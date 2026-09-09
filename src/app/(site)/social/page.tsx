@@ -6,6 +6,8 @@ import { SOCIAL_PLATFORM_META } from '@/components/site/socialMeta';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { JsonLd } from '@/components/site/JsonLd';
 import { Icons } from '@/components/ui/Icon';
+import { PageHero } from '@/components/site/PageHero';
+import { Reveal, revealProps } from '@/components/visual/Reveal';
 import { getSocialAccounts, getSocialPosts } from '@/lib/content/queries';
 import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 import { getSettings } from '@/lib/settings';
@@ -17,7 +19,8 @@ import { safeUrl } from '@/lib/sanitize';
  *
  * Es werden keine Embeds der Plattformen geladen. Angezeigt werden die
  * gepflegten Accounts und kuratierte Beiträge mit lokalen Vorschaubildern –
- * schnell und ohne Datenübertragung an Dritte.
+ * schnell und ohne Datenübertragung an Dritte. Es gibt keinen simulierten
+ * Live-Feed.
  */
 
 type PageProps = { searchParams: Promise<{ plattform?: string }> };
@@ -48,78 +51,99 @@ export default async function SocialPage({ searchParams }: PageProps) {
 
   const discordUrl = safeUrl(settings.discordInviteUrl);
 
+  const filterClass = (active: boolean) =>
+    active
+      ? 'badge border-[color-mix(in_srgb,var(--color-brand)_65%,transparent)] bg-[var(--color-brand)] px-4 py-2 font-semibold text-white'
+      : 'badge-neutral px-4 py-2 transition-colors duration-200 hover:border-[var(--color-line-strong)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)]';
+
   return (
     <>
       <JsonLd data={breadcrumbJsonLd([{ name: 'Start', path: '/' }, { name: 'Social Media', path: '/social' }])} />
 
-      <section className="border-b border-[var(--color-line)] hero-veil">
-        <div className="shell py-14 sm:py-20">
-          <p className="eyebrow">
-            <Icons.chat size={14} />
-            Social Media
-          </p>
-          <h1 className="heading-xl max-w-2xl">Folge SwissHub</h1>
-          <p className="lead mt-4 max-w-2xl">
-            Der Discord ist unser zentraler Treffpunkt – dort läuft der Alltag der Community. Auf den übrigen Kanälen
-            teilen wir Highlights, Clips und Ankündigungen.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Social Media"
+        icon="chat"
+        title="Folge SwissHub"
+        lead="Der Discord ist unser zentraler Treffpunkt – dort läuft der Alltag der Community. Auf den übrigen Kanälen teilen wir Highlights, Clips und Ankündigungen."
+        signals={
+          accounts.length > 0
+            ? [{ label: 'Kanäle', value: accounts.length === 1 ? '1 Kanal' : `${accounts.length} Kanäle` }]
+            : undefined
+        }
+      />
 
-      <div className="shell section space-y-14">
+      <div className="shell section space-y-16 sm:space-y-20">
         <section aria-labelledby="kanaele">
-          <h2 id="kanaele" className="heading-lg mb-6">Unsere Kanäle</h2>
+          <Reveal>
+            <h2 id="kanaele" className="heading-lg mb-8">
+              Unsere Kanäle
+            </h2>
+          </Reveal>
 
           {accounts.length === 0 ? (
             <EmptyState
+              icon="chat"
               title="Noch keine Kanäle hinterlegt"
               description="Die Accounts werden im Admin-Dashboard gepflegt und erscheinen anschliessend hier."
               action={{ href: '/kontakt', label: 'Kontakt aufnehmen' }}
             />
           ) : (
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {accounts.map((account) => {
+              {accounts.map((account, index) => {
                 const meta = SOCIAL_PLATFORM_META[account.platform];
                 const PlatformIcon = meta.icon;
                 const url = safeUrl(account.profileUrl);
+                const isDiscord = account.platform === 'DISCORD';
 
                 return (
-                  <li key={account.id} className="card relative flex h-full flex-col p-5">
-                    <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--color-brand-soft)] text-[var(--color-brand-text)]">
-                      <PlatformIcon size={22} />
-                    </span>
+                  <li key={account.id} {...revealProps('up', index)}>
+                    {/* Discord bekommt als zentraler Treffpunkt sichtbar mehr Gewicht. */}
+                    <article
+                      className={`card-interactive group relative flex h-full flex-col p-5 sm:p-6 ${
+                        isDiscord ? 'border-[color-mix(in_srgb,var(--color-brand)_45%,var(--color-line))]' : ''
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="accent-line absolute inset-x-0 top-0 h-px bg-[var(--color-brand-bright)]"
+                      />
 
-                    <h3 className="text-base font-semibold text-[var(--color-ink)]">
-                      {url ? (
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          data-track-social={account.platform}
-                          className="after:absolute after:inset-0"
-                        >
-                          {meta.label}
-                        </a>
-                      ) : (
-                        meta.label
-                      )}
-                    </h3>
-                    <p className="mt-0.5 text-sm text-[var(--color-ink-subtle)]">{account.handle}</p>
+                      <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--color-brand)_30%,var(--color-line))] bg-[var(--color-brand-soft)] text-[var(--color-brand-text)] transition-transform duration-300 ease-[var(--ease-out-soft)] group-hover:-translate-y-0.5">
+                        <PlatformIcon size={22} />
+                      </span>
 
-                    <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">
-                      {account.description || meta.description}
-                    </p>
+                      <h3 className="text-base font-semibold text-[var(--color-ink)]">
+                        {url ? (
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-track-social={account.platform}
+                            className="after:absolute after:inset-0"
+                          >
+                            {meta.label}
+                          </a>
+                        ) : (
+                          meta.label
+                        )}
+                      </h3>
+                      <p className="meta mt-1">{account.handle}</p>
 
-                    <p className="mt-auto flex items-center gap-2 pt-4 text-xs text-[var(--color-ink-subtle)]">
-                      {typeof account.followerCount === 'number' ? (
-                        <span>{formatNumber(account.followerCount)} Follower</span>
-                      ) : null}
-                      {url ? (
-                        <span className="ml-auto inline-flex items-center gap-1 font-semibold text-[var(--color-brand-text)]">
-                          Profil öffnen <Icons.external size={12} />
-                        </span>
-                      ) : null}
-                    </p>
+                      <p className="mt-3 text-sm leading-relaxed text-[var(--color-ink-muted)]">
+                        {account.description || meta.description}
+                      </p>
+
+                      <p className="mt-auto flex items-center gap-2 pt-5">
+                        {typeof account.followerCount === 'number' ? (
+                          <span className="meta numeric">{formatNumber(account.followerCount)} Follower</span>
+                        ) : null}
+                        {url ? (
+                          <span className="link-arrow ml-auto text-xs">
+                            Profil öffnen <Icons.external size={12} />
+                          </span>
+                        ) : null}
+                      </p>
+                    </article>
                   </li>
                 );
               })}
@@ -128,18 +152,19 @@ export default async function SocialPage({ searchParams }: PageProps) {
         </section>
 
         <section aria-labelledby="beitraege">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-            <h2 id="beitraege" className="heading-lg">Ausgewählte Beiträge</h2>
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
+            <Reveal>
+              <h2 id="beitraege" className="heading-lg">
+                Ausgewählte Beiträge
+              </h2>
+              <p className="meta mt-2">Von uns kuratiert – ohne automatisch geladene Plattform-Feeds.</p>
+            </Reveal>
 
             {availablePlatforms.length > 1 ? (
               <nav aria-label="Nach Plattform filtern">
                 <ul className="flex flex-wrap gap-2">
                   <li>
-                    <Link
-                      href="/social"
-                      aria-current={selected === null ? 'true' : undefined}
-                      className={selected === null ? 'badge border-[var(--color-line-strong)] bg-[var(--color-surface-hover)] px-3 py-1 font-semibold text-[var(--color-ink)]' : 'badge-neutral px-3 py-1'}
-                    >
+                    <Link href="/social" aria-current={selected === null ? 'true' : undefined} className={filterClass(selected === null)}>
                       Alle
                     </Link>
                   </li>
@@ -148,7 +173,7 @@ export default async function SocialPage({ searchParams }: PageProps) {
                       <Link
                         href={`/social?plattform=${platform.toLowerCase()}`}
                         aria-current={selected === platform ? 'true' : undefined}
-                        className={selected === platform ? 'badge border-[var(--color-line-strong)] bg-[var(--color-surface-hover)] px-3 py-1 font-semibold text-[var(--color-ink)]' : 'badge-neutral px-3 py-1'}
+                        className={filterClass(selected === platform)}
                       >
                         {SOCIAL_PLATFORM_META[platform].label}
                       </Link>
@@ -161,14 +186,15 @@ export default async function SocialPage({ searchParams }: PageProps) {
 
           {posts.length === 0 ? (
             <EmptyState
+              icon="play"
               title="Aktuell sind keine Beiträge freigegeben"
               description="Wir kuratieren hier ausgewählte Beiträge unserer Kanäle. Bis dahin findest du alles Aktuelle direkt auf den Profilen oder im Discord."
               action={discordUrl ? { href: discordUrl, label: 'Discord beitreten', external: true } : undefined}
             />
           ) : (
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {posts.map((post) => (
-                <li key={post.id}>
+              {posts.map((post, index) => (
+                <li key={post.id} {...revealProps('up', index)}>
                   <SocialPostCard post={post} />
                 </li>
               ))}
@@ -177,23 +203,34 @@ export default async function SocialPage({ searchParams }: PageProps) {
         </section>
 
         {discordUrl ? (
-          <section className="rounded-[var(--radius-card)] border border-[color-mix(in_srgb,var(--color-brand)_55%,transparent)] bg-[var(--color-brand-soft)] p-8 text-center sm:p-12">
-            <h2 className="heading-lg">Zäme hock, zäme zocke</h2>
-            <p className="lead mx-auto mt-3 max-w-xl">
-              Der schnellste Weg in die Community führt über unseren Discord – dort findest du Mitspielende, Events und
-              den Support.
-            </p>
-            <a
-              href={discordUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-track-social="DISCORD"
-              className="btn-primary mt-7"
-            >
-              <Icons.discord size={18} />
-              Discord beitreten
-            </a>
-          </section>
+          <Reveal variant="scale">
+            <section className="relative isolate overflow-hidden rounded-[var(--radius-panel)] border border-[color-mix(in_srgb,var(--color-brand)_45%,transparent)] bg-[var(--color-brand-soft)] p-8 text-center sm:p-14">
+              <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-grid-fine opacity-45" />
+              <span
+                aria-hidden="true"
+                data-ambient
+                className="glow-orb glow-brand drift-slow pointer-events-none left-[calc(50%-13rem)] top-[-7rem] h-[26rem] w-[26rem] opacity-35"
+              />
+
+              <div className="relative">
+                <h2 className="display-2">{settings.motto ? `«${settings.motto}»` : 'Komm in die Community'}</h2>
+                <p className="lead mx-auto mt-4 max-w-xl">
+                  Der schnellste Weg in die Community führt über unseren Discord – dort findest du Mitspielende, Events
+                  und den Support.
+                </p>
+                <a
+                  href={discordUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-track-social="DISCORD"
+                  className="btn-primary btn-lg mt-8"
+                >
+                  <Icons.discord size={18} />
+                  Discord beitreten
+                </a>
+              </div>
+            </section>
+          </Reveal>
         ) : null}
       </div>
     </>

@@ -64,7 +64,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (adminItems.length > 0) groups.push({ label: 'Administration', items: adminItems });
 
   return (
-    <div className="flex min-h-dvh flex-col lg:flex-row">
+    <div className="flex min-h-dvh flex-col bg-[var(--color-canvas)] lg:flex-row">
       <AdminNav
         groups={groups}
         user={{

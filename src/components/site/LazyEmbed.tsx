@@ -26,17 +26,27 @@ const PROVIDER_LABEL: Record<LazyEmbedProps['provider'], string> = {
 
 export function LazyEmbed({ provider, embedUrl, title, externalUrl, poster }: LazyEmbedProps) {
   const [loaded, setLoaded] = useState(false);
+  const [ready, setReady] = useState(false);
   const providerName = PROVIDER_LABEL[provider];
 
   if (loaded) {
     return (
       <div className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-black">
+        {/* Ladezustand für einen tatsächlich stattfindenden Ladevorgang. */}
+        {!ready ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="skeleton absolute inset-0" />
+            <span className="meta relative">Video wird geladen …</span>
+          </div>
+        ) : null}
+
         <iframe
           src={embedUrl}
           title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           referrerPolicy="strict-origin-when-cross-origin"
+          onLoad={() => setReady(true)}
           className="absolute inset-0 h-full w-full"
         />
       </div>
@@ -44,15 +54,16 @@ export function LazyEmbed({ provider, embedUrl, title, externalUrl, poster }: La
   }
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface-raised)]">
+    <div className="group relative aspect-video w-full overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-void)]">
       {poster ? <div className="absolute inset-0 opacity-45">{poster}</div> : null}
+      {!poster ? <span aria-hidden="true" className="absolute inset-0 tech-grid-fine opacity-60" /> : null}
 
-      <div className="relative flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+      <div className="relative flex h-full flex-col items-center justify-center gap-3.5 p-6 text-center">
         <p className="max-w-md text-sm text-[var(--color-ink-muted)]">
           Dieses Video wird von {providerName} bereitgestellt. Beim Abspielen werden Daten an{' '}
           {providerName} übertragen.
         </p>
-        <button type="button" onClick={() => setLoaded(true)} className="btn-primary">
+        <button type="button" onClick={() => setLoaded(true)} className="btn-primary btn-lg">
           <Icons.play size={18} />
           Video laden und abspielen
         </button>

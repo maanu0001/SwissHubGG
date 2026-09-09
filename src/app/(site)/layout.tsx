@@ -4,6 +4,7 @@ import { SiteFooter } from '@/components/site/SiteFooter';
 import { Analytics } from '@/components/site/Analytics';
 import { CookieNotice } from '@/components/site/CookieNotice';
 import { MaintenanceScreen } from '@/components/site/MaintenanceScreen';
+import { MotionRuntime } from '@/components/visual/MotionRuntime';
 import { getSocialAccounts } from '@/lib/content/queries';
 import { getSettings } from '@/lib/settings';
 import { organizationJsonLd, websiteJsonLd } from '@/lib/seo';
@@ -34,6 +35,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
   return (
     <>
+      {/* Muss vor dem ersten Zeichnen laufen, damit nichts aufblitzt. */}
+      <MotionRuntime />
+
       <a href="#inhalt" className="skip-link">
         Direkt zum Inhalt
       </a>

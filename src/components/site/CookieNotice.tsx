@@ -60,7 +60,7 @@ export function CookieNotice({ policyVersion }: { policyVersion: string }) {
     <div
       role="region"
       aria-label="Datenschutzhinweis"
-      className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-3xl rounded-[var(--radius-card)] border border-[var(--color-line-strong)] bg-[var(--color-surface-raised)] p-4 shadow-[var(--shadow-raised)] sm:inset-x-6 sm:p-5"
+      className="panel-glass fixed inset-x-3 bottom-3 z-50 mx-auto max-w-3xl p-4 sm:inset-x-6 sm:p-5"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm leading-relaxed text-[var(--color-ink-muted)]">
@@ -71,7 +71,7 @@ export function CookieNotice({ policyVersion }: { policyVersion: string }) {
           </Link>
           .
         </p>
-        <button type="button" onClick={dismiss} className="btn-primary shrink-0">
+        <button type="button" onClick={dismiss} className="btn-primary shrink-0 sm:min-w-40">
           Verstanden
         </button>
       </div>

@@ -68,7 +68,13 @@ export default async function AdminTeamPage() {
                           <textarea id={`description-${member.id}`} name="description" rows={2} maxLength={300} defaultValue={member.description ?? ''} className="input resize-y" />
                         </Field>
 
-                        <MediaSelectField label="Bild" name="avatarId" media={media} defaultValue={member.avatarId} />
+                        <MediaSelectField
+                          label="Bild"
+                          name="avatarId"
+                          id={`avatar-${member.id}`}
+                          media={media}
+                          defaultValue={member.avatarId}
+                        />
 
                         <div className="flex flex-wrap gap-4">
                           <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
@@ -117,7 +123,7 @@ export default async function AdminTeamPage() {
                 <textarea id="description" name="description" rows={2} maxLength={300} className="input resize-y" />
               </Field>
 
-              <MediaSelectField label="Bild" name="avatarId" media={media} />
+              <MediaSelectField label="Bild" name="avatarId" id="avatar-neu" media={media} />
 
               <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">

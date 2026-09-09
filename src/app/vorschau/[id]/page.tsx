@@ -5,6 +5,7 @@ import { SectionRenderer } from '@/components/sections/SectionRenderer';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { PreviewFrame } from '@/components/admin/builder/PreviewFrame';
+import { MotionRuntime } from '@/components/visual/MotionRuntime';
 import { prisma } from '@/lib/db';
 import { requirePermission } from '@/lib/auth/guards';
 import { PERMISSIONS } from '@/lib/permissions';
@@ -54,10 +55,13 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
 
   return (
     <div className="min-h-dvh bg-[var(--color-canvas)]">
+      {/* Die Vorschau zeigt dieselben Bewegungen wie die veröffentlichte Seite. */}
+      <MotionRuntime />
+
       <div className="sticky top-0 z-50 border-b border-[var(--color-line)] bg-[var(--color-surface)]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-warning-text)]">
+            <p className="meta text-[var(--color-warning-text)]">
               Vorschau · nicht veröffentlichter Entwurf
             </p>
             <p className="truncate text-sm text-[var(--color-ink)]">

@@ -2,34 +2,41 @@
 
 /*
   SwissHub Designsystem
-  --------------------
-  Dunkles Grunddesign mit #83060A als Markenfarbe. Rot wird gezielt als Akzent
-  eingesetzt – für Aktionen, Hervorhebungen und Kanten, nicht als Fläche.
+  =====================
+  Leitidee: „Swiss precision meets gaming energy.“
+
+  Sehr dunkle, abgestufte Flächen, präzise Kanten, feine technische Raster und
+  #83060A als gezielt gesetzte Markenfarbe. Bewegung ist überall dezent,
+  läuft ausschliesslich über transform/opacity und respektiert
+  `prefers-reduced-motion` vollständig.
+
   Alle Kombinationen aus Text- und Hintergrundfarbe erfüllen mindestens
   WCAG 2.2 AA (4.5:1 für Fliesstext, 3:1 für grosse Schrift und Bedienelemente).
 */
 
 @theme {
-  /* Flächen */
-  --color-canvas: #0b0c10;
-  --color-surface: #14151b;
-  --color-surface-raised: #1c1e26;
-  --color-surface-hover: #23252f;
-  --color-line: #2b2e39;
-  --color-line-strong: #3a3d4a;
+  /* --- Flächen: von tief nach hoch --- */
+  --color-void: #050609;
+  --color-canvas: #0a0b10;
+  --color-surface: #101219;
+  --color-surface-raised: #171a23;
+  --color-surface-hover: #1f2330;
+  --color-line: #262a35;
+  --color-line-strong: #373c4b;
 
-  /* Text */
-  --color-ink: #f4f5f7;
-  --color-ink-muted: #b0b4be;
-  --color-ink-subtle: #868b96;
+  /* --- Text --- */
+  --color-ink: #f5f6f8;
+  --color-ink-muted: #b3b8c4;
+  --color-ink-subtle: #8a90a0;
 
-  /* Marke */
+  /* --- Marke --- */
   --color-brand: #83060a;
-  --color-brand-strong: #9d070d;
-  --color-brand-soft: #2a0507;
+  --color-brand-strong: #a20a10;
+  --color-brand-bright: #c81219;
+  --color-brand-soft: #250406;
   --color-brand-text: #ff6b70;
 
-  /* Semantische Status */
+  /* --- Semantische Status --- */
   --color-success: #2f9e5f;
   --color-success-text: #6fdc9b;
   --color-warning: #a1670a;
@@ -39,15 +46,28 @@
   --color-info: #2b5f9e;
   --color-info-text: #7db6f5;
 
-  /* Typografie */
+  /* Kühler Tech-Akzent – sparsam für technische Details und Linien. */
+  --color-tech: #3c7fd0;
+  --color-tech-text: #86bcf7;
+
+  /* --- Typografie --- */
   --font-sans:
     'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     sans-serif;
+  /* Systemschrift für Interface- und Metatexte – kein zusätzlicher Download. */
+  --font-mono:
+    ui-monospace, 'SF Mono', SFMono-Regular, 'DejaVu Sans Mono', Menlo, Consolas, monospace;
 
-  /* Radien und Schatten */
+  /* --- Radien und Schatten --- */
   --radius-card: 0.875rem;
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.7);
-  --shadow-raised: 0 2px 4px rgb(0 0 0 / 0.5), 0 16px 40px -20px rgb(0 0 0 / 0.8);
+  --radius-panel: 1.125rem;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.45), 0 10px 28px -14px rgb(0 0 0 / 0.75);
+  --shadow-raised: 0 2px 6px rgb(0 0 0 / 0.5), 0 22px 48px -24px rgb(0 0 0 / 0.85);
+  --shadow-lift: 0 4px 10px rgb(0 0 0 / 0.45), 0 30px 60px -28px rgb(0 0 0 / 0.9);
+
+  /* --- Bewegung --- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 /* Selbst gehostete Schrift – keine Anfrage an Drittanbieter. */
@@ -81,6 +101,8 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    /* Sticky Header freihalten, wenn Anker angesprungen werden. */
+    scroll-padding-top: 5.5rem;
   }
 
   body {
@@ -90,6 +112,8 @@
     font-feature-settings: 'cv11', 'ss01';
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    /* Kein horizontaler Überlauf durch dekorative Ebenen. */
+    overflow-x: hidden;
   }
 
   /* Gut sichtbarer, konsistenter Fokus für Tastaturbedienung. */
@@ -104,7 +128,7 @@
   h3,
   h4 {
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.022em;
     text-wrap: balance;
   }
 
@@ -139,11 +163,11 @@
   `@apply` weiterverwenden. Dadurch bauen die Varianten unten sauber darauf auf.
 */
 @utility card {
-  @apply rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[var(--shadow-card)];
+  @apply relative rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[var(--shadow-card)];
 }
 
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-55;
+  @apply relative inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-[color,background-color,border-color,box-shadow,transform] duration-200 disabled:cursor-not-allowed disabled:opacity-55;
 }
 
 @utility badge {
@@ -151,11 +175,13 @@
 }
 
 @utility input {
-  @apply w-full rounded-lg border border-[var(--color-line)] bg-[var(--color-canvas)] px-3 py-2.5 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-subtle)] focus:border-[var(--color-brand-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-text)];
+  @apply w-full rounded-lg border border-[var(--color-line)] bg-[var(--color-void)] px-3 py-2.5 text-sm text-[var(--color-ink)] transition-colors duration-150 placeholder:text-[var(--color-ink-subtle)] hover:border-[var(--color-line-strong)] focus:border-[var(--color-brand-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-text)];
 }
 
 @layer components {
-  /* --- Layout --- */
+  /* ------------------------------------------------------------------ */
+  /* Layout                                                              */
+  /* ------------------------------------------------------------------ */
   .shell {
     @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
   }
@@ -164,55 +190,190 @@
     @apply mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8;
   }
 
+  .shell-wide {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
   .section {
-    @apply py-14 sm:py-20;
+    @apply py-14 sm:py-20 lg:py-24;
   }
 
   .section-tight {
     @apply py-10 sm:py-14;
   }
 
-  /* --- Typografie --- */
+  /* ------------------------------------------------------------------ */
+  /* Typografie                                                          */
+  /* ------------------------------------------------------------------ */
+
+  /* Interface- und Metatexte: technisch, klein, mit klarer Sperrung. */
+  .meta {
+    font-family: var(--font-mono);
+    @apply text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--color-ink-subtle)];
+  }
+
+  .meta-brand {
+    font-family: var(--font-mono);
+    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-brand-text)];
+  }
+
   .eyebrow {
-    @apply mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-brand-text)];
+    font-family: var(--font-mono);
+    @apply mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-brand-text)];
+  }
+
+  /* Marketing-Headlines: responsiv über clamp, ohne Riesenzeilen auf dem Handy. */
+  .display-1 {
+    font-size: clamp(2.15rem, 1.35rem + 3.4vw, 4.25rem);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    font-weight: 800;
+  }
+
+  .display-2 {
+    font-size: clamp(1.75rem, 1.2rem + 2.1vw, 3rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    font-weight: 800;
   }
 
   .heading-xl {
-    @apply text-3xl leading-tight sm:text-4xl lg:text-5xl;
+    font-size: clamp(1.9rem, 1.35rem + 2.2vw, 3.1rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
   }
 
   .heading-lg {
-    @apply text-2xl leading-tight sm:text-3xl;
+    font-size: clamp(1.5rem, 1.2rem + 1.1vw, 2.15rem);
+    line-height: 1.15;
+    letter-spacing: -0.025em;
   }
 
   .heading-md {
-    @apply text-xl leading-snug sm:text-2xl;
+    font-size: clamp(1.2rem, 1.08rem + 0.5vw, 1.5rem);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
   }
 
   .lead {
-    @apply text-base leading-relaxed text-[var(--color-ink-muted)] sm:text-lg;
+    @apply text-base leading-relaxed text-[var(--color-ink-muted)] sm:text-[1.0625rem];
+    max-width: 62ch;
   }
 
   .muted {
     @apply text-sm leading-relaxed text-[var(--color-ink-muted)];
   }
 
-  /* --- Flächen --- */
+  /* Zahlen in Statistiken und Countdowns – gleiche Ziffernbreite, kein Zappeln. */
+  .numeric {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Flächen und Panels                                                  */
+  /* ------------------------------------------------------------------ */
   .card-interactive {
-    @apply card transition-colors duration-200 hover:border-[var(--color-line-strong)] hover:bg-[var(--color-surface-raised)];
+    @apply card transition-[transform,border-color,box-shadow,background-color] duration-300;
+    transition-timing-function: var(--ease-out-soft);
+  }
+
+  .card-interactive:hover {
+    border-color: var(--color-line-strong);
+    background-color: var(--color-surface-raised);
+    box-shadow: var(--shadow-lift);
+    transform: translateY(-3px);
+  }
+
+  .card-interactive:focus-within {
+    border-color: var(--color-line-strong);
+    box-shadow: var(--shadow-lift);
   }
 
   .panel {
-    @apply rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 sm:p-6;
+    @apply relative rounded-[var(--radius-panel)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-card)] sm:p-6;
   }
 
-  /* --- Bedienelemente --- */
+  /* Dezenter Glaseffekt für Overlays und den Kopfbereich. */
+  .panel-glass {
+    @apply rounded-[var(--radius-panel)] border border-[var(--color-line)] shadow-[var(--shadow-raised)];
+    background-color: color-mix(in srgb, var(--color-surface) 78%, transparent);
+    backdrop-filter: blur(14px) saturate(1.1);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  }
+
+  /* Karte mit technischem Charakter: feine Ecken, Akzentkante oben. */
+  .card-tech {
+    @apply card overflow-hidden;
+  }
+
+  .card-tech::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-brand) 70%, transparent),
+      transparent
+    );
+    opacity: 0.55;
+    transition: opacity 0.3s var(--ease-out-soft);
+  }
+
+  .card-tech:hover::before {
+    opacity: 1;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Bedienelemente                                                      */
+  /* ------------------------------------------------------------------ */
   .btn-primary {
-    @apply btn bg-[var(--color-brand)] text-white hover:bg-[var(--color-brand-strong)];
+    @apply btn text-white;
+    background-image: linear-gradient(
+      135deg,
+      var(--color-brand-strong) 0%,
+      var(--color-brand) 55%,
+      #6d0508 100%
+    );
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.14),
+      0 1px 2px rgb(0 0 0 / 0.5),
+      0 10px 24px -14px color-mix(in srgb, var(--color-brand-bright) 85%, transparent);
+  }
+
+  .btn-primary:hover {
+    background-image: linear-gradient(
+      135deg,
+      var(--color-brand-bright) 0%,
+      var(--color-brand-strong) 55%,
+      var(--color-brand) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.2),
+      0 2px 4px rgb(0 0 0 / 0.5),
+      0 14px 30px -12px color-mix(in srgb, var(--color-brand-bright) 70%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
   }
 
   .btn-secondary {
-    @apply btn border border-[var(--color-line-strong)] bg-[var(--color-surface-raised)] text-[var(--color-ink)] hover:bg-[var(--color-surface-hover)];
+    @apply btn border border-[var(--color-line-strong)] bg-[var(--color-surface-raised)] text-[var(--color-ink)];
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--color-surface-hover);
+    border-color: color-mix(in srgb, var(--color-brand) 55%, var(--color-line-strong));
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary:active {
+    transform: translateY(0);
   }
 
   .btn-ghost {
@@ -227,7 +388,27 @@
     @apply px-3 py-1.5 text-xs;
   }
 
-  /* --- Formulare --- */
+  .btn-lg {
+    @apply px-5 py-3 text-[0.9375rem];
+  }
+
+  /* Textlink mit animierter Unterlinie – Feedback ohne Farbwechselzwang. */
+  .link-arrow {
+    @apply relative inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-brand-text)];
+  }
+
+  .link-arrow svg {
+    transition: transform 0.25s var(--ease-out-soft);
+  }
+
+  .link-arrow:hover svg,
+  .group:hover .link-arrow svg {
+    transform: translateX(3px);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Formulare                                                           */
+  /* ------------------------------------------------------------------ */
   .field-label {
     @apply mb-1.5 block text-sm font-medium text-[var(--color-ink)];
   }
@@ -252,10 +433,12 @@
   }
 
   .select {
-    @apply input appearance-none bg-[var(--color-canvas)] pr-9;
+    @apply input appearance-none bg-[var(--color-void)] pr-9;
   }
 
-  /* --- Badges --- */
+  /* ------------------------------------------------------------------ */
+  /* Badges und Status                                                   */
+  /* ------------------------------------------------------------------ */
   .badge-neutral {
     @apply badge border-[var(--color-line-strong)] bg-[var(--color-surface-raised)] text-[var(--color-ink-muted)];
   }
@@ -280,12 +463,21 @@
     @apply badge border-[color-mix(in_srgb,var(--color-info)_50%,transparent)] bg-[color-mix(in_srgb,var(--color-info)_16%,transparent)] text-[var(--color-info-text)];
   }
 
-  /* --- Sprunglink für Screenreader und Tastatur --- */
+  .badge-tech {
+    font-family: var(--font-mono);
+    @apply badge border-[var(--color-line-strong)] bg-[var(--color-void)] text-[11px] uppercase tracking-[0.12em] text-[var(--color-ink-muted)];
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Sprunglink                                                          */
+  /* ------------------------------------------------------------------ */
   .skip-link {
     @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-[var(--color-brand)] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white;
   }
 
-  /* --- Redaktioneller Fliesstext --- */
+  /* ------------------------------------------------------------------ */
+  /* Redaktioneller Fliesstext                                           */
+  /* ------------------------------------------------------------------ */
   .prose-swisshub {
     @apply text-[15px] leading-relaxed text-[var(--color-ink-muted)];
   }
@@ -327,11 +519,12 @@
   }
 
   .prose-swisshub code {
+    font-family: var(--font-mono);
     @apply rounded bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[0.85em] text-[var(--color-ink)];
   }
 
   .prose-swisshub pre {
-    @apply mb-4 overflow-x-auto rounded-lg border border-[var(--color-line)] bg-[var(--color-canvas)] p-4 text-sm;
+    @apply mb-4 overflow-x-auto rounded-lg border border-[var(--color-line)] bg-[var(--color-void)] p-4 text-sm;
   }
 
   .prose-swisshub table {
@@ -352,43 +545,375 @@
 }
 
 @layer utilities {
+  /* ------------------------------------------------------------------ */
+  /* Technische Hintergrundebenen                                        */
+  /* ------------------------------------------------------------------ */
+
+  /* Feines Koordinatenraster. Rein dekorativ, immer ausgeblendet am Rand. */
+  .tech-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--color-line) 62%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-line) 62%, transparent) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 75% 65% at 50% 30%, #000 25%, transparent 78%);
+    -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 30%, #000 25%, transparent 78%);
+  }
+
+  .tech-grid-fine {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--color-line) 45%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-line) 45%, transparent) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(180deg, #000 0%, transparent 85%);
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 85%);
+  }
+
+  /* Punktraster für ruhigere Bereiche. */
+  .tech-dots {
+    background-image: radial-gradient(
+      color-mix(in srgb, var(--color-line-strong) 70%, transparent) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+    mask-image: linear-gradient(180deg, transparent, #000 35%, #000 65%, transparent);
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 35%, #000 65%, transparent);
+  }
+
+  /* Ruhiger Grundverlauf für Kopfbereiche. */
+  .hero-veil {
+    background:
+      radial-gradient(
+        ellipse 62% 52% at 50% -8%,
+        color-mix(in srgb, var(--color-brand) 26%, transparent) 0%,
+        transparent 68%
+      ),
+      linear-gradient(180deg, var(--color-void) 0%, var(--color-canvas) 62%, var(--color-surface) 100%);
+  }
+
+  /* Wandernde Lichtflächen – langsam, gross, ausschliesslich per transform. */
+  .glow-orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(70px);
+    opacity: 0.5;
+    pointer-events: none;
+    will-change: transform;
+  }
+
+  .glow-brand {
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-brand-bright) 55%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
+  .glow-tech {
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-tech) 34%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
   /* Dezente Kante mit Markenfarbe – ersetzt flächiges Rot. */
   .edge-brand {
     box-shadow: inset 0 1px 0 0 color-mix(in srgb, var(--color-brand) 45%, transparent);
   }
 
-  /* Ruhiger Hintergrundverlauf ohne unruhige Muster oder Parallaxe. */
-  .hero-veil {
-    background:
-      radial-gradient(
-        ellipse 70% 55% at 50% 0%,
-        color-mix(in srgb, var(--color-brand) 24%, transparent) 0%,
-        transparent 70%
-      ),
-      linear-gradient(180deg, var(--color-canvas) 0%, var(--color-surface) 100%);
+  /* Haarlinie, die zu beiden Seiten ausläuft – verbindet Abschnitte. */
+  .hairline {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-line-strong) 90%, transparent) 18%,
+      color-mix(in srgb, var(--color-line-strong) 90%, transparent) 82%,
+      transparent
+    );
   }
 
-  .fade-in-up {
-    animation: swisshub-fade-in-up 0.5s ease-out both;
+  .hairline-brand {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-brand) 75%, transparent) 50%,
+      transparent
+    );
   }
 
-  @keyframes swisshub-fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  /* Senkrechte Verbindungslinie zwischen zwei Abschnitten. */
+  .connector {
+    width: 1px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--color-brand) 60%, transparent) 45%,
+      color-mix(in srgb, var(--color-line-strong) 80%, transparent)
+    );
+  }
+
+  /* Eckmarken für technische Panels. */
+  .corner-ticks::before,
+  .corner-ticks::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: color-mix(in srgb, var(--color-brand) 65%, transparent);
+    pointer-events: none;
+  }
+
+  .corner-ticks::before {
+    top: -1px;
+    left: -1px;
+    border-top: 1px solid;
+    border-left: 1px solid;
+    border-top-left-radius: var(--radius-card);
+  }
+
+  .corner-ticks::after {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+    border-bottom-right-radius: var(--radius-card);
   }
 
   /* Logos verschiedener Partner einheitlich und verzerrungsfrei darstellen. */
   .logo-plate {
-    @apply flex items-center justify-center rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-raised)] p-4;
+    @apply flex items-center justify-center rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-raised)] p-4 transition-colors duration-300;
+  }
+
+  .logo-plate:hover {
+    border-color: var(--color-line-strong);
+    background-color: var(--color-surface-hover);
   }
 
   .logo-plate img {
     @apply max-h-12 w-auto object-contain;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Bewegung                                                            */
+  /* ------------------------------------------------------------------ */
+
+  /*
+    Reveal beim Scrollen.
+
+    Ohne JavaScript und bei reduzierter Bewegung wird `motion-ready` nie
+    gesetzt – dann ist jeder Inhalt sofort und unverändert sichtbar.
+  */
+  .motion-ready [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+    transition:
+      opacity 0.6s var(--ease-out-soft),
+      transform 0.6s var(--ease-out-soft);
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+  }
+
+  .motion-ready [data-reveal='left'] {
+    transform: translate3d(-16px, 0, 0);
+  }
+
+  .motion-ready [data-reveal='right'] {
+    transform: translate3d(16px, 0, 0);
+  }
+
+  .motion-ready [data-reveal='scale'] {
+    transform: scale(0.97);
+  }
+
+  .motion-ready [data-reveal='fade'] {
+    transform: none;
+  }
+
+  .motion-ready [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+  }
+
+  /* Sicherheitsnetz: Sollte die Beobachtung ausfallen, wird alles sichtbar. */
+  .motion-failsafe [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Langsame Bewegung dekorativer Ebenen. Pausiert ausserhalb des Sichtbereichs. */
+  .motion-ready .drift-slow {
+    animation: sh-drift 26s var(--ease-in-out-soft) infinite alternate;
+  }
+
+  .motion-ready .drift-slower {
+    animation: sh-drift-2 34s var(--ease-in-out-soft) infinite alternate;
+  }
+
+  .motion-ready .sweep {
+    animation: sh-sweep 9s linear infinite;
+  }
+
+  [data-ambient]:not(.is-inview) *,
+  [data-ambient]:not(.is-inview) {
+    animation-play-state: paused !important;
+  }
+
+  @keyframes sh-drift {
+    from {
+      transform: translate3d(-4%, -2%, 0) scale(1);
+    }
+    to {
+      transform: translate3d(5%, 3%, 0) scale(1.12);
+    }
+  }
+
+  @keyframes sh-drift-2 {
+    from {
+      transform: translate3d(4%, 3%, 0) scale(1.08);
+    }
+    to {
+      transform: translate3d(-5%, -2%, 0) scale(1);
+    }
+  }
+
+  /* Signalstrich, der einmal durch den Bereich läuft. */
+  @keyframes sh-sweep {
+    0% {
+      transform: translate3d(-100%, 0, 0);
+      opacity: 0;
+    }
+    12% {
+      opacity: 0.85;
+    }
+    55% {
+      opacity: 0.85;
+    }
+    75%,
+    100% {
+      transform: translate3d(220%, 0, 0);
+      opacity: 0;
+    }
+  }
+
+  /* Aktivitätspunkt: zeigt einen laufenden Zustand, nie eine erfundene Zahl. */
+  .pulse-dot {
+    position: relative;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background-color: currentColor;
+    flex: none;
+  }
+
+  .motion-ready .pulse-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background-color: currentColor;
+    animation: sh-pulse 2.4s var(--ease-out-soft) infinite;
+  }
+
+  @keyframes sh-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.55;
+    }
+    70%,
+    100% {
+      transform: scale(2.6);
+      opacity: 0;
+    }
+  }
+
+  /* Akzentlinie, die beim Hover einer Karte aufzieht. */
+  .accent-line {
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.45s var(--ease-out-soft);
+  }
+
+  .group:hover .accent-line,
+  .group:focus-within .accent-line {
+    transform: scaleX(1);
+  }
+
+  /* Leichte perspektivische Bewegung – bewusst ohne Cursorverfolgung. */
+  .tilt {
+    transition: transform 0.45s var(--ease-out-soft);
+  }
+
+  .tilt:hover {
+    transform: perspective(900px) rotateX(1.6deg) rotateY(-1.6deg) translateY(-3px);
+  }
+
+  /* Ladezustand für tatsächlich nachgeladene Inhalte. */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-raised) 0%,
+      var(--color-surface-hover) 50%,
+      var(--color-surface-raised) 100%
+    );
+    background-size: 200% 100%;
+    border-radius: 0.5rem;
+  }
+
+  .motion-ready .skeleton {
+    animation: sh-skeleton 1.4s ease-in-out infinite;
+  }
+
+  @keyframes sh-skeleton {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  /*
+    Kopfbereich: startet transparent über dem Hero und wird beim Scrollen
+    kompakter und klar abgegrenzt. Der Zustand kommt über `data-scrolled` am
+    <html>, gesetzt von der Bewegungs-Laufzeit. Ohne JavaScript bleibt der
+    Kopfbereich im Ausgangszustand – voll benutzbar und gut lesbar.
+  */
+  .header-shell {
+    background-color: color-mix(in srgb, var(--color-void) 74%, transparent);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    border-bottom: 1px solid transparent;
+    transition:
+      background-color 0.35s var(--ease-out-soft),
+      border-color 0.35s var(--ease-out-soft),
+      box-shadow 0.35s var(--ease-out-soft);
+  }
+
+  html[data-scrolled='true'] .header-shell {
+    background-color: color-mix(in srgb, var(--color-void) 90%, transparent);
+    border-bottom-color: var(--color-line);
+    box-shadow: var(--shadow-card);
+  }
+
+  .header-bar {
+    height: 4.5rem;
+    transition: height 0.35s var(--ease-out-soft);
+  }
+
+  html[data-scrolled='true'] .header-bar {
+    height: 4rem;
+  }
+
+  .header-edge {
+    opacity: 0;
+    transition: opacity 0.35s var(--ease-out-soft);
+  }
+
+  html[data-scrolled='true'] .header-edge {
+    opacity: 0.75;
   }
 }

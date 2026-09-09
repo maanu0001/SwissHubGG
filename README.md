@@ -153,6 +153,7 @@ DATABASE_URL_TEST="postgresql://swisshub:passwort@localhost:5432/swisshub_test?s
 | [docs/backup.md](docs/backup.md) | Sicherung, Wiederherstellung, Aufbewahrung |
 | [docs/inhalte.md](docs/inhalte.md) | Anleitung für Redaktion und Administration |
 | [docs/architektur.md](docs/architektur.md) | Aufbau, Datenmodell, Sicherheit, Performance |
+| [docs/design.md](docs/design.md) | Designsystem, Bewegung, Barrierefreiheit im Frontend |
 
 ---
 

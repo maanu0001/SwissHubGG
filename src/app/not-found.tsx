@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { LogoMark } from '@/components/brand/Logo';
+import { LogoStage } from '@/components/brand/Logo';
 import { Icons } from '@/components/ui/Icon';
+import { TechBackdrop } from '@/components/visual/TechBackdrop';
 
 export const metadata: Metadata = {
   title: 'Seite nicht gefunden',
@@ -11,24 +12,27 @@ export const metadata: Metadata = {
 /** Individuelle 404-Seite mit sinnvollen Anschlusszielen. */
 export default function NotFound() {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center px-6 py-20 text-center">
-      <LogoMark size={64} priority />
-      <p className="mt-8 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-brand-text)]">
-        Fehler 404
-      </p>
-      <h1 className="heading-lg mt-3">Diese Seite gibt es nicht</h1>
-      <p className="lead mt-4 max-w-lg">
+    <main className="relative isolate flex min-h-dvh flex-col items-center justify-center overflow-hidden px-6 py-20 text-center">
+      <TechBackdrop variant="hero" />
+
+      <div className="relative">
+        <LogoStage size="compact" priority />
+      </div>
+
+      <p className="meta-brand relative mt-8">Fehler 404</p>
+      <h1 className="heading-lg relative mt-3">Diese Seite gibt es nicht</h1>
+      <p className="lead relative mx-auto mt-4 max-w-lg">
         Vielleicht wurde die Seite verschoben oder der Link ist nicht mehr aktuell. Von hier kommst du weiter:
       </p>
 
-      <nav aria-label="Weiterführende Links" className="mt-8 flex flex-wrap justify-center gap-3">
-        <Link href="/" className="btn-primary">
+      <nav aria-label="Weiterführende Links" className="relative mt-9 flex flex-wrap justify-center gap-3">
+        <Link href="/" className="btn-primary btn-lg">
           Zur Startseite
         </Link>
-        <Link href="/turniere" className="btn-secondary">
+        <Link href="/turniere" className="btn-secondary btn-lg">
           Turniere
         </Link>
-        <Link href="/kontakt" className="btn-secondary">
+        <Link href="/kontakt" className="btn-secondary btn-lg">
           Kontakt
           <Icons.arrowRight size={15} />
         </Link>

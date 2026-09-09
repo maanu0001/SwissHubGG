@@ -8,22 +8,35 @@ import { getSettings } from '@/lib/settings';
 import { safeUrl } from '@/lib/sanitize';
 
 /**
- * Sticky Kopfbereich mit leichter Transparenz, Blur und dezenter Abgrenzung.
- * Rendert serverseitig; nur die mobile Navigation ist interaktiv.
+ * Kopfbereich der Website.
+ *
+ * Startet transparent über dem Hero und wird beim Scrollen kompakter, dunkler
+ * und klar abgegrenzt. Der Zustandswechsel läuft über das Attribut
+ * `data-scrolled` am Wurzelelement, das die zentrale Bewegungs-Laufzeit setzt –
+ * dadurch bleibt der Kopfbereich vollständig serverseitig gerendert.
+ *
+ * Interaktiv ist nur die mobile Navigation.
  */
 export async function SiteHeader() {
   const [items, settings] = await Promise.all([getNavigation('main'), getSettings()]);
   const discordUrl = safeUrl(settings.discordInviteUrl);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[color-mix(in_srgb,var(--color-canvas)_82%,transparent)] backdrop-blur-md">
-      <div className="shell flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="shrink-0 rounded-lg" aria-label="SwissHub Startseite">
-          <LogoLockup size={34} priority />
+    <header className="header-shell sticky top-0 z-40">
+      {/* Feine Markenkante, die erst beim Scrollen sichtbar wird. */}
+      <span aria-hidden="true" className="hairline-brand header-edge absolute inset-x-0 bottom-0" />
+
+      <div className="shell header-bar flex items-center justify-between gap-4">
+        <Link
+          href="/"
+          className="group shrink-0 rounded-lg"
+          aria-label={`${settings.siteName} Startseite`}
+        >
+          <LogoLockup size={36} priority interactive />
         </Link>
 
         <nav className="hidden md:block" aria-label="Hauptnavigation">
-          <ul className="flex items-center gap-1">
+          <ul className="flex items-center gap-0.5">
             {items.map((item) => (
               <li key={item.id}>
                 <NavLink
@@ -50,7 +63,7 @@ export async function SiteHeader() {
               Discord beitreten
             </a>
           ) : null}
-          <MobileNav items={items} discordUrl={discordUrl} />
+          <MobileNav items={items} discordUrl={discordUrl} siteName={settings.siteName} motto={settings.motto} />
         </div>
       </div>
     </header>

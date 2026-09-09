@@ -53,15 +53,16 @@ export function ContactForm({
         ref={feedbackRef}
         tabIndex={-1}
         role="status"
-        className="card border-[color-mix(in_srgb,var(--color-success)_50%,transparent)] p-8 text-center"
+        className="card relative overflow-hidden border-[color-mix(in_srgb,var(--color-success)_50%,transparent)] p-8 text-center sm:p-10"
       >
-        <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-success)_18%,transparent)] text-[var(--color-success-text)]">
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-dots opacity-30" />
+        <span className="relative mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--color-success)_45%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_18%,transparent)] text-[var(--color-success-text)]">
           <Icons.check size={24} />
         </span>
-        <h2 className="text-lg font-bold text-[var(--color-ink)]">Nachricht gesendet</h2>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">{state.message}</p>
+        <h2 className="relative text-lg font-bold text-[var(--color-ink)]">Nachricht gesendet</h2>
+        <p className="relative mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">{state.message}</p>
         {state.reference ? (
-          <p className="mt-4 text-sm text-[var(--color-ink-muted)]">
+          <p className="relative mt-5 text-sm text-[var(--color-ink-muted)]">
             Deine Referenz:{' '}
             <span className="font-mono font-semibold text-[var(--color-ink)]">{state.reference}</span>
           </p>
@@ -311,8 +312,21 @@ export function ContactForm({
         </div>
 
         <div className="flex flex-wrap items-center gap-4 pt-1">
-          <button type="submit" className="btn-primary" disabled={pending}>
-            {pending ? 'Wird gesendet …' : 'Nachricht senden'}
+          <button type="submit" className="btn-primary btn-lg" disabled={pending}>
+            {pending ? (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="h-4 w-4 animate-spin rounded-full border-2 border-white/35 border-t-white"
+                />
+                Wird gesendet …
+              </>
+            ) : (
+              <>
+                Nachricht senden
+                <Icons.arrowRight size={15} />
+              </>
+            )}
           </button>
           <p className="text-xs text-[var(--color-ink-subtle)]">
             Mit <span className="text-[var(--color-brand-text)]">*</span> markierte Felder sind Pflichtfelder.

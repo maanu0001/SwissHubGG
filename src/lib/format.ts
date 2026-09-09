@@ -63,6 +63,46 @@ export function formatDateRange(from: Date | string | null, to: Date | string | 
   return start === end ? start : `${start} – ${end}`;
 }
 
+const dayInZoneFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+/** Kalendertag in Schweizer Zeit als UTC-Mitternacht – Basis für Tagesdifferenzen. */
+function zonedDayStart(value: Date): number {
+  return Date.parse(`${dayInZoneFormatter.format(value)}T00:00:00Z`);
+}
+
+/**
+ * Ganze Tage bis zu einem Termin, gerechnet in Schweizer Kalendertagen.
+ * Negative Werte liegen in der Vergangenheit.
+ */
+export function daysUntil(value: Date | string | null | undefined, now: Date = new Date()): number | null {
+  if (!value) return null;
+  const target = zonedDayStart(new Date(value));
+  const today = zonedDayStart(now);
+  if (!Number.isFinite(target) || !Number.isFinite(today)) return null;
+  return Math.round((target - today) / 86_400_000);
+}
+
+/**
+ * Wahrheitsgemässe Angabe zum Start eines Turniers.
+ *
+ * Bewusst auf Tagesebene und serverseitig berechnet: kein tickender Zähler,
+ * kein zusätzliches JavaScript und keine Angabe, die genauer wirkt als sie ist.
+ * Ohne gepflegten Termin gibt es keine Ausgabe.
+ */
+export function formatCountdown(value: Date | string | null | undefined, now: Date = new Date()): string | null {
+  const days = daysUntil(value, now);
+  if (days === null || days < 0) return null;
+  if (days === 0) return 'Heute';
+  if (days === 1) return 'Morgen';
+  if (days <= 60) return `in ${days} Tagen`;
+  return null;
+}
+
 /** Für <time datetime="…"> – maschinenlesbar und zeitzonensicher. */
 export function toIsoString(value: Date | string | null | undefined): string | undefined {
   if (!value) return undefined;

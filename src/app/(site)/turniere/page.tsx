@@ -4,7 +4,8 @@ import { TournamentStatus } from '@prisma/client';
 import { TournamentCard } from '@/components/site/TournamentCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { JsonLd } from '@/components/site/JsonLd';
-import { Icons } from '@/components/ui/Icon';
+import { PageHero } from '@/components/site/PageHero';
+import { revealProps } from '@/components/visual/Reveal';
 import { getTournamentGames, getVisiblePublicTournaments, PAST_STATUSES, UPCOMING_STATUSES } from '@/lib/content/queries';
 import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 import { getSettings } from '@/lib/settings';
@@ -45,6 +46,13 @@ function matchesStatus(status: TournamentStatus, filter: string): boolean {
   return true;
 }
 
+/** Einheitliche Darstellung der Filterschaltflächen. */
+function filterClass(active: boolean): string {
+  return active
+    ? 'badge border-[color-mix(in_srgb,var(--color-brand)_65%,transparent)] bg-[var(--color-brand)] px-4 py-2 font-semibold text-white shadow-[var(--shadow-card)]'
+    : 'badge-neutral px-4 py-2 transition-[color,border-color,background-color] duration-200 hover:border-[var(--color-line-strong)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)]';
+}
+
 export default async function TournamentsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const statusFilter = STATUS_FILTERS.some((filter) => filter.key === params.status) ? (params.status as string) : 'alle';
@@ -79,6 +87,8 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
     return aUpcoming ? aTime - bTime : bTime - aTime;
   });
 
+  const running = all.filter((tournament) => tournament.status === TournamentStatus.RUNNING).length;
+
   const buildHref = (nextStatus: string, nextGame: string) => {
     const query = new URLSearchParams();
     if (nextStatus !== 'alle') query.set('status', nextStatus);
@@ -93,23 +103,21 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
     <>
       <JsonLd data={breadcrumbJsonLd([{ name: 'Start', path: '/' }, { name: 'Turniere', path: '/turniere' }])} />
 
-      <section className="border-b border-[var(--color-line)] hero-veil">
-        <div className="shell py-14 sm:py-20">
-          <p className="eyebrow">
-            <Icons.tournament size={14} />
-            Turniere & Events
-          </p>
-          <h1 className="heading-xl max-w-2xl">Turniere der Schweizer Gaming-Community</h1>
-          <p className="lead mt-4 max-w-2xl">
-            SwissHub organisiert regelmässig Turniere in verschiedenen Spielen – vom lockeren Community-Cup bis zum
-            grösseren Wettbewerb. Alle Ausschreibungen, laufenden Turniere und das vollständige Archiv findest du hier.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Turniere & Events"
+        icon="tournament"
+        title="Turniere der Schweizer Gaming-Community"
+        lead="SwissHub organisiert regelmässig Turniere in verschiedenen Spielen – vom lockeren Community-Cup bis zum grösseren Wettbewerb. Alle Ausschreibungen, laufenden Turniere und das vollständige Archiv findest du hier."
+        signals={
+          running > 0
+            ? [{ label: 'Aktuell', value: running === 1 ? '1 Turnier läuft' : `${running} Turniere laufen`, live: true }]
+            : undefined
+        }
+      />
 
       <div className="shell section">
-        <div className="mb-8 space-y-4">
-          <nav aria-label="Nach Status filtern">
+        <div className="mb-9 space-y-4">
+          <nav aria-label="Nach Status filtern" {...revealProps('up', 0)}>
             <ul className="flex flex-wrap gap-2">
               {statusFilters.map((filter) => {
                 const active = filter.key === statusFilter;
@@ -118,11 +126,7 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
                     <Link
                       href={buildHref(filter.key, gameFilter)}
                       aria-current={active ? 'true' : undefined}
-                      className={
-                        active
-                          ? 'badge border-[color-mix(in_srgb,var(--color-brand)_60%,transparent)] bg-[var(--color-brand)] px-3.5 py-1.5 font-semibold text-white'
-                          : 'badge-neutral px-3.5 py-1.5 hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink)]'
-                      }
+                      className={filterClass(active)}
                     >
                       {filter.label}
                     </Link>
@@ -133,7 +137,7 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
           </nav>
 
           {games.length > 0 ? (
-            <nav aria-label="Nach Spiel filtern">
+            <nav aria-label="Nach Spiel filtern" {...revealProps('up', 1)}>
               <ul className="flex flex-wrap gap-2">
                 <li>
                   <Link
@@ -141,8 +145,8 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
                     aria-current={gameFilter === 'alle' ? 'true' : undefined}
                     className={
                       gameFilter === 'alle'
-                        ? 'badge border-[var(--color-line-strong)] bg-[var(--color-surface-hover)] px-3 py-1 font-semibold text-[var(--color-ink)]'
-                        : 'badge-neutral px-3 py-1'
+                        ? 'badge-tech border-[var(--color-line-strong)] bg-[var(--color-surface-hover)] px-3 py-1.5 text-[var(--color-ink)]'
+                        : 'badge-tech px-3 py-1.5 transition-colors hover:text-[var(--color-ink)]'
                     }
                   >
                     Alle Spiele
@@ -155,8 +159,8 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
                       aria-current={gameFilter === game.slug ? 'true' : undefined}
                       className={
                         gameFilter === game.slug
-                          ? 'badge border-[var(--color-line-strong)] bg-[var(--color-surface-hover)] px-3 py-1 font-semibold text-[var(--color-ink)]'
-                          : 'badge-neutral px-3 py-1'
+                          ? 'badge-tech border-[var(--color-line-strong)] bg-[var(--color-surface-hover)] px-3 py-1.5 text-[var(--color-ink)]'
+                          : 'badge-tech px-3 py-1.5 transition-colors hover:text-[var(--color-ink)]'
                       }
                     >
                       {game.shortName ?? game.name}
@@ -168,12 +172,13 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
           ) : null}
         </div>
 
-        <p className="mb-6 text-sm text-[var(--color-ink-subtle)]" role="status">
+        <p className="meta mb-7" role="status">
           {sorted.length === 1 ? '1 Turnier gefunden' : `${sorted.length} Turniere gefunden`}
         </p>
 
         {sorted.length === 0 ? (
           <EmptyState
+            icon="tournament"
             title={all.length === 0 ? 'Noch keine Turniere veröffentlicht' : 'Keine Turniere für diese Auswahl'}
             description={
               all.length === 0
@@ -189,7 +194,7 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
         ) : (
           <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {sorted.map((tournament, index) => (
-              <li key={tournament.id}>
+              <li key={tournament.id} {...revealProps('up', index)}>
                 <TournamentCard tournament={tournament} priority={index < 3} />
               </li>
             ))}

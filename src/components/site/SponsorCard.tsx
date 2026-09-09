@@ -4,9 +4,11 @@ import { safeUrl } from '@/lib/sanitize';
 import { formatDateRange } from '@/lib/format';
 
 /**
- * Sponsorendarstellung mit einheitlicher Logo-Behandlung: Logos werden
- * proportional in eine feste Fläche eingepasst und nie verzerrt oder
- * beschnitten.
+ * Sponsorendarstellung.
+ *
+ * Bewusst ruhig und vertrauenswürdig gehalten: Logos werden proportional in
+ * eine feste Fläche eingepasst, nie verzerrt, beschnitten, eingefärbt oder mit
+ * Effekten überlagert. Bewegung beschränkt sich auf den Rahmen um das Logo.
  */
 
 type Sponsor = {
@@ -55,12 +57,18 @@ export function SponsorCard({ sponsor, showDescription = true }: { sponsor: Spon
   const isFormer = sponsor.status === 'FORMER';
 
   return (
-    <article className="card flex h-full flex-col p-5">
-      <div className="flex h-20 items-center justify-start">
-        <SponsorLogo sponsor={sponsor} />
+    <article className="card-interactive group relative flex h-full flex-col p-5 sm:p-6">
+      <span aria-hidden="true" className="accent-line absolute inset-x-0 top-0 h-px bg-[var(--color-brand)]" />
+
+      {/* Ruhige Logofläche mit konstanter Höhe – kein Springen im Raster. */}
+      <div className="relative flex h-24 items-center justify-center rounded-lg border border-[var(--color-line)] bg-[var(--color-void)] px-4">
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-lg tech-grid-fine opacity-50" />
+        <span className="relative">
+          <SponsorLogo sponsor={sponsor} />
+        </span>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-5 flex flex-wrap items-center gap-2">
         <h3 className="text-base font-semibold text-[var(--color-ink)]">{sponsor.name}</h3>
         {sponsor.tier ? <span className="badge-brand">{sponsor.tier.name}</span> : null}
         {isFormer ? <span className="badge-neutral">Ehemaliger Partner</span> : null}
@@ -70,14 +78,12 @@ export function SponsorCard({ sponsor, showDescription = true }: { sponsor: Spon
         <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">{sponsor.shortDescription}</p>
       ) : null}
 
-      {(sponsor.partnerSince || sponsor.partnerUntil) && (
-        <p className="mt-3 text-xs text-[var(--color-ink-subtle)]">
-          Partnerschaft: {formatDateRange(sponsor.partnerSince, sponsor.partnerUntil)}
-        </p>
-      )}
+      {sponsor.partnerSince || sponsor.partnerUntil ? (
+        <p className="meta mt-4">Partnerschaft {formatDateRange(sponsor.partnerSince, sponsor.partnerUntil)}</p>
+      ) : null}
 
       {sponsor.tournaments && sponsor.tournaments.length > 0 ? (
-        <p className="mt-2 text-xs text-[var(--color-ink-subtle)]">
+        <p className="mt-2 text-xs leading-relaxed text-[var(--color-ink-subtle)]">
           Unterstützte Turniere: {sponsor.tournaments.map((entry) => entry.tournament.title).join(', ')}
         </p>
       ) : null}
@@ -88,7 +94,7 @@ export function SponsorCard({ sponsor, showDescription = true }: { sponsor: Spon
           target="_blank"
           rel="noopener noreferrer sponsored"
           data-track-sponsor={sponsor.slug}
-          className="mt-auto inline-flex items-center gap-1.5 pt-4 text-sm font-semibold text-[var(--color-brand-text)] hover:text-[var(--color-ink)]"
+          className="link-arrow mt-auto pt-5 after:absolute after:inset-0"
         >
           Website besuchen
           <Icons.external size={13} />

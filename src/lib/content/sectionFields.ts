@@ -40,6 +40,7 @@ const TONE_OPTIONS: SelectOption[] = [
   { value: 'default', label: 'Standard' },
   { value: 'muted', label: 'Abgesetzte Fläche' },
   { value: 'accent', label: 'Akzentfläche' },
+  { value: 'tech', label: 'Technische Fläche' },
 ];
 
 const COLUMN_OPTIONS: SelectOption[] = [

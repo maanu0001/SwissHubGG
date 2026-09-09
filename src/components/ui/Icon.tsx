@@ -146,6 +146,30 @@ export const Icons = {
       <path d="M18 6 6 18M6 6l12 12" />
     </Svg>
   ),
+  clock: (props: IconProps) => (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </Svg>
+  ),
+  users: (props: IconProps) => (
+    <Svg {...props}>
+      <path d="M16 19v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V19" />
+      <circle cx="9" cy="7" r="3.2" />
+      <path d="M22 19v-1.5a4 4 0 0 0-3-3.87M16 4.13a4 4 0 0 1 0 5.74" />
+    </Svg>
+  ),
+  bolt: (props: IconProps) => (
+    <Svg {...props}>
+      <path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5Z" />
+    </Svg>
+  ),
+  mail: (props: IconProps) => (
+    <Svg {...props}>
+      <rect x="2.5" y="4.5" width="19" height="15" rx="2.5" />
+      <path d="m3.5 6.5 8.5 6 8.5-6" />
+    </Svg>
+  ),
 } as const;
 
 export type IconName = keyof typeof Icons;

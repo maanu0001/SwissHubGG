@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { ContactForm } from '@/components/site/ContactForm';
 import { JsonLd } from '@/components/site/JsonLd';
 import { Icons } from '@/components/ui/Icon';
+import { PageHero } from '@/components/site/PageHero';
+import { Reveal } from '@/components/visual/Reveal';
 import { prisma } from '@/lib/db';
 import { env } from '@/lib/env';
 import { getSettings } from '@/lib/settings';
@@ -47,22 +49,18 @@ export default async function ContactPage({ searchParams }: PageProps) {
     <>
       <JsonLd data={breadcrumbJsonLd([{ name: 'Start', path: '/' }, { name: 'Kontakt', path: '/kontakt' }])} />
 
-      <section className="border-b border-[var(--color-line)] hero-veil">
-        <div className="shell py-14 sm:py-20">
-          <p className="eyebrow">
-            <Icons.chat size={14} />
-            Kontakt
-          </p>
-          <h1 className="heading-xl max-w-2xl">Schreib uns</h1>
-          <p className="lead mt-4 max-w-2xl">
-            Ob Partnerschaft, Sponsoring, Medienanfrage oder ein technisches Problem auf der Website – hier bist du
-            richtig. Wir melden uns so schnell wie möglich zurück.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Kontakt"
+        icon="mail"
+        title="Schreib uns"
+        lead="Ob Partnerschaft, Sponsoring, Medienanfrage oder ein technisches Problem auf der Website – hier bist du richtig. Wir melden uns so schnell wie möglich zurück."
+      />
 
       <div className="shell section grid gap-10 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] lg:items-start">
-        <div className="panel">
+        <Reveal className="panel corner-ticks relative overflow-hidden">
+          <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-grid-fine opacity-40" />
+          <div className="relative">
+          <p className="meta-brand mb-2">Schriftliche Anfrage</p>
           <h2 className="heading-md mb-6">Kontaktformular</h2>
           <ContactForm
             categories={categories}
@@ -71,10 +69,12 @@ export default async function ContactPage({ searchParams }: PageProps) {
             maxUploadMb={config.MAX_UPLOAD_MB}
             captchaSiteKey={settings.contactCaptchaEnabled && config.captchaConfigured ? config.TURNSTILE_SITE_KEY : null}
           />
-        </div>
+          </div>
+        </Reveal>
 
         <aside className="space-y-5 lg:sticky lg:top-24">
-          <div className="panel">
+          <div className="panel border-[color-mix(in_srgb,var(--color-brand)_40%,var(--color-line))] bg-[var(--color-brand-soft)]">
+            <p className="meta-brand mb-3">Community-Support</p>
             <h2 className="mb-2 flex items-center gap-2 text-base font-semibold text-[var(--color-ink)]">
               <Icons.discord size={18} className="text-[var(--color-brand-text)]" />
               Support über Discord
@@ -103,6 +103,7 @@ export default async function ContactPage({ searchParams }: PageProps) {
 
           {settings.contactEmail ? (
             <div className="panel">
+              <p className="meta mb-3">Direkter Draht</p>
               <h2 className="mb-2 text-base font-semibold text-[var(--color-ink)]">E-Mail</h2>
               <p className="muted mb-3">Du schreibst uns lieber direkt?</p>
               <a
@@ -116,10 +117,10 @@ export default async function ContactPage({ searchParams }: PageProps) {
 
           {categories.length > 0 ? (
             <div className="panel">
-              <h2 className="mb-3 text-base font-semibold text-[var(--color-ink)]">Kategorien</h2>
+              <h2 className="mb-4 text-base font-semibold text-[var(--color-ink)]">Kategorien</h2>
               <dl className="space-y-3">
                 {categories.map((category) => (
-                  <div key={category.key}>
+                  <div key={category.key} className="border-l border-[var(--color-line-strong)] pl-3">
                     <dt className="text-sm font-medium text-[var(--color-ink)]">{category.label}</dt>
                     {category.description ? (
                       <dd className="text-xs leading-relaxed text-[var(--color-ink-subtle)]">{category.description}</dd>

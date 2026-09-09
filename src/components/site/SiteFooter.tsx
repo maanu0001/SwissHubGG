@@ -10,7 +10,12 @@ import { SOCIAL_PLATFORM_META } from '@/components/site/socialMeta';
  * Fussbereich mit Markenblock, gepflegter Navigation, Social-Profilen und
  * rechtlichen Hinweisen. Alle Inhalte stammen aus dem CMS bzw. den globalen
  * Einstellungen – es gibt keine fest verdrahteten Platzhalter.
+ *
+ * Der Abschluss ist bewusst kompakt gehalten: kein Linkteppich, sondern drei
+ * klare Spalten und ein ruhiger technischer Hintergrund.
  */
+const LEGAL_HREFS = ['/impressum', '/datenschutz', '/nutzungsbedingungen', '/cookies'];
+
 export async function SiteFooter() {
   const [settings, footerItems, accounts, sponsors] = await Promise.all([
     getSettings(),
@@ -24,20 +29,32 @@ export async function SiteFooter() {
   const hostingPartner = sponsors.find((sponsor) => sponsor.tier?.key === 'hosting');
 
   return (
-    <footer className="mt-auto border-t border-[var(--color-line)] bg-[var(--color-surface)]">
-      <div className="shell py-12">
-        <div className="grid gap-10 md:grid-cols-[minmax(0,1.4fr)_repeat(2,minmax(0,1fr))]">
+    <footer className="relative mt-auto overflow-hidden border-t border-[var(--color-line)] bg-[var(--color-void)]">
+      {/* Dezente technische Grafik als Abschluss der Seite. */}
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-grid-fine opacity-50" />
+      <span
+        aria-hidden="true"
+        className="glow-orb glow-brand pointer-events-none -left-32 -top-40 h-[26rem] w-[26rem] opacity-20"
+      />
+
+      <div className="shell relative py-14 sm:py-16">
+        <div className="grid gap-10 md:grid-cols-[minmax(0,1.5fr)_repeat(2,minmax(0,1fr))] lg:gap-14">
           <div>
-            <LogoLockup size={36} />
+            <LogoLockup size={40} />
+
+            {settings.motto ? (
+              <p className="mt-5 flex items-center gap-2.5 text-base font-semibold text-[var(--color-brand-text)]">
+                <span aria-hidden="true" className="h-px w-6 bg-[var(--color-brand)]" />
+                «{settings.motto}»
+              </p>
+            ) : null}
+
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-[var(--color-ink-muted)]">
               {settings.footerText}
             </p>
-            {settings.motto ? (
-              <p className="mt-3 text-sm font-semibold text-[var(--color-brand-text)]">«{settings.motto}»</p>
-            ) : null}
 
             {accounts.length > 0 ? (
-              <ul className="mt-6 flex flex-wrap gap-2">
+              <ul className="mt-7 flex flex-wrap gap-2">
                 {accounts.map((account) => {
                   const meta = SOCIAL_PLATFORM_META[account.platform];
                   const PlatformIcon = meta.icon;
@@ -51,10 +68,12 @@ export async function SiteFooter() {
                         target="_blank"
                         rel="noopener noreferrer"
                         data-track-social={account.platform}
-                        className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-raised)] text-[var(--color-ink-muted)] transition-colors hover:border-[var(--color-line-strong)] hover:text-[var(--color-ink)]"
+                        className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-ink-muted)] transition-[color,border-color,transform,background-color] duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--color-brand)_50%,transparent)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-brand-text)]"
                       >
                         <PlatformIcon size={18} />
-                        <span className="sr-only">{meta.label}: {account.handle}</span>
+                        <span className="sr-only">
+                          {meta.label}: {account.handle}
+                        </span>
                       </a>
                     </li>
                   );
@@ -64,20 +83,24 @@ export async function SiteFooter() {
           </div>
 
           <nav aria-labelledby="footer-nav-heading">
-            <h2 id="footer-nav-heading" className="mb-4 text-sm font-semibold text-[var(--color-ink)]">
+            <h2 id="footer-nav-heading" className="meta mb-5">
               Community
             </h2>
-            <ul className="space-y-2.5">
+            <ul className="space-y-3">
               {footerItems
-                .filter((item) => !['/impressum', '/datenschutz', '/nutzungsbedingungen'].includes(item.href))
+                .filter((item) => !LEGAL_HREFS.includes(item.href))
                 .map((item) => (
                   <li key={item.id}>
                     <Link
                       href={item.href}
                       target={item.openInNewTab ? '_blank' : undefined}
                       rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
-                      className="text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
+                      className="group inline-flex items-center gap-2 text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
                     >
+                      <span
+                        aria-hidden="true"
+                        className="h-px w-0 bg-[var(--color-brand)] transition-[width] duration-300 ease-[var(--ease-out-soft)] group-hover:w-3"
+                      />
                       {item.label}
                     </Link>
                   </li>
@@ -86,35 +109,48 @@ export async function SiteFooter() {
           </nav>
 
           <div>
-            <h2 className="mb-4 text-sm font-semibold text-[var(--color-ink)]">Kontakt & Rechtliches</h2>
-            <ul className="space-y-2.5">
+            <h2 className="meta mb-5">Kontakt &amp; Rechtliches</h2>
+            <ul className="space-y-3">
               {settings.contactEmail ? (
                 <li>
                   <a
                     href={`mailto:${settings.contactEmail}`}
-                    className="text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
+                    className="inline-flex items-center gap-2 text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
                   >
+                    <Icons.mail size={14} className="text-[var(--color-ink-subtle)]" />
                     {settings.contactEmail}
                   </a>
                 </li>
               ) : null}
               <li>
-                <Link href="/kontakt" className="text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]">
+                <Link
+                  href="/kontakt"
+                  className="text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
+                >
                   Kontaktformular
                 </Link>
               </li>
               <li>
-                <Link href="/impressum" className="text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]">
+                <Link
+                  href="/impressum"
+                  className="text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
+                >
                   Impressum
                 </Link>
               </li>
               <li>
-                <Link href="/datenschutz" className="text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]">
+                <Link
+                  href="/datenschutz"
+                  className="text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
+                >
                   Datenschutz
                 </Link>
               </li>
               <li>
-                <Link href="/cookies" className="text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]">
+                <Link
+                  href="/cookies"
+                  className="text-sm text-[var(--color-ink-muted)] transition-colors hover:text-[var(--color-ink)]"
+                >
                   Cookies
                 </Link>
               </li>
@@ -126,7 +162,7 @@ export async function SiteFooter() {
                 target="_blank"
                 rel="noopener noreferrer"
                 data-track-social="DISCORD"
-                className="btn-secondary mt-6 w-full sm:w-auto"
+                className="btn-primary mt-7 w-full sm:w-auto"
               >
                 <Icons.discord size={17} />
                 Discord beitreten
@@ -135,29 +171,34 @@ export async function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-[var(--color-line)] pt-6 text-xs text-[var(--color-ink-subtle)] sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} {settings.legalEntityName || 'SwissHub'}. Alle Rechte vorbehalten.</p>
+        <div className="mt-12">
+          <span aria-hidden="true" className="hairline block" />
+          <div className="mt-6 flex flex-col gap-3 text-xs text-[var(--color-ink-subtle)] sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              © {year} {settings.legalEntityName || 'SwissHub'}. Alle Rechte vorbehalten.
+            </p>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            {hostingPartner ? (
-              <p>
-                Hosting-Partner:{' '}
-                {safeUrl(hostingPartner.websiteUrl) ? (
-                  <a
-                    href={safeUrl(hostingPartner.websiteUrl) as string}
-                    target="_blank"
-                    rel="noopener noreferrer sponsored"
-                    data-track-sponsor={hostingPartner.slug}
-                    className="text-[var(--color-ink-muted)] underline underline-offset-2 hover:text-[var(--color-ink)]"
-                  >
-                    {hostingPartner.name}
-                  </a>
-                ) : (
-                  <span className="text-[var(--color-ink-muted)]">{hostingPartner.name}</span>
-                )}
-              </p>
-            ) : null}
-            {settings.footerNote ? <p>{settings.footerNote}</p> : null}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {hostingPartner ? (
+                <p>
+                  Hosting-Partner:{' '}
+                  {safeUrl(hostingPartner.websiteUrl) ? (
+                    <a
+                      href={safeUrl(hostingPartner.websiteUrl) as string}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                      data-track-sponsor={hostingPartner.slug}
+                      className="text-[var(--color-ink-muted)] underline underline-offset-2 hover:text-[var(--color-ink)]"
+                    >
+                      {hostingPartner.name}
+                    </a>
+                  ) : (
+                    <span className="text-[var(--color-ink-muted)]">{hostingPartner.name}</span>
+                  )}
+                </p>
+              ) : null}
+              {settings.footerNote ? <p>{settings.footerNote}</p> : null}
+            </div>
           </div>
         </div>
       </div>

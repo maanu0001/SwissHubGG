@@ -10,13 +10,19 @@ import { Field } from '@/components/admin/ui';
 type MediaSelectFieldProps = {
   label: string;
   name: string;
+  /**
+   * Abweichende `id`, falls dasselbe Feld mehrfach auf einer Seite vorkommt
+   * (z. B. je Teammitglied). Ohne Angabe dient der Feldname als `id`.
+   */
+  id?: string;
   media: { id: string; originalName: string; title: string | null; storageKey: string }[];
   defaultValue?: string | null;
   disabled?: boolean;
   hint?: string;
 };
 
-export function MediaSelectField({ label, name, media, defaultValue, disabled, hint }: MediaSelectFieldProps) {
+export function MediaSelectField({ label, name, id, media, defaultValue, disabled, hint }: MediaSelectFieldProps) {
+  const fieldId = id ?? name;
   const selected = media.find((asset) => asset.id === defaultValue);
 
   return (
@@ -35,8 +41,8 @@ export function MediaSelectField({ label, name, media, defaultValue, disabled, h
       ) : null}
 
       <div className="min-w-0 flex-1">
-        <Field label={label} name={name} hint={hint}>
-          <select id={name} name={name} defaultValue={defaultValue ?? ''} disabled={disabled} className="select">
+        <Field label={label} name={fieldId} errorKey={name} hint={hint}>
+          <select id={fieldId} name={name} defaultValue={defaultValue ?? ''} disabled={disabled} className="select">
             <option value="">Kein Medium</option>
             {media.map((asset) => (
               <option key={asset.id} value={asset.id}>

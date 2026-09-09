@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LogoLockup } from '@/components/brand/Logo';
+import { TechBackdrop } from '@/components/visual/TechBackdrop';
 import { Icons } from '@/components/ui/Icon';
 import { env } from '@/lib/env';
 import { getCurrentUser } from '@/lib/auth/session';
@@ -52,13 +53,18 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
     : '/admin/login/start';
 
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <main className="relative isolate flex min-h-dvh items-center justify-center overflow-hidden px-4 py-12">
+      <TechBackdrop variant="hero" />
+
+      <div className="relative w-full max-w-md">
         <div className="mb-8 flex justify-center">
           <LogoLockup size={44} priority suffix="Admin-Dashboard" />
         </div>
 
-        <div className="panel">
+        <div className="panel corner-ticks relative overflow-hidden">
+          <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-grid-fine opacity-40" />
+          <div className="relative">
+          <p className="meta-brand mb-2">Zugang nur für das Team</p>
           <h1 className="heading-md">Anmeldung</h1>
           <p className="muted mt-2">
             Das Dashboard steht ausschliesslich berechtigten Mitgliedern des SwissHub-Teams offen. Die Anmeldung
@@ -76,7 +82,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
           ) : null}
 
           {config.discordConfigured ? (
-            <a href={startHref} className="btn-primary mt-6 w-full" rel="nofollow">
+            <a href={startHref} className="btn-primary btn-lg mt-6 w-full" rel="nofollow">
               <Icons.discord size={18} />
               Mit Discord anmelden
             </a>
@@ -91,6 +97,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
             Es werden nur dein Discord-Profil und deine Rollen im SwissHub-Server gelesen. Eine Anmeldung allein
             erteilt keine Rechte – diese vergibt ein Superadmin im Dashboard.
           </p>
+          </div>
         </div>
 
         <p className="mt-6 text-center text-sm">

@@ -8,10 +8,13 @@ import { SponsorLogo } from '@/components/site/SponsorCard';
 import { TOURNAMENT_STATUS_META } from '@/components/site/TournamentCard';
 import { JsonLd } from '@/components/site/JsonLd';
 import { Icons } from '@/components/ui/Icon';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { getTournamentBySlug, isTournamentPubliclyVisible } from '@/lib/content/queries';
 import { breadcrumbJsonLd, buildMetadata, tournamentJsonLd } from '@/lib/seo';
 import { env } from '@/lib/env';
-import { formatDate, formatDateRange, formatDateTime } from '@/lib/format';
+import { formatCountdown, formatDate, formatDateRange, formatDateTime } from '@/lib/format';
+import { TechBackdrop } from '@/components/visual/TechBackdrop';
+import { Reveal, revealProps } from '@/components/visual/Reveal';
 import { renderRichText, safeUrl } from '@/lib/sanitize';
 import { resolveEmbed } from '@/lib/content/embeds';
 import { getSettings } from '@/lib/settings';
@@ -57,6 +60,23 @@ export default async function TournamentDetailPage({ params }: PageProps) {
   const recap = tournament.recapUrl ? resolveEmbed(tournament.recapUrl, host) : null;
 
   const registrationOpen = tournament.status === 'REGISTRATION_OPEN';
+
+  // Nur bei einem echten, in der Zukunft liegenden Termin.
+  const countdown =
+    tournament.status === 'RUNNING' || tournament.status === 'COMPLETED' || tournament.status === 'CANCELLED'
+      ? null
+      : formatCountdown(tournament.startsAt);
+
+  // Hat die Hauptspalte überhaupt Inhalt? Sonst entstünde eine leere Fläche.
+  const hasDetails = Boolean(
+    tournament.description ||
+      tournament.rules ||
+      (streamEmbed && streamEmbed.kind !== 'link') ||
+      tournament.results.length > 0 ||
+      tournament.teams.length > 0 ||
+      tournament.media.length > 0 ||
+      (recap && recap.kind !== 'link'),
+  );
 
   const facts: { label: string; value: string }[] = [
     { label: 'Zeitraum', value: formatDateRange(tournament.startsAt, tournament.endsAt) },
@@ -110,42 +130,59 @@ export default async function TournamentDetailPage({ params }: PageProps) {
       />
 
       <article>
-        <header className="border-b border-[var(--color-line)] hero-veil">
-          <div className="shell py-10 sm:py-14">
-            <nav aria-label="Brotkrumen" className="mb-6 text-sm text-[var(--color-ink-subtle)]">
+        <header className="relative isolate overflow-hidden border-b border-[var(--color-line)]">
+          <TechBackdrop variant="hero" />
+
+          <div className="shell relative py-10 sm:py-16">
+            <nav aria-label="Brotkrumen" className="mb-7 text-sm text-[var(--color-ink-subtle)]">
               <ol className="flex flex-wrap items-center gap-1.5">
                 <li>
-                  <Link href="/" className="hover:text-[var(--color-ink-muted)]">Start</Link>
+                  <Link href="/" className="transition-colors hover:text-[var(--color-ink-muted)]">
+                    Start
+                  </Link>
                 </li>
                 <li aria-hidden="true">/</li>
                 <li>
-                  <Link href="/turniere" className="hover:text-[var(--color-ink-muted)]">Turniere</Link>
+                  <Link href="/turniere" className="transition-colors hover:text-[var(--color-ink-muted)]">
+                    Turniere
+                  </Link>
                 </li>
                 <li aria-hidden="true">/</li>
-                <li className="text-[var(--color-ink-muted)]" aria-current="page">{tournament.title}</li>
+                <li className="text-[var(--color-ink-muted)]" aria-current="page">
+                  {tournament.title}
+                </li>
               </ol>
             </nav>
 
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-start">
-              <div>
-                <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <span className={status.badge}>{status.label}</span>
-                  {tournament.game ? <span className="badge-neutral">{tournament.game.name}</span> : null}
+            <div className="grid gap-9 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-center">
+              <Reveal>
+                <div className="mb-5 flex flex-wrap items-center gap-2">
+                  <span className={status.badge}>
+                    {tournament.status === 'RUNNING' ? <span className="pulse-dot h-1.5 w-1.5" /> : null}
+                    {status.label}
+                  </span>
+                  {tournament.game ? <span className="badge-tech">{tournament.game.name}</span> : null}
                   {tournament.featured ? <span className="badge-brand">Highlight</span> : null}
+                  {countdown ? (
+                    <span className="badge-tech text-[var(--color-brand-text)]">
+                      <Icons.clock size={12} />
+                      Start {countdown.toLowerCase()}
+                    </span>
+                  ) : null}
                 </div>
 
-                <h1 className="heading-xl">{tournament.title}</h1>
-                {tournament.summary ? <p className="lead mt-4 max-w-2xl">{tournament.summary}</p> : null}
+                <h1 className="display-2">{tournament.title}</h1>
+                {tournament.summary ? <p className="lead mt-5">{tournament.summary}</p> : null}
 
-                <div className="mt-7 flex flex-wrap gap-3">
+                <div className="mt-8 flex flex-wrap gap-3">
                   {registrationUrl && registrationOpen ? (
-                    <a href={registrationUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">
+                    <a href={registrationUrl} target="_blank" rel="noopener noreferrer" className="btn-primary btn-lg">
                       Jetzt anmelden
                       <Icons.external size={13} />
                     </a>
                   ) : null}
                   {registrationUrl && !registrationOpen ? (
-                    <a href={registrationUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary">
+                    <a href={registrationUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary btn-lg">
                       Turnierseite öffnen
                       <Icons.external size={13} />
                     </a>
@@ -156,36 +193,58 @@ export default async function TournamentDetailPage({ params }: PageProps) {
                       target="_blank"
                       rel="noopener noreferrer"
                       data-track-social="DISCORD"
-                      className={registrationUrl && registrationOpen ? 'btn-secondary' : 'btn-primary'}
+                      className={registrationUrl && registrationOpen ? 'btn-secondary btn-lg' : 'btn-primary btn-lg'}
                     >
                       <Icons.discord size={17} />
                       Fragen? Ab in den Discord
                     </a>
                   ) : null}
                 </div>
-              </div>
+              </Reveal>
 
               {tournament.banner ? (
-                <div className="relative aspect-[16/9] overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)]">
-                  <MediaImage
-                    storageKey={tournament.banner.storageKey}
-                    alt={tournament.banner.alt ?? `Turnierbanner: ${tournament.title}`}
-                    fill
-                    priority
-                    sizes="(min-width: 1024px) 420px, 92vw"
-                    className="object-cover"
-                  />
-                </div>
+                <Reveal variant="scale" index={1}>
+                  <div className="relative aspect-[16/9] overflow-hidden rounded-[var(--radius-panel)] border border-[var(--color-line)] shadow-[var(--shadow-raised)]">
+                    <MediaImage
+                      storageKey={tournament.banner.storageKey}
+                      alt={tournament.banner.alt ?? `Turnierbanner: ${tournament.title}`}
+                      fill
+                      priority
+                      sizes="(min-width: 1024px) 420px, 92vw"
+                      className="object-cover"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-gradient-to-t from-[color-mix(in_srgb,var(--color-void)_45%,transparent)] to-transparent"
+                    />
+                  </div>
+                </Reveal>
               ) : null}
             </div>
           </div>
         </header>
 
         <div className="shell section grid gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start">
-          <div className="space-y-12">
+          {/* min-w-0 verhindert, dass die Ergebnistabelle die Spalte aufweitet. */}
+          <div className="min-w-0 space-y-12">
+            {/* Frisch ausgeschriebene Turniere haben oft nur eine Kurzfassung.
+                Statt einer leeren Spalte steht dann ein ehrlicher Hinweis. */}
+            {!hasDetails ? (
+              <EmptyState
+                icon="tournament"
+                title="Die ausführlichen Angaben folgen"
+                description={
+                  registrationUrl
+                    ? 'Format, Regeln und Ablauf ergänzen wir, sobald sie feststehen. Die Anmeldung ist bereits möglich – Neuigkeiten kündigen wir zuerst auf unserem Discord an.'
+                    : 'Format, Regeln und Ablauf ergänzen wir, sobald sie feststehen. Neuigkeiten kündigen wir zuerst auf unserem Discord an.'
+                }
+                action={discordUrl ? { href: discordUrl, label: 'Discord beitreten', external: true } : undefined}
+              />
+            ) : null}
+
             {tournament.description ? (
-              <section aria-labelledby="beschreibung">
-                <h2 id="beschreibung" className="heading-md mb-4">Über das Turnier</h2>
+              <section {...revealProps('up')} aria-labelledby="beschreibung">
+                <h2 id="beschreibung" className="heading-md mb-5">Über das Turnier</h2>
                 <div
                   className="prose-swisshub"
                   dangerouslySetInnerHTML={{ __html: renderRichText(tournament.description) }}
@@ -194,15 +253,15 @@ export default async function TournamentDetailPage({ params }: PageProps) {
             ) : null}
 
             {tournament.rules ? (
-              <section aria-labelledby="regeln">
-                <h2 id="regeln" className="heading-md mb-4">Regeln</h2>
+              <section {...revealProps('up')} aria-labelledby="regeln">
+                <h2 id="regeln" className="heading-md mb-5">Regeln</h2>
                 <div className="prose-swisshub" dangerouslySetInnerHTML={{ __html: renderRichText(tournament.rules) }} />
               </section>
             ) : null}
 
             {streamEmbed && streamEmbed.kind !== 'link' ? (
-              <section aria-labelledby="stream">
-                <h2 id="stream" className="heading-md mb-4">Livestream</h2>
+              <section {...revealProps('up')} aria-labelledby="stream">
+                <h2 id="stream" className="heading-md mb-5">Livestream</h2>
                 <LazyEmbed
                   provider={streamEmbed.kind}
                   embedUrl={streamEmbed.embedUrl}
@@ -213,41 +272,69 @@ export default async function TournamentDetailPage({ params }: PageProps) {
             ) : null}
 
             {tournament.results.length > 0 ? (
-              <section aria-labelledby="ergebnisse">
-                <h2 id="ergebnisse" className="heading-md mb-4">Ergebnisse</h2>
+              <section {...revealProps('up')} aria-labelledby="ergebnisse">
+                <h2 id="ergebnisse" className="heading-md mb-5">Ergebnisse</h2>
                 {tournament.resultSummary ? (
                   <div
                     className="prose-swisshub mb-5"
                     dangerouslySetInnerHTML={{ __html: renderRichText(tournament.resultSummary) }}
                   />
                 ) : null}
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-[var(--radius-card)] border border-[var(--color-line)]">
                   <table className="w-full min-w-[420px] border-collapse text-sm">
                     <caption className="sr-only">Platzierungen im Turnier {tournament.title}</caption>
-                    <thead>
+                    <thead className="bg-[var(--color-void)]">
                       <tr>
-                        <th scope="col" className="border-b border-[var(--color-line-strong)] px-3 py-2 text-left font-semibold">Platz</th>
-                        <th scope="col" className="border-b border-[var(--color-line-strong)] px-3 py-2 text-left font-semibold">Team / Person</th>
-                        <th scope="col" className="border-b border-[var(--color-line-strong)] px-3 py-2 text-left font-semibold">Preis</th>
+                        <th scope="col" className="meta border-b border-[var(--color-line)] px-4 py-3 text-left">
+                          Platz
+                        </th>
+                        <th scope="col" className="meta border-b border-[var(--color-line)] px-4 py-3 text-left">
+                          Team / Person
+                        </th>
+                        <th scope="col" className="meta border-b border-[var(--color-line)] px-4 py-3 text-left">
+                          Preis
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {tournament.results.map((result) => (
-                        <tr key={result.id}>
-                          <td className="border-b border-[var(--color-line)] px-3 py-2.5 font-semibold text-[var(--color-brand-text)]">
-                            {result.placement}.
-                          </td>
-                          <td className="border-b border-[var(--color-line)] px-3 py-2.5 text-[var(--color-ink)]">
-                            {result.team?.name ?? result.displayName}
-                            {result.note ? (
-                              <span className="block text-xs text-[var(--color-ink-subtle)]">{result.note}</span>
-                            ) : null}
-                          </td>
-                          <td className="border-b border-[var(--color-line)] px-3 py-2.5 text-[var(--color-ink-muted)]">
-                            {result.prize ?? '–'}
-                          </td>
-                        </tr>
-                      ))}
+                      {tournament.results.map((result) => {
+                        // Die ersten drei Plätze werden sichtbar hervorgehoben.
+                        const podium = result.placement <= 3;
+
+                        return (
+                          <tr
+                            key={result.id}
+                            className={`transition-colors duration-200 hover:bg-[var(--color-surface-raised)] ${
+                              podium ? 'bg-[color-mix(in_srgb,var(--color-brand-soft)_55%,transparent)]' : ''
+                            }`}
+                          >
+                            <td className="border-b border-[var(--color-line)] px-4 py-3">
+                              <span
+                                className={`numeric inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${
+                                  result.placement === 1
+                                    ? 'bg-[var(--color-brand)] text-white'
+                                    : podium
+                                      ? 'border border-[color-mix(in_srgb,var(--color-brand)_50%,transparent)] text-[var(--color-brand-text)]'
+                                      : 'border border-[var(--color-line)] text-[var(--color-ink-muted)]'
+                                }`}
+                              >
+                                {result.placement}
+                              </span>
+                            </td>
+                            <td className="border-b border-[var(--color-line)] px-4 py-3">
+                              <span className={podium ? 'font-semibold text-[var(--color-ink)]' : 'text-[var(--color-ink)]'}>
+                                {result.team?.name ?? result.displayName}
+                              </span>
+                              {result.note ? (
+                                <span className="block text-xs text-[var(--color-ink-subtle)]">{result.note}</span>
+                              ) : null}
+                            </td>
+                            <td className="border-b border-[var(--color-line)] px-4 py-3 text-[var(--color-ink-muted)]">
+                              {result.prize ?? '–'}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -255,13 +342,13 @@ export default async function TournamentDetailPage({ params }: PageProps) {
             ) : null}
 
             {tournament.teams.length > 0 ? (
-              <section aria-labelledby="teams">
-                <h2 id="teams" className="heading-md mb-4">
+              <section {...revealProps('up')} aria-labelledby="teams">
+                <h2 id="teams" className="heading-md mb-5">
                   Teilnehmende {tournament.participantUnit === 'PLAYER' ? 'Spielerinnen und Spieler' : 'Teams'}
                 </h2>
                 <ul className="flex flex-wrap gap-2">
                   {tournament.teams.map((team) => (
-                    <li key={team.id} className="badge-neutral px-3 py-1.5">
+                    <li key={team.id} className="badge-tech gap-2 px-3.5 py-2 text-[var(--color-ink)]">
                       {team.tag ? <span className="font-semibold text-[var(--color-ink)]">{team.tag}</span> : null}
                       {team.name}
                     </li>
@@ -271,11 +358,11 @@ export default async function TournamentDetailPage({ params }: PageProps) {
             ) : null}
 
             {tournament.media.length > 0 ? (
-              <section aria-labelledby="galerie">
-                <h2 id="galerie" className="heading-md mb-4">Rückblick</h2>
+              <section {...revealProps('up')} aria-labelledby="galerie">
+                <h2 id="galerie" className="heading-md mb-5">Rückblick</h2>
                 <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {tournament.media.map((entry) => (
-                    <li key={entry.id}>
+                  {tournament.media.map((entry, mediaIndex) => (
+                    <li key={entry.id} {...revealProps('up', mediaIndex, 60)}>
                       <figure>
                         <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)]">
                           <MediaImage
@@ -297,8 +384,8 @@ export default async function TournamentDetailPage({ params }: PageProps) {
             ) : null}
 
             {recap && recap.kind !== 'link' ? (
-              <section aria-labelledby="video-rueckblick">
-                <h2 id="video-rueckblick" className="heading-md mb-4">Video-Rückblick</h2>
+              <section {...revealProps('up')} aria-labelledby="video-rueckblick">
+                <h2 id="video-rueckblick" className="heading-md mb-5">Video-Rückblick</h2>
                 <LazyEmbed
                   provider={recap.kind}
                   embedUrl={recap.embedUrl}
@@ -309,31 +396,34 @@ export default async function TournamentDetailPage({ params }: PageProps) {
             ) : null}
           </div>
 
-          <aside className="space-y-6 lg:sticky lg:top-24">
+          <aside className="space-y-5 lg:sticky lg:top-24">
+            {/* Gewinner steht als Leistungsnachweis zuoberst, sobald gepflegt. */}
+            {tournament.winnerName ? (
+              <div className="panel corner-ticks relative overflow-hidden border-[color-mix(in_srgb,var(--color-brand)_45%,var(--color-line))] bg-[var(--color-brand-soft)]">
+                <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-grid-fine opacity-45" />
+                <div className="relative">
+                  <p className="meta-brand mb-2 flex items-center gap-2">
+                    <Icons.star size={13} />
+                    Siegerin oder Sieger
+                  </p>
+                  <p className="heading-md text-[var(--color-ink)]">{tournament.winnerName}</p>
+                </div>
+              </div>
+            ) : null}
+
             <div className="panel">
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-ink-subtle)]">
-                Auf einen Blick
-              </h2>
-              <dl className="space-y-3">
+              <h2 className="meta mb-4">Auf einen Blick</h2>
+              <dl className="space-y-3.5">
                 {facts.map((fact) => (
-                  <div key={fact.label}>
-                    <dt className="text-xs text-[var(--color-ink-subtle)]">{fact.label}</dt>
-                    <dd className="text-sm text-[var(--color-ink)]">{fact.value}</dd>
+                  <div key={fact.label} className="border-b border-[var(--color-line)] pb-3.5 last:border-0 last:pb-0">
+                    <dt className="meta">{fact.label}</dt>
+                    <dd className="mt-1 text-sm text-[var(--color-ink)]">{fact.value}</dd>
                   </div>
                 ))}
-                {tournament.winnerName ? (
-                  <div>
-                    <dt className="text-xs text-[var(--color-ink-subtle)]">Gewinner</dt>
-                    <dd className="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-brand-text)]">
-                      <Icons.star size={14} />
-                      {tournament.winnerName}
-                    </dd>
-                  </div>
-                ) : null}
                 {tournament.publishedAt ? (
                   <div>
-                    <dt className="text-xs text-[var(--color-ink-subtle)]">Veröffentlicht</dt>
-                    <dd className="text-sm text-[var(--color-ink-muted)]">
+                    <dt className="meta">Veröffentlicht</dt>
+                    <dd className="mt-1 text-sm text-[var(--color-ink-muted)]">
                       <time dateTime={tournament.publishedAt.toISOString()}>{formatDate(tournament.publishedAt)}</time>
                     </dd>
                   </div>
@@ -343,9 +433,7 @@ export default async function TournamentDetailPage({ params }: PageProps) {
 
             {tournament.sponsors.length > 0 ? (
               <div className="panel">
-                <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--color-ink-subtle)]">
-                  Unterstützt von
-                </h2>
+                <h2 className="meta mb-4">Unterstützt von</h2>
                 <ul className="space-y-3">
                   {tournament.sponsors.map((entry) => {
                     const website = safeUrl(entry.sponsor.websiteUrl);

@@ -4,13 +4,18 @@ import { SponsorCard } from '@/components/site/SponsorCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { JsonLd } from '@/components/site/JsonLd';
 import { Icons } from '@/components/ui/Icon';
+import { PageHero } from '@/components/site/PageHero';
+import { Reveal, revealProps } from '@/components/visual/Reveal';
 import { getSponsors } from '@/lib/content/queries';
 import { getSettings } from '@/lib/settings';
 import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 
 /**
  * Öffentliche Partner- und Sponsorenübersicht.
- * Aktive und ehemalige Partner sind klar getrennt gekennzeichnet.
+ *
+ * Bewusst der ruhigste Bereich der Website: viel Weissraum, keine
+ * spielerischen Effekte, klare Stufen. Aktive und ehemalige Partner sind
+ * deutlich getrennt gekennzeichnet.
  */
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -37,36 +42,39 @@ export default async function PartnerPage() {
 
   return (
     <>
-      <JsonLd data={breadcrumbJsonLd([{ name: 'Start', path: '/' }, { name: settings.sponsorSectionLabel, path: '/partner' }])} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'Start', path: '/' },
+          { name: settings.sponsorSectionLabel, path: '/partner' },
+        ])}
+      />
 
-      <section className="border-b border-[var(--color-line)] hero-veil">
-        <div className="shell py-14 sm:py-20">
-          <p className="eyebrow">
-            <Icons.shield size={14} />
-            {settings.sponsorSectionLabel}
-          </p>
-          <h1 className="heading-xl max-w-2xl">Gemeinsam mit starken Partnern</h1>
-          <p className="lead mt-4 max-w-2xl">
-            Turniere, Events und der Betrieb unserer Infrastruktur sind nur möglich, weil uns Partner unterstützen.
-            Hier stellen wir sie vor.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow={settings.sponsorSectionLabel}
+        icon="shield"
+        title="Gemeinsam mit starken Partnern"
+        lead="Turniere, Events und der Betrieb unserer Infrastruktur sind nur möglich, weil uns Partner unterstützen. Hier stellen wir sie vor."
+      />
 
-      <div className="shell section space-y-14">
+      <div className="shell section space-y-16 sm:space-y-20">
         <section aria-labelledby="aktive-partner">
-          <h2 id="aktive-partner" className="heading-lg mb-6">Aktuelle Partner</h2>
+          <Reveal>
+            <h2 id="aktive-partner" className="heading-lg mb-8">
+              Aktuelle Partner
+            </h2>
+          </Reveal>
 
           {grouped.length === 0 ? (
             <EmptyState
+              icon="shield"
               title="Aktuell sind keine Partner veröffentlicht"
               description="Sobald eine Partnerschaft bestätigt und freigegeben ist, stellen wir sie hier vor."
               action={{ href: '/kontakt?kategorie=sponsoring', label: 'Sponsoring anfragen' }}
             />
           ) : (
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {grouped.map((sponsor) => (
-                <li key={sponsor.id}>
+              {grouped.map((sponsor, index) => (
+                <li key={sponsor.id} {...revealProps('up', index)}>
                   <SponsorCard sponsor={sponsor} />
                 </li>
               ))}
@@ -76,13 +84,16 @@ export default async function PartnerPage() {
 
         {former.length > 0 ? (
           <section aria-labelledby="ehemalige-partner">
-            <h2 id="ehemalige-partner" className="heading-lg mb-2">Ehemalige Partner</h2>
-            <p className="lead mb-6 max-w-2xl">
-              Diesen Partnern danken wir für die Unterstützung in der Vergangenheit.
-            </p>
+            <Reveal>
+              <h2 id="ehemalige-partner" className="heading-lg mb-3">
+                Ehemalige Partner
+              </h2>
+              <p className="lead mb-8">Diesen Partnern danken wir für die Unterstützung in der Vergangenheit.</p>
+            </Reveal>
+
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {former.map((sponsor) => (
-                <li key={sponsor.id}>
+              {former.map((sponsor, index) => (
+                <li key={sponsor.id} {...revealProps('up', index)}>
                   <SponsorCard sponsor={sponsor} />
                 </li>
               ))}
@@ -90,21 +101,34 @@ export default async function PartnerPage() {
           </section>
         ) : null}
 
-        <section className="rounded-[var(--radius-card)] border border-[color-mix(in_srgb,var(--color-brand)_55%,transparent)] bg-[var(--color-brand-soft)] p-8 sm:p-12">
-          <h2 className="heading-lg">Partner werden</h2>
-          <p className="lead mt-3 max-w-2xl">
-            Du möchtest eine Schweizer Gaming-Community erreichen und Turniere oder Events unterstützen? Erzähl uns von
-            deiner Idee – wir melden uns mit einem passenden Vorschlag.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link href="/kontakt?kategorie=sponsoring" className="btn-primary">
-              Sponsoring anfragen
-            </Link>
-            <Link href="/kontakt?kategorie=partnerschaft" className="btn-secondary">
-              Kooperation vorschlagen
-            </Link>
-          </div>
-        </section>
+        <Reveal variant="scale">
+          <section className="relative isolate overflow-hidden rounded-[var(--radius-panel)] border border-[color-mix(in_srgb,var(--color-brand)_45%,transparent)] bg-[var(--color-brand-soft)] p-8 sm:p-14">
+            <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-grid-fine opacity-45" />
+            <span
+              aria-hidden="true"
+              data-ambient
+              className="glow-orb glow-brand drift-slow pointer-events-none -right-24 -top-24 h-[24rem] w-[24rem] opacity-30"
+            />
+
+            <div className="relative max-w-2xl">
+              <p className="meta-brand mb-4">Zusammenarbeit</p>
+              <h2 className="display-2">Partner werden</h2>
+              <p className="lead mt-4">
+                Du möchtest eine Schweizer Gaming-Community erreichen und Turniere oder Events unterstützen? Erzähl uns
+                von deiner Idee – wir melden uns mit einem passenden Vorschlag.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href="/kontakt?kategorie=sponsoring" className="btn-primary btn-lg">
+                  Sponsoring anfragen
+                  <Icons.arrowRight size={15} />
+                </Link>
+                <Link href="/kontakt?kategorie=partnerschaft" className="btn-secondary btn-lg">
+                  Kooperation vorschlagen
+                </Link>
+              </div>
+            </div>
+          </section>
+        </Reveal>
       </div>
     </>
   );

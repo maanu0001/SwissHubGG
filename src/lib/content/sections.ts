@@ -24,8 +24,11 @@ const mediaRefSchema = z.object({
   caption: z.string().max(200).optional().default(''),
 });
 
-/** Erlaubte Hintergrundvarianten – bewusst begrenzt auf das Designsystem. */
-const toneSchema = z.enum(['default', 'muted', 'accent']).default('default');
+/**
+ * Erlaubte Hintergrundvarianten – bewusst begrenzt auf das Designsystem.
+ * „tech“ ist die dunkle, technische Fläche mit feinem Raster.
+ */
+const toneSchema = z.enum(['default', 'muted', 'accent', 'tech']).default('default');
 
 export const heroSchema = z.object({
   eyebrow: z.string().max(60).default(''),
