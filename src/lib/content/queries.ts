@@ -1,0 +1,412 @@
+import 'server-only';
+import { PageStatus, SponsorStatus, TournamentStatus, type SocialPlatform } from '@prisma/client';
+import { prisma } from '@/lib/db';
+import { CacheTag, cached } from '@/lib/cache';
+import { parseSections, type RenderableSection } from '@/lib/content/sections';
+
+/**
+ * Lesezugriffe der öffentlichen Website.
+ *
+ * Alle Abfragen laufen über den getaggten Cache, damit ein Seitenaufruf im
+ * Regelfall ohne Datenbankzugriff auskommt. Beim Veröffentlichen im Dashboard
+ * werden genau die betroffenen Tags geleert.
+ */
+
+export type PublicPage = {
+  id: string;
+  slug: string;
+  title: string;
+  sections: RenderableSection[];
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoImageKey: string | null;
+  seoNoIndex: boolean;
+  canonicalUrl: string | null;
+  publishedAt: Date | null;
+  updatedAt: Date;
+};
+
+type PublishedSnapshot = {
+  title?: string;
+  sections?: { id: string; type: string; visible: boolean; data: unknown }[];
+};
+
+export async function getPublishedPage(slug: string): Promise<PublicPage | null> {
+  return cached(
+    `page:${slug}`,
+    [CacheTag.pages, CacheTag.page(slug)],
+    async () => {
+      const page = await prisma.page.findFirst({
+        where: { slug, status: PageStatus.PUBLISHED, archivedAt: null },
+        include: { seoImage: { select: { storageKey: true } } },
+      });
+
+      if (!page || !page.publishedContent) return null;
+
+      const snapshot = page.publishedContent as PublishedSnapshot;
+      const rawSections = Array.isArray(snapshot.sections) ? snapshot.sections : [];
+
+      const sections = parseSections(
+        rawSections
+          .filter((section) => section.visible !== false)
+          .map((section) => ({
+            id: String(section.id),
+            type: section.type as RenderableSection['type'],
+            visible: section.visible !== false,
+            data: section.data,
+          })),
+      );
+
+      return {
+        id: page.id,
+        slug: page.slug,
+        title: snapshot.title ?? page.title,
+        sections,
+        seoTitle: page.seoTitle,
+        seoDescription: page.seoDescription,
+        seoImageKey: page.seoImage?.storageKey ?? null,
+        seoNoIndex: page.seoNoIndex,
+        canonicalUrl: page.canonicalUrl,
+        publishedAt: page.publishedAt,
+        updatedAt: page.updatedAt,
+      } satisfies PublicPage;
+    },
+  );
+}
+
+export async function listPublishedPageSlugs(): Promise<{ slug: string; updatedAt: Date }[]> {
+  return cached(
+    'pages:slugs',
+    [CacheTag.pages],
+    () =>
+      prisma.page.findMany({
+        where: { status: PageStatus.PUBLISHED, archivedAt: null, seoNoIndex: false },
+        select: { slug: true, updatedAt: true },
+        orderBy: { slug: 'asc' },
+      }),
+    900,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Turniere
+// ---------------------------------------------------------------------------
+
+const TOURNAMENT_LIST_SELECT = {
+  id: true,
+  slug: true,
+  title: true,
+  status: true,
+  summary: true,
+  startsAt: true,
+  endsAt: true,
+  registrationOpensAt: true,
+  registrationClosesAt: true,
+  format: true,
+  maxParticipants: true,
+  participantUnit: true,
+  prizeInfo: true,
+  featured: true,
+  winnerName: true,
+  registrationUrl: true,
+  streamUrl: true,
+  banner: { select: { storageKey: true, alt: true, width: true, height: true } },
+  game: { select: { slug: true, name: true, shortName: true } },
+} as const;
+
+export type TournamentListItem = Awaited<ReturnType<typeof fetchTournaments>>[number];
+
+export const UPCOMING_STATUSES: TournamentStatus[] = [
+  TournamentStatus.ANNOUNCED,
+  TournamentStatus.REGISTRATION_OPEN,
+  TournamentStatus.REGISTRATION_CLOSED,
+];
+
+export const PAST_STATUSES: TournamentStatus[] = [TournamentStatus.COMPLETED, TournamentStatus.CANCELLED];
+
+async function fetchTournaments(options: {
+  statuses?: TournamentStatus[];
+  gameSlug?: string;
+  featuredOnly?: boolean;
+  limit?: number;
+  order?: 'asc' | 'desc';
+}) {
+  return prisma.tournament.findMany({
+    where: {
+      publishedAt: { not: null, lte: new Date() },
+      archivedAt: null,
+      status: options.statuses ? { in: options.statuses } : { not: TournamentStatus.DRAFT },
+      ...(options.gameSlug ? { game: { slug: options.gameSlug } } : {}),
+      ...(options.featuredOnly ? { featured: true } : {}),
+    },
+    select: TOURNAMENT_LIST_SELECT,
+    orderBy: [{ startsAt: options.order ?? 'asc' }, { sortOrder: 'asc' }, { title: 'asc' }],
+    take: options.limit ?? 60,
+  });
+}
+
+export async function getUpcomingTournaments(limit = 6) {
+  return cached(`tournaments:upcoming:${limit}`, [CacheTag.tournaments], () =>
+    fetchTournaments({ statuses: UPCOMING_STATUSES, limit, order: 'asc' }),
+  );
+}
+
+export async function getRunningTournaments(limit = 6) {
+  return cached(`tournaments:running:${limit}`, [CacheTag.tournaments], () =>
+    fetchTournaments({ statuses: [TournamentStatus.RUNNING], limit, order: 'asc' }),
+  );
+}
+
+export async function getPastTournaments(limit = 24) {
+  return cached(`tournaments:past:${limit}`, [CacheTag.tournaments], () =>
+    fetchTournaments({ statuses: PAST_STATUSES, limit, order: 'desc' }),
+  );
+}
+
+export async function getFeaturedTournaments(limit = 3) {
+  return cached(`tournaments:featured:${limit}`, [CacheTag.tournaments], () =>
+    fetchTournaments({ featuredOnly: true, limit, order: 'asc' }),
+  );
+}
+
+export async function getAllPublicTournaments() {
+  return cached('tournaments:all', [CacheTag.tournaments], () => fetchTournaments({ limit: 200, order: 'desc' }));
+}
+
+export async function getTournamentBySlug(slug: string) {
+  return cached(`tournament:${slug}`, [CacheTag.tournaments, CacheTag.tournament(slug)], () =>
+    prisma.tournament.findFirst({
+      where: { slug, publishedAt: { not: null, lte: new Date() }, archivedAt: null },
+      include: {
+        game: true,
+        banner: { select: { storageKey: true, alt: true, width: true, height: true } },
+        seoImage: { select: { storageKey: true } },
+        teams: { orderBy: [{ seed: 'asc' }, { name: 'asc' }] },
+        results: { orderBy: { placement: 'asc' }, include: { team: { select: { name: true, tag: true } } } },
+        media: {
+          orderBy: { position: 'asc' },
+          include: { media: { select: { storageKey: true, alt: true, width: true, height: true } } },
+        },
+        sponsors: {
+          orderBy: { position: 'asc' },
+          include: {
+            sponsor: {
+              select: {
+                id: true,
+                slug: true,
+                name: true,
+                websiteUrl: true,
+                status: true,
+                logo: { select: { storageKey: true, alt: true, width: true, height: true } },
+              },
+            },
+          },
+        },
+      },
+    }),
+  );
+}
+
+export async function getTournamentGames() {
+  return cached('tournaments:games', [CacheTag.tournaments], () =>
+    prisma.tournamentGame.findMany({
+      where: { active: true },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      select: { slug: true, name: true, shortName: true },
+    }),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sponsoren
+// ---------------------------------------------------------------------------
+
+const SPONSOR_SELECT = {
+  id: true,
+  slug: true,
+  name: true,
+  status: true,
+  shortDescription: true,
+  description: true,
+  websiteUrl: true,
+  partnerSince: true,
+  partnerUntil: true,
+  featured: true,
+  sortOrder: true,
+  logo: { select: { storageKey: true, alt: true, width: true, height: true } },
+  tier: { select: { key: true, name: true, sortOrder: true } },
+  tournaments: {
+    where: { tournament: { publishedAt: { not: null }, archivedAt: null } },
+    select: { tournament: { select: { slug: true, title: true, startsAt: true } } },
+    take: 6,
+  },
+} as const;
+
+export async function getSponsors(status: SponsorStatus | 'ALL' = SponsorStatus.ACTIVE, limit = 60) {
+  return cached(`sponsors:${status}:${limit}`, [CacheTag.sponsors], () =>
+    prisma.sponsor.findMany({
+      where: {
+        publishedAt: { not: null, lte: new Date() },
+        archivedAt: null,
+        ...(status === 'ALL' ? {} : { status }),
+      },
+      select: SPONSOR_SELECT,
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      take: limit,
+    }),
+  );
+}
+
+export async function getSponsorsByIds(ids: string[]) {
+  if (ids.length === 0) return [];
+  const key = `sponsors:ids:${[...ids].sort().join(',')}`;
+  return cached(key, [CacheTag.sponsors], () =>
+    prisma.sponsor.findMany({
+      where: { id: { in: ids }, publishedAt: { not: null, lte: new Date() }, archivedAt: null },
+      select: SPONSOR_SELECT,
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    }),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Social Media
+// ---------------------------------------------------------------------------
+
+export async function getSocialAccounts() {
+  return cached('social:accounts', [CacheTag.social], () =>
+    prisma.socialAccount.findMany({
+      where: { active: true },
+      orderBy: [{ sortOrder: 'asc' }, { platform: 'asc' }],
+      select: {
+        id: true,
+        platform: true,
+        handle: true,
+        profileUrl: true,
+        displayName: true,
+        description: true,
+        followerCount: true,
+        followerCountUpdatedAt: true,
+      },
+    }),
+  );
+}
+
+export async function getSocialPosts(options: {
+  platforms?: SocialPlatform[];
+  onlyFeatured?: boolean;
+  limit?: number;
+} = {}) {
+  const key = `social:posts:${options.platforms?.join('|') ?? 'all'}:${options.onlyFeatured ? 'f' : 'a'}:${options.limit ?? 12}`;
+
+  return cached(key, [CacheTag.social], () =>
+    prisma.socialPost.findMany({
+      where: {
+        publishedAt: { not: null, lte: new Date() },
+        archivedAt: null,
+        ...(options.platforms && options.platforms.length > 0 ? { platform: { in: options.platforms } } : {}),
+        ...(options.onlyFeatured ? { featured: true } : {}),
+      },
+      orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { postedAt: 'desc' }],
+      take: options.limit ?? 12,
+      select: {
+        id: true,
+        platform: true,
+        type: true,
+        title: true,
+        excerpt: true,
+        url: true,
+        postedAt: true,
+        featured: true,
+        thumbnail: { select: { storageKey: true, alt: true, width: true, height: true } },
+        account: { select: { handle: true, profileUrl: true } },
+      },
+    }),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Team und Navigation
+// ---------------------------------------------------------------------------
+
+export async function getTeamMembers(limit = 24) {
+  return cached(`team:${limit}`, [CacheTag.team], () =>
+    prisma.teamMember.findMany({
+      where: { active: true, publishedAt: { not: null, lte: new Date() } },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        description: true,
+        avatar: { select: { storageKey: true, alt: true } },
+      },
+    }),
+  );
+}
+
+export type NavItem = {
+  id: string;
+  label: string;
+  href: string;
+  highlight: boolean;
+  openInNewTab: boolean;
+  children: NavItem[];
+};
+
+export async function getNavigation(key: 'main' | 'footer'): Promise<NavItem[]> {
+  return cached(`navigation:${key}`, [CacheTag.navigation], async () => {
+    const navigation = await prisma.navigation.findUnique({
+      where: { key },
+      include: {
+        items: {
+          where: { visible: true },
+          orderBy: { position: 'asc' },
+          select: {
+            id: true,
+            label: true,
+            href: true,
+            highlight: true,
+            openInNewTab: true,
+            parentId: true,
+          },
+        },
+      },
+    });
+
+    if (!navigation) return [];
+
+    const byParent = new Map<string | null, NavItem[]>();
+    for (const item of navigation.items) {
+      const node: NavItem = {
+        id: item.id,
+        label: item.label,
+        href: item.href,
+        highlight: item.highlight,
+        openInNewTab: item.openInNewTab,
+        children: [],
+      };
+      const list = byParent.get(item.parentId) ?? [];
+      list.push(node);
+      byParent.set(item.parentId, list);
+    }
+
+    const attach = (nodes: NavItem[]): NavItem[] =>
+      nodes.map((node) => ({ ...node, children: attach(byParent.get(node.id) ?? []) }));
+
+    return attach(byParent.get(null) ?? []);
+  }, 900);
+}
+
+export async function getFeatureFlags(): Promise<Record<string, boolean>> {
+  return cached(
+    'feature-flags',
+    [CacheTag.featureFlags],
+    async () => {
+      const flags = await prisma.featureFlag.findMany();
+      return Object.fromEntries(flags.map((flag) => [flag.key, flag.enabled]));
+    },
+    600,
+  );
+}

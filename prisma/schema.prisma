@@ -1,0 +1,893 @@
+// SwissHub – Datenmodell
+// Zeitzone der Anwendung: Europe/Zurich, Locale de-CH.
+// Alle Zeitstempel werden in UTC gespeichert und in der Anwendung lokalisiert dargestellt.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Benutzer, Rollen und Berechtigungen
+// ---------------------------------------------------------------------------
+
+model AdminUser {
+  id            String    @id @default(cuid())
+  discordId     String    @unique
+  discordTag    String
+  displayName   String
+  email         String?
+  avatarUrl     String?
+  isSuperAdmin  Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  roles            UserRole[]
+  sessions         Session[]
+  auditLogs        AuditLog[]
+  uploadedMedia    MediaAsset[]      @relation("MediaUploader")
+  pageVersions     PageVersion[]
+  assignedRequests ContactRequest[]  @relation("ContactAssignee")
+  sentMessages     ContactMessage[]  @relation("ContactMessageAuthor")
+  contactNotes     ContactNote[]
+
+  @@index([isActive])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String
+  isSystem    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@index([sortOrder])
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String
+  group       String
+  sortOrder   Int      @default(0)
+
+  roles RolePermission[]
+
+  @@index([group, sortOrder])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model UserRole {
+  userId     String
+  roleId     String
+  assignedAt DateTime  @default(now())
+  user       AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+}
+
+model Session {
+  id            String    @id @default(cuid())
+  tokenHash     String    @unique
+  userId        String
+  user          AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipHash        String?
+  userAgent     String?
+  createdAt     DateTime  @default(now())
+  lastSeenAt    DateTime  @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  revokedReason String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Kurzlebiger Zustand des Discord-OAuth-Flows (state + PKCE-Verifier).
+model OAuthState {
+  id            String   @id @default(cuid())
+  stateHash     String   @unique
+  codeVerifier  String
+  redirectPath  String?
+  createdAt     DateTime @default(now())
+  expiresAt     DateTime
+
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// CMS: Seiten, Abschnitte, Versionen, Navigation
+// ---------------------------------------------------------------------------
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SectionType {
+  HERO
+  TEXT
+  RICH_TEXT
+  IMAGE
+  GALLERY
+  VIDEO
+  CTA
+  CARD_GRID
+  STATS
+  FAQ
+  LOGO_BAR
+  SOCIAL_HIGHLIGHTS
+  TOURNAMENT_LIST
+  SPONSOR_LIST
+  TEAM_MEMBERS
+  SPACER
+  TWO_COLUMN
+}
+
+model Page {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  title       String
+  status      PageStatus @default(DRAFT)
+
+  /// Systemseiten (z. B. Startseite, Kontakt) können nicht gelöscht werden,
+  /// ihr Slug ist fest mit Anwendungslogik verknüpft.
+  isSystem    Boolean    @default(false)
+
+  /// Veröffentlichter Stand als Snapshot. Die öffentliche Website liest
+  /// ausschliesslich dieses Feld – ein Entwurf wird nie ausgeliefert.
+  publishedContent Json?
+  publishedAt      DateTime?
+  publishedById    String?
+
+  scheduledPublishAt   DateTime?
+  scheduledUnpublishAt DateTime?
+
+  // SEO
+  seoTitle       String?
+  seoDescription String?
+  seoImageId     String?
+  seoNoIndex     Boolean @default(false)
+  canonicalUrl   String?
+
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  sections PageSection[]
+  versions PageVersion[]
+  seoImage MediaAsset?   @relation("PageSeoImage", fields: [seoImageId], references: [id], onDelete: SetNull)
+
+  @@index([status, publishedAt])
+  @@index([scheduledPublishAt])
+  @@index([scheduledUnpublishAt])
+}
+
+/// Arbeitsstand (Entwurf) einer Seite. Wird beim Veröffentlichen in
+/// Page.publishedContent überführt.
+model PageSection {
+  id        String      @id @default(cuid())
+  pageId    String
+  page      Page        @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  type      SectionType
+  position  Int
+  visible   Boolean     @default(true)
+  data      Json
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([pageId, position])
+}
+
+model PageVersion {
+  id          String     @id @default(cuid())
+  pageId      String
+  page        Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  version     Int
+  label       String?
+  changeType  String
+  content     Json
+  createdById String?
+  createdBy   AdminUser? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+
+  @@unique([pageId, version])
+  @@index([pageId, createdAt])
+}
+
+model Navigation {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items NavigationItem[]
+}
+
+model NavigationItem {
+  id           String          @id @default(cuid())
+  navigationId String
+  navigation   Navigation      @relation(fields: [navigationId], references: [id], onDelete: Cascade)
+  parentId     String?
+  parent       NavigationItem? @relation("NavigationChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children     NavigationItem[] @relation("NavigationChildren")
+  label        String
+  href         String
+  position     Int
+  visible      Boolean         @default(true)
+  openInNewTab Boolean         @default(false)
+  highlight    Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([navigationId, position])
+  @@index([parentId])
+}
+
+// ---------------------------------------------------------------------------
+// Medienbibliothek
+// ---------------------------------------------------------------------------
+
+enum MediaKind {
+  IMAGE
+  DOCUMENT
+  VIDEO
+}
+
+model MediaAsset {
+  id           String    @id @default(cuid())
+  kind         MediaKind @default(IMAGE)
+  storageKey   String    @unique
+  originalName String
+  mimeType     String
+  byteSize     Int
+  width        Int?
+  height       Int?
+  checksum     String
+  alt          String?
+  title        String?
+  description  String?
+  uploadedById String?
+  uploadedBy   AdminUser? @relation("MediaUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  pageSeoImages     Page[]           @relation("PageSeoImage")
+  tournamentBanners Tournament[]     @relation("TournamentBanner")
+  tournamentSeo     Tournament[]     @relation("TournamentSeoImage")
+  tournamentMedia   TournamentMedia[]
+  sponsorLogos      Sponsor[]        @relation("SponsorLogo")
+  socialThumbnails  SocialPost[]     @relation("SocialPostThumbnail")
+  teamAvatars       TeamMember[]     @relation("TeamMemberAvatar")
+
+  @@index([kind, createdAt])
+  @@index([checksum])
+}
+
+// ---------------------------------------------------------------------------
+// Turniere
+// ---------------------------------------------------------------------------
+
+enum TournamentStatus {
+  DRAFT
+  ANNOUNCED
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  RUNNING
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+model TournamentGame {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  shortName   String?
+  description String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tournaments Tournament[]
+
+  @@index([active, sortOrder])
+}
+
+model Tournament {
+  id      String           @id @default(cuid())
+  slug    String           @unique
+  title   String
+  status  TournamentStatus @default(DRAFT)
+  gameId  String?
+  game    TournamentGame?  @relation(fields: [gameId], references: [id], onDelete: SetNull)
+
+  summary     String?
+  description String?
+
+  bannerId String?
+  banner   MediaAsset? @relation("TournamentBanner", fields: [bannerId], references: [id], onDelete: SetNull)
+
+  startsAt             DateTime?
+  endsAt               DateTime?
+  registrationOpensAt  DateTime?
+  registrationClosesAt DateTime?
+
+  format          String?
+  rules           String?
+  rulesDocumentId String?
+  maxParticipants Int?
+  participantUnit String   @default("TEAM")
+  prizeInfo       String?
+
+  registrationUrl String?
+  streamUrl       String?
+  discordUrl      String?
+
+  resultSummary String?
+  winnerName    String?
+  recapUrl      String?
+
+  featured  Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  seoTitle       String?
+  seoDescription String?
+  seoImageId     String?
+  seoImage       MediaAsset? @relation("TournamentSeoImage", fields: [seoImageId], references: [id], onDelete: SetNull)
+
+  publishedAt        DateTime?
+  scheduledPublishAt DateTime?
+  archivedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  teams    TournamentTeam[]
+  results  TournamentResult[]
+  sponsors TournamentSponsor[]
+  media    TournamentMedia[]
+
+  @@index([status, startsAt])
+  @@index([publishedAt])
+  @@index([gameId])
+  @@index([scheduledPublishAt])
+  @@index([featured, startsAt])
+}
+
+model TournamentTeam {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  name         String
+  tag          String?
+  contact      String?
+  seed         Int?
+  checkedIn    Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  results TournamentResult[]
+
+  @@unique([tournamentId, name])
+  @@index([tournamentId, seed])
+}
+
+model TournamentResult {
+  id           String          @id @default(cuid())
+  tournamentId String
+  tournament   Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  teamId       String?
+  team         TournamentTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  placement    Int
+  displayName  String
+  prize        String?
+  note         String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@unique([tournamentId, placement])
+  @@index([tournamentId])
+}
+
+model TournamentMedia {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  mediaId      String
+  media        MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  caption      String?
+  position     Int        @default(0)
+
+  @@unique([tournamentId, mediaId])
+  @@index([tournamentId, position])
+}
+
+// ---------------------------------------------------------------------------
+// Sponsoren und Partner
+// ---------------------------------------------------------------------------
+
+enum SponsorStatus {
+  ACTIVE
+  FORMER
+}
+
+model SponsorTier {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sponsors Sponsor[]
+
+  @@index([sortOrder])
+}
+
+model Sponsor {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  name             String
+  status           SponsorStatus @default(ACTIVE)
+  shortDescription String?
+  description      String?
+  websiteUrl       String?
+  logoId           String?
+  logo             MediaAsset?   @relation("SponsorLogo", fields: [logoId], references: [id], onDelete: SetNull)
+  tierId           String?
+  tier             SponsorTier?  @relation(fields: [tierId], references: [id], onDelete: SetNull)
+
+  partnerSince DateTime?
+  partnerUntil DateTime?
+
+  featured  Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  publishedAt        DateTime?
+  scheduledPublishAt DateTime?
+  archivedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  tournaments TournamentSponsor[]
+
+  @@index([status, sortOrder])
+  @@index([publishedAt])
+  @@index([scheduledPublishAt])
+}
+
+model TournamentSponsor {
+  tournamentId String
+  sponsorId    String
+  role         String?
+  position     Int        @default(0)
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  sponsor      Sponsor    @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+
+  @@id([tournamentId, sponsorId])
+  @@index([sponsorId])
+}
+
+// ---------------------------------------------------------------------------
+// Social Media
+// ---------------------------------------------------------------------------
+
+enum SocialPlatform {
+  DISCORD
+  INSTAGRAM
+  TIKTOK
+  YOUTUBE
+  TWITCH
+  OTHER
+}
+
+enum SocialPostType {
+  POST
+  VIDEO
+  CLIP
+  STREAM
+  ANNOUNCEMENT
+}
+
+model SocialAccount {
+  id                      String         @id @default(cuid())
+  platform                SocialPlatform
+  handle                  String
+  profileUrl              String
+  displayName             String?
+  description             String?
+  active                  Boolean        @default(true)
+  followerCount           Int?
+  followerCountUpdatedAt  DateTime?
+  lastSyncedAt            DateTime?
+  lastSyncError           String?
+  sortOrder               Int            @default(0)
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+
+  posts SocialPost[]
+
+  @@unique([platform, handle])
+  @@index([active, sortOrder])
+}
+
+model SocialPost {
+  id          String         @id @default(cuid())
+  accountId   String?
+  account     SocialAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  platform    SocialPlatform
+  type        SocialPostType @default(POST)
+  title       String
+  excerpt     String?
+  url         String
+  thumbnailId String?
+  thumbnail   MediaAsset?    @relation("SocialPostThumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
+
+  /// Veröffentlichungszeitpunkt des Originalbeitrags auf der Plattform.
+  postedAt DateTime?
+
+  featured  Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  publishedAt        DateTime?
+  scheduledPublishAt DateTime?
+  archivedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([platform, publishedAt])
+  @@index([featured, sortOrder])
+  @@index([scheduledPublishAt])
+}
+
+// ---------------------------------------------------------------------------
+// Kontaktanfragen
+// ---------------------------------------------------------------------------
+
+enum ContactStatus {
+  NEW
+  IN_PROGRESS
+  ANSWERED
+  CLOSED
+  SPAM
+}
+
+enum ContactPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+model ContactCategory {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  label       String
+  description String?
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requests   ContactRequest[]
+  recipients EmailRecipientCategory[]
+
+  @@index([active, sortOrder])
+}
+
+model ContactRequest {
+  id           String           @id @default(cuid())
+  reference    String           @unique
+  name         String
+  email        String
+  organisation String?
+  subject      String
+  categoryId   String?
+  category     ContactCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  message      String
+
+  status     ContactStatus   @default(NEW)
+  priority   ContactPriority @default(NORMAL)
+  assignedToId String?
+  assignedTo   AdminUser?    @relation("ContactAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  privacyAcceptedAt DateTime
+  ipHash            String?
+  userAgent         String?
+
+  notificationJobId String?
+  confirmationJobId String?
+
+  respondedAt  DateTime?
+  closedAt     DateTime?
+  archivedAt   DateTime?
+  anonymizedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  messages    ContactMessage[]
+  notes       ContactNote[]
+  attachments ContactAttachment[]
+
+  @@index([status, createdAt])
+  @@index([categoryId, createdAt])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
+model ContactMessage {
+  id          String           @id @default(cuid())
+  requestId   String
+  request     ContactRequest   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  direction   MessageDirection
+  subject     String?
+  body        String
+  authorId    String?
+  author      AdminUser?       @relation("ContactMessageAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  emailJobId  String?
+  emailJob    EmailJob?        @relation(fields: [emailJobId], references: [id], onDelete: SetNull)
+  createdAt   DateTime         @default(now())
+
+  @@index([requestId, createdAt])
+}
+
+model ContactNote {
+  id        String         @id @default(cuid())
+  requestId String
+  request   ContactRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    AdminUser?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  body      String
+  createdAt DateTime       @default(now())
+
+  @@index([requestId, createdAt])
+}
+
+/// Anhänge werden ausserhalb des öffentlichen Verzeichnisses gespeichert und
+/// nur über eine berechtigungsgeprüfte Route ausgeliefert.
+model ContactAttachment {
+  id           String         @id @default(cuid())
+  requestId    String
+  request      ContactRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  storageKey   String         @unique
+  originalName String
+  mimeType     String
+  byteSize     Int
+  checksum     String
+  createdAt    DateTime       @default(now())
+
+  @@index([requestId])
+}
+
+// ---------------------------------------------------------------------------
+// E-Mail
+// ---------------------------------------------------------------------------
+
+enum RecipientKind {
+  TO
+  CC
+  BCC
+}
+
+model EmailRecipient {
+  id        String        @id @default(cuid())
+  email     String
+  name      String?
+  kind      RecipientKind @default(TO)
+  active    Boolean       @default(true)
+  /// Wenn true, erhält der Empfänger Benachrichtigungen aller Kategorien.
+  allCategories Boolean   @default(false)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  categories EmailRecipientCategory[]
+
+  @@unique([email, kind])
+  @@index([active])
+}
+
+model EmailRecipientCategory {
+  recipientId String
+  categoryId  String
+  recipient   EmailRecipient  @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  category    ContactCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([recipientId, categoryId])
+  @@index([categoryId])
+}
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  subject     String
+  bodyMarkdown String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum EmailJobStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+model EmailJob {
+  id          String         @id @default(cuid())
+  status      EmailJobStatus @default(PENDING)
+  toAddresses String[]
+  ccAddresses String[]
+  bccAddresses String[]
+  replyTo     String?
+  subject     String
+  bodyHtml    String
+  bodyText    String
+  templateKey String?
+  context     String?
+  attempts    Int            @default(0)
+  maxAttempts Int            @default(5)
+  lastError   String?
+  scheduledFor DateTime      @default(now())
+  lockedAt    DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  messages ContactMessage[]
+
+  @@index([status, scheduledFor])
+}
+
+// ---------------------------------------------------------------------------
+// Team, Einstellungen, Betrieb
+// ---------------------------------------------------------------------------
+
+model TeamMember {
+  id          String      @id @default(cuid())
+  name        String
+  role        String
+  description String?
+  avatarId    String?
+  avatar      MediaAsset? @relation("TeamMemberAvatar", fields: [avatarId], references: [id], onDelete: SetNull)
+  sortOrder   Int         @default(0)
+  active      Boolean     @default(true)
+  publishedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([active, sortOrder])
+}
+
+model GlobalSetting {
+  key       String   @id
+  group     String
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@index([group])
+}
+
+model FeatureFlag {
+  key         String   @id
+  label       String
+  description String?
+  enabled     Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+}
+
+model Redirect {
+  id          String   @id @default(cuid())
+  source      String   @unique
+  destination String
+  statusCode  Int      @default(308)
+  active      Boolean  @default(true)
+  hits        Int      @default(0)
+  lastHitAt   DateTime?
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+}
+
+model AuditLog {
+  id         String     @id @default(cuid())
+  actorId    String?
+  actor      AdminUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorLabel String
+  action     String
+  entityType String
+  entityId   String?
+  summary    String
+  metadata   Json?
+  ipHash     String?
+  createdAt  DateTime   @default(now())
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([action])
+}
+
+enum MetricType {
+  PAGE_VIEW
+  DISCORD_CLICK
+  SOCIAL_CLICK
+  SPONSOR_CLICK
+  TOURNAMENT_VIEW
+  CONTACT_SUBMISSION
+}
+
+/// Aggregierte, anonyme Kennzahlen: ein Datensatz pro Tag, Typ und Schlüssel.
+/// Es werden keine personenbezogenen Daten gespeichert.
+model SiteMetric {
+  id    String     @id @default(cuid())
+  day   DateTime   @db.Date
+  type  MetricType
+  key   String
+  count Int        @default(0)
+
+  @@unique([day, type, key])
+  @@index([type, day])
+}
+
+/// Fensterbasierter Zähler für Rate Limits. Überdauert Neustarts.
+model RateLimitCounter {
+  id          String   @id @default(cuid())
+  bucket      String
+  identifier  String
+  windowStart DateTime
+  count       Int      @default(0)
+  expiresAt   DateTime
+
+  @@unique([bucket, identifier, windowStart])
+  @@index([expiresAt])
+}
+
+/// Nachweis erteilter Einwilligungen ohne Personenbezug.
+model ConsentRecord {
+  id         String   @id @default(cuid())
+  consentId  String   @unique
+  categories String[]
+  policyVersion String
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}

@@ -1,0 +1,46 @@
+# Abhängigkeiten
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Produktion
+build/
+dist/
+
+# Umgebungsvariablen / Secrets — niemals committen
+.env
+.env.*
+!.env.example
+
+# Uploads und Backups dürfen nicht in Git landen
+storage/
+backups/
+*.dump
+*.sql.gz
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Tests / Coverage
+coverage/
+.vitest/
+
+# Betriebssystem / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Sonstiges
+.cache/
+.turbo/
+tsconfig.tsbuildinfo

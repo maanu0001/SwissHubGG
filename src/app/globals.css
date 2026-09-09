@@ -1,0 +1,383 @@
+@import 'tailwindcss';
+
+/*
+  SwissHub Designsystem
+  --------------------
+  Dunkles Grunddesign mit #83060A als Markenfarbe. Rot wird gezielt als Akzent
+  eingesetzt – für Aktionen, Hervorhebungen und Kanten, nicht als Fläche.
+  Alle Kombinationen aus Text- und Hintergrundfarbe erfüllen mindestens
+  WCAG 2.2 AA (4.5:1 für Fliesstext, 3:1 für grosse Schrift und Bedienelemente).
+*/
+
+@theme {
+  /* Flächen */
+  --color-base: #0b0c10;
+  --color-surface: #14151b;
+  --color-surface-raised: #1c1e26;
+  --color-surface-hover: #23252f;
+  --color-line: #2b2e39;
+  --color-line-strong: #3a3d4a;
+
+  /* Text */
+  --color-ink: #f4f5f7;
+  --color-ink-muted: #b0b4be;
+  --color-ink-subtle: #868b96;
+
+  /* Marke */
+  --color-brand: #83060a;
+  --color-brand-strong: #9d070d;
+  --color-brand-soft: #2a0507;
+  --color-brand-text: #ff6b70;
+
+  /* Semantische Status */
+  --color-success: #2f9e5f;
+  --color-success-text: #6fdc9b;
+  --color-warning: #a1670a;
+  --color-warning-text: #f0b555;
+  --color-danger: #a32222;
+  --color-danger-text: #ff8b8b;
+  --color-info: #2b5f9e;
+  --color-info-text: #7db6f5;
+
+  /* Typografie */
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+
+  /* Radien und Schatten */
+  --radius-card: 0.875rem;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.7);
+  --shadow-raised: 0 2px 4px rgb(0 0 0 / 0.5), 0 16px 40px -20px rgb(0 0 0 / 0.8);
+}
+
+/* Selbst gehostete Schrift – keine Anfrage an Drittanbieter. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/inter-latin-variable.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/inter-latin-ext-variable.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0,
+    U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-base);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Gut sichtbarer, konsistenter Fokus für Tastaturbedienung. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-text);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--color-brand);
+    color: #ffffff;
+  }
+
+  /* Bewegung reduzieren, wenn das Betriebssystem es verlangt. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* --- Layout --- */
+  .shell {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .shell-narrow {
+    @apply mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .section {
+    @apply py-14 sm:py-20;
+  }
+
+  .section-tight {
+    @apply py-10 sm:py-14;
+  }
+
+  /* --- Typografie --- */
+  .eyebrow {
+    @apply mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-brand-text)];
+  }
+
+  .heading-xl {
+    @apply text-3xl leading-tight sm:text-4xl lg:text-5xl;
+  }
+
+  .heading-lg {
+    @apply text-2xl leading-tight sm:text-3xl;
+  }
+
+  .heading-md {
+    @apply text-xl leading-snug sm:text-2xl;
+  }
+
+  .lead {
+    @apply text-base leading-relaxed text-[var(--color-ink-muted)] sm:text-lg;
+  }
+
+  .muted {
+    @apply text-sm leading-relaxed text-[var(--color-ink-muted)];
+  }
+
+  /* --- Flächen --- */
+  .card {
+    @apply rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] shadow-[var(--shadow-card)];
+  }
+
+  .card-interactive {
+    @apply card transition-colors duration-200 hover:border-[var(--color-line-strong)] hover:bg-[var(--color-surface-raised)];
+  }
+
+  .panel {
+    @apply rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 sm:p-6;
+  }
+
+  /* --- Bedienelemente --- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .btn-primary {
+    @apply btn bg-[var(--color-brand)] text-white hover:bg-[var(--color-brand-strong)];
+  }
+
+  .btn-secondary {
+    @apply btn border border-[var(--color-line-strong)] bg-[var(--color-surface-raised)] text-[var(--color-ink)] hover:bg-[var(--color-surface-hover)];
+  }
+
+  .btn-ghost {
+    @apply btn text-[var(--color-ink-muted)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-ink)];
+  }
+
+  .btn-danger {
+    @apply btn border border-[var(--color-danger)] bg-transparent text-[var(--color-danger-text)] hover:bg-[color-mix(in_srgb,var(--color-danger)_20%,transparent)];
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  /* --- Formulare --- */
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-[var(--color-ink)];
+  }
+
+  .field-hint {
+    @apply mt-1.5 text-xs text-[var(--color-ink-subtle)];
+  }
+
+  .field-error {
+    @apply mt-1.5 flex items-start gap-1.5 text-xs font-medium text-[var(--color-danger-text)];
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-[var(--color-line)] bg-[var(--color-base)] px-3 py-2.5 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-ink-subtle)] focus:border-[var(--color-brand-text)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-text)];
+  }
+
+  .input-invalid {
+    @apply border-[var(--color-danger)] focus:border-[var(--color-danger-text)] focus:ring-[var(--color-danger-text)];
+  }
+
+  .select {
+    @apply input appearance-none bg-[var(--color-base)] pr-9;
+  }
+
+  /* --- Badges --- */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium;
+  }
+
+  .badge-neutral {
+    @apply badge border-[var(--color-line-strong)] bg-[var(--color-surface-raised)] text-[var(--color-ink-muted)];
+  }
+
+  .badge-brand {
+    @apply badge border-[color-mix(in_srgb,var(--color-brand)_60%,transparent)] bg-[var(--color-brand-soft)] text-[var(--color-brand-text)];
+  }
+
+  .badge-success {
+    @apply badge border-[color-mix(in_srgb,var(--color-success)_50%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_16%,transparent)] text-[var(--color-success-text)];
+  }
+
+  .badge-warning {
+    @apply badge border-[color-mix(in_srgb,var(--color-warning)_50%,transparent)] bg-[color-mix(in_srgb,var(--color-warning)_16%,transparent)] text-[var(--color-warning-text)];
+  }
+
+  .badge-danger {
+    @apply badge border-[color-mix(in_srgb,var(--color-danger)_50%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_16%,transparent)] text-[var(--color-danger-text)];
+  }
+
+  .badge-info {
+    @apply badge border-[color-mix(in_srgb,var(--color-info)_50%,transparent)] bg-[color-mix(in_srgb,var(--color-info)_16%,transparent)] text-[var(--color-info-text)];
+  }
+
+  /* --- Sprunglink für Screenreader und Tastatur --- */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-[var(--color-brand)] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white;
+  }
+
+  /* --- Redaktioneller Fliesstext --- */
+  .prose-swisshub {
+    @apply text-[15px] leading-relaxed text-[var(--color-ink-muted)];
+  }
+
+  .prose-swisshub h2 {
+    @apply mb-3 mt-8 text-xl font-bold text-[var(--color-ink)] first:mt-0 sm:text-2xl;
+  }
+
+  .prose-swisshub h3 {
+    @apply mb-2 mt-6 text-lg font-semibold text-[var(--color-ink)] first:mt-0;
+  }
+
+  .prose-swisshub h4 {
+    @apply mb-2 mt-5 text-base font-semibold text-[var(--color-ink)] first:mt-0;
+  }
+
+  .prose-swisshub p {
+    @apply mb-4 last:mb-0;
+  }
+
+  .prose-swisshub ul {
+    @apply mb-4 list-disc space-y-1.5 pl-5 marker:text-[var(--color-brand-text)];
+  }
+
+  .prose-swisshub ol {
+    @apply mb-4 list-decimal space-y-1.5 pl-5 marker:text-[var(--color-ink-subtle)];
+  }
+
+  .prose-swisshub a {
+    @apply font-medium text-[var(--color-brand-text)] underline underline-offset-2 hover:text-[var(--color-ink)];
+  }
+
+  .prose-swisshub strong {
+    @apply font-semibold text-[var(--color-ink)];
+  }
+
+  .prose-swisshub blockquote {
+    @apply my-4 border-l-2 border-[var(--color-brand)] py-1 pl-4 italic;
+  }
+
+  .prose-swisshub code {
+    @apply rounded bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[0.85em] text-[var(--color-ink)];
+  }
+
+  .prose-swisshub pre {
+    @apply mb-4 overflow-x-auto rounded-lg border border-[var(--color-line)] bg-[var(--color-base)] p-4 text-sm;
+  }
+
+  .prose-swisshub table {
+    @apply mb-4 w-full border-collapse text-sm;
+  }
+
+  .prose-swisshub th {
+    @apply border-b border-[var(--color-line-strong)] px-3 py-2 text-left font-semibold text-[var(--color-ink)];
+  }
+
+  .prose-swisshub td {
+    @apply border-b border-[var(--color-line)] px-3 py-2 align-top;
+  }
+
+  .prose-swisshub hr {
+    @apply my-6 border-[var(--color-line)];
+  }
+}
+
+@layer utilities {
+  /* Dezente Kante mit Markenfarbe – ersetzt flächiges Rot. */
+  .edge-brand {
+    box-shadow: inset 0 1px 0 0 color-mix(in srgb, var(--color-brand) 45%, transparent);
+  }
+
+  /* Ruhiger Hintergrundverlauf ohne unruhige Muster oder Parallaxe. */
+  .hero-veil {
+    background:
+      radial-gradient(
+        ellipse 70% 55% at 50% 0%,
+        color-mix(in srgb, var(--color-brand) 24%, transparent) 0%,
+        transparent 70%
+      ),
+      linear-gradient(180deg, var(--color-base) 0%, var(--color-surface) 100%);
+  }
+
+  .fade-in-up {
+    animation: swisshub-fade-in-up 0.5s ease-out both;
+  }
+
+  @keyframes swisshub-fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Logos verschiedener Partner einheitlich und verzerrungsfrei darstellen. */
+  .logo-plate {
+    @apply flex items-center justify-center rounded-lg border border-[var(--color-line)] bg-[var(--color-surface-raised)] p-4;
+  }
+
+  .logo-plate img {
+    @apply max-h-12 w-auto object-contain;
+  }
+}
