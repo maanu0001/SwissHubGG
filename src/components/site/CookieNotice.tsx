@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 
 /**
@@ -8,35 +8,53 @@ import Link from 'next/link';
  *
  * Die Website setzt keine Cookies zu Marketing- oder Trackingzwecken. Dieser
  * Hinweis ist deshalb optional und im Dashboard abschaltbar. Er verwendet keine
- * Dark Patterns: Ablehnen ist genauso leicht erreichbar wie Zustimmen, und die
- * Entscheidung wird nur lokal im Browser gespeichert.
+ * Dark Patterns: Die Bestätigung ist ein einzelner Klick, die Entscheidung wird
+ * ausschliesslich lokal im Browser gespeichert und nie an den Server gesendet.
  */
 
 const STORAGE_KEY = 'swisshub.privacy-notice';
+const CHANGE_EVENT = 'swisshub:privacy-notice';
+
+/**
+ * Der gespeicherte Wert wird über `useSyncExternalStore` gelesen. Damit gibt es
+ * keinen zusätzlichen Renderdurchlauf und kein Aufblitzen des Hinweises.
+ */
+function subscribe(onChange: () => void): () => void {
+  window.addEventListener('storage', onChange);
+  window.addEventListener(CHANGE_EVENT, onChange);
+  return () => {
+    window.removeEventListener('storage', onChange);
+    window.removeEventListener(CHANGE_EVENT, onChange);
+  };
+}
+
+function getSnapshot(): string | null {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    // Ist der Speicher blockiert, gilt der Hinweis als noch nicht bestätigt.
+    return null;
+  }
+}
+
+/** Auf dem Server ist nichts bekannt – der Hinweis erscheint erst nach der Hydration. */
+function getServerSnapshot(): string | null {
+  return null;
+}
 
 export function CookieNotice({ policyVersion }: { policyVersion: string }) {
-  const [visible, setVisible] = useState(false);
+  const acknowledged = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      setVisible(stored !== policyVersion);
-    } catch {
-      // Bei blockiertem Speicher wird der Hinweis einmalig pro Sitzung angezeigt.
-      setVisible(true);
-    }
-  }, [policyVersion]);
-
-  if (!visible) return null;
-
-  const dismiss = () => {
+  const dismiss = useCallback(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY, policyVersion);
     } catch {
       // Ohne Speicher bleibt der Hinweis beim nächsten Besuch erneut sichtbar.
     }
-    setVisible(false);
-  };
+    window.dispatchEvent(new Event(CHANGE_EVENT));
+  }, [policyVersion]);
+
+  if (acknowledged === policyVersion) return null;
 
   return (
     <div

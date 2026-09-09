@@ -52,6 +52,18 @@ const nextConfig: NextConfig = {
     },
   },
 
+  /*
+   * Die Route für Social-Vorschaubilder liest Schrift und Logo zur Laufzeit von
+   * der Festplatte. Damit beides im eigenständigen Produktions-Image liegt,
+   * werden die Dateien ausdrücklich mitgenommen.
+   *
+   * Hochgeladene Medien liegen bewusst ausserhalb des Bundles in einem
+   * Datenverzeichnis (STORAGE_DIR) und werden über ein Volume eingebunden.
+   */
+  outputFileTracingIncludes: {
+    '/api/og': ['./src/assets/fonts/*.woff', './public/brand/swisshub-logo-256.png'],
+  },
+
   async headers() {
     return [
       {

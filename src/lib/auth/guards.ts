@@ -4,17 +4,9 @@ import { redirect } from 'next/navigation';
 import { env } from '@/lib/env';
 import type { PermissionKey } from '@/lib/permissions';
 import { getCurrentUser, userHasPermission, type CurrentUser } from '@/lib/auth/session';
+import { AuthorizationError } from '@/lib/auth/errors';
 
-/**
- * Fehler für Server Actions. Actions geben kontrollierte Ergebnisse zurück,
- * statt eine Ausnahme bis in die UI durchzureichen.
- */
-export class AuthorizationError extends Error {
-  constructor(message = 'Für diese Aktion fehlt dir die Berechtigung.') {
-    super(message);
-    this.name = 'AuthorizationError';
-  }
-}
+export { AuthorizationError };
 
 /** Erzwingt eine gültige Session; leitet sonst zum Admin-Login. */
 export async function requireUser(redirectPath?: string): Promise<CurrentUser> {

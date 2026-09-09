@@ -50,7 +50,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de-CH" suppressHydrationWarning>
-      <body className="flex min-h-dvh flex-col bg-[var(--color-base)] text-[var(--color-ink)] antialiased">
+      <body className="flex min-h-dvh flex-col bg-[var(--color-canvas)] text-[var(--color-ink)] antialiased">
         {children}
       </body>
     </html>

@@ -147,10 +147,4 @@ export function userHasAnyPermission(user: CurrentUser | null, permissions: Perm
   return permissions.some((permission) => userHasPermission(user, permission));
 }
 
-/** Aktualisiert `lastSeenAt` höchstens einmal alle fünf Minuten. */
-export async function touchSession(sessionId: string, lastSeenAt: Date): Promise<void> {
-  if (Date.now() - lastSeenAt.getTime() < 5 * 60 * 1000) return;
-  await prisma.session.update({ where: { id: sessionId }, data: { lastSeenAt: new Date() } });
-}
-
 export { cookieOptions };

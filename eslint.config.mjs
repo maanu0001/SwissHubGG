@@ -1,12 +1,10 @@
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { FlatCompat } from '@eslint/eslintrc';
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({ baseDirectory: __dirname });
-
+/**
+ * ESLint-Konfiguration im Flat-Config-Format.
+ * `eslint-config-next` liefert seine Regelsätze bereits als Flat Config.
+ */
 const config = [
   {
     ignores: [
@@ -17,10 +15,10 @@ const config = [
       'coverage/**',
       'storage/**',
       'next-env.d.ts',
-      'src/generated/**',
     ],
   },
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   {
     rules: {
       '@typescript-eslint/no-unused-vars': [
@@ -33,6 +31,7 @@ const config = [
     },
   },
   {
+    // Skripte und Seed dürfen bewusst auf die Konsole schreiben.
     files: ['scripts/**/*.ts', 'prisma/**/*.ts', 'tests/**/*.ts'],
     rules: {
       'no-console': 'off',

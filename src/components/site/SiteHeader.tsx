@@ -16,7 +16,7 @@ export async function SiteHeader() {
   const discordUrl = safeUrl(settings.discordInviteUrl);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[color-mix(in_srgb,var(--color-base)_82%,transparent)] backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-[var(--color-line)] bg-[color-mix(in_srgb,var(--color-canvas)_82%,transparent)] backdrop-blur-md">
       <div className="shell flex h-16 items-center justify-between gap-4">
         <Link href="/" className="shrink-0 rounded-lg" aria-label="SwissHub Startseite">
           <LogoLockup size={34} priority />

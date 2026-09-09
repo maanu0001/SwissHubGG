@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useId, useRef, useState } from 'react';
+import Link from 'next/link';
 import Script from 'next/script';
 import { submitContactRequest } from '@/server/actions/contact';
 import { HONEYPOT_FIELD, initialContactState } from '@/lib/validation/contact';
@@ -33,20 +34,17 @@ export function ContactForm({
 }: ContactFormProps) {
   const [state, formAction, pending] = useActionState(submitContactRequest, initialContactState);
   const [messageLength, setMessageLength] = useState(0);
-  const formRef = useRef<HTMLFormElement>(null);
   const feedbackRef = useRef<HTMLDivElement>(null);
   const baseId = useId();
 
   const fieldId = (name: string) => `${baseId}-${name}`;
   const errorId = (name: string) => `${baseId}-${name}-error`;
 
+  // Nach dem Absenden erhält die Rückmeldung den Fokus, damit sie auch mit
+  // Screenreader und Tastatur sofort wahrgenommen wird.
   useEffect(() => {
     if (state.status === 'idle') return;
     feedbackRef.current?.focus();
-    if (state.status === 'success') {
-      formRef.current?.reset();
-      setMessageLength(0);
-    }
   }, [state]);
 
   if (state.status === 'success') {
@@ -78,7 +76,7 @@ export function ContactForm({
         <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="lazyOnload" />
       ) : null}
 
-      <form ref={formRef} action={formAction} noValidate={false} className="space-y-5">
+      <form action={formAction} className="space-y-5">
         {state.status === 'error' ? (
           <div
             ref={feedbackRef}
@@ -292,14 +290,14 @@ export function ContactForm({
             required
             aria-describedby={state.fieldErrors?.privacy ? errorId('privacy') : undefined}
             aria-invalid={state.fieldErrors?.privacy ? true : undefined}
-            className="mt-1 h-4 w-4 shrink-0 rounded border-[var(--color-line-strong)] bg-[var(--color-base)] accent-[var(--color-brand)]"
+            className="mt-1 h-4 w-4 shrink-0 rounded border-[var(--color-line-strong)] bg-[var(--color-canvas)] accent-[var(--color-brand)]"
           />
           <div>
             <label htmlFor={fieldId('privacy')} className="text-sm leading-relaxed text-[var(--color-ink-muted)]">
               Ich habe die{' '}
-              <a href="/datenschutz" className="text-[var(--color-brand-text)] underline underline-offset-2">
+              <Link href="/datenschutz" className="text-[var(--color-brand-text)] underline underline-offset-2">
                 Datenschutzerklärung
-              </a>{' '}
+              </Link>{' '}
               gelesen und bin damit einverstanden, dass meine Angaben zur Bearbeitung der Anfrage gespeichert werden.{' '}
               <span className="text-[var(--color-brand-text)]">*</span>
             </label>

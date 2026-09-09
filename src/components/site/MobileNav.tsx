@@ -27,10 +27,13 @@ export function MobileNav({ items, discordUrl }: MobileNavProps) {
   const toggleRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Beim Seitenwechsel schliessen.
-  useEffect(() => {
+  // Beim Seitenwechsel schliessen. Die Anpassung erfolgt beim Rendern statt in
+  // einem Effekt – so entsteht kein zusätzlicher Renderdurchlauf.
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -70,7 +73,7 @@ export function MobileNav({ items, discordUrl }: MobileNavProps) {
         <div
           id={panelId}
           ref={panelRef}
-          className="fixed inset-0 z-50 flex flex-col bg-[var(--color-base)] md:hidden"
+          className="fixed inset-0 z-50 flex flex-col bg-[var(--color-canvas)] md:hidden"
           role="dialog"
           aria-modal="true"
           aria-label="Hauptnavigation"

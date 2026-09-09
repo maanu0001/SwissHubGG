@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import type { RenderableSection, SectionLink } from '@/lib/content/sections';
 import { renderRichText, safeUrl } from '@/lib/sanitize';
 import { resolveEmbed } from '@/lib/content/embeds';
-import { publishedStats, getSettings } from '@/lib/settings';
+import { publishedStats, getSettings, type SiteSettings } from '@/lib/settings';
 import {
   getAllPublicTournaments,
   getFeaturedTournaments,
@@ -33,14 +33,41 @@ import { prisma } from '@/lib/db';
  * aktuell sind, ohne bei jedem Aufruf die Datenbank zu belasten.
  */
 
+/**
+ * Ersetzt Platzhalter durch gepflegte Einstellungen. Damit lassen sich z. B.
+ * Impressumsangaben an einer Stelle pflegen und in mehreren Seiten verwenden.
+ */
+function applySettingsTokens(text: string, settings: SiteSettings): string {
+  const tokens: Record<string, string> = {
+    siteName: settings.siteName,
+    motto: settings.motto,
+    kontaktEmail: settings.contactEmail,
+    vereinsname: settings.legalEntityName,
+    adresse: settings.legalAddress,
+    vertretung: settings.legalRepresentatives,
+    register: settings.legalRegisterInfo,
+  };
+
+  return text.replace(/\{\{(\w+)\}\}/g, (match, key: string) => tokens[key] ?? match);
+}
+
 const TONE_CLASS: Record<'default' | 'muted' | 'accent', string> = {
   default: '',
   muted: 'bg-[var(--color-surface)]',
   accent: 'bg-[var(--color-brand-soft)]',
 };
 
-function SectionLinkButton({ link, fallbackStyle }: { link: SectionLink; fallbackStyle?: SectionLink['style'] }) {
-  const href = safeUrl(link.href);
+/**
+ * Platzhalter, der auf den in den Einstellungen gepflegten Discord-Link
+ * verweist. So bleibt der Einladungslink an einer einzigen Stelle pflegbar.
+ * Ist er nicht gesetzt, wird die Schaltfläche ausgelassen statt ins Leere zu führen.
+ */
+const DISCORD_TOKEN = '{discord}';
+
+async function SectionLinkButton({ link, fallbackStyle }: { link: SectionLink; fallbackStyle?: SectionLink['style'] }) {
+  const settings = await getSettings();
+  const rawHref = link.href === DISCORD_TOKEN ? settings.discordInviteUrl : link.href;
+  const href = safeUrl(rawHref);
   if (!href) return null;
 
   const style = link.style ?? fallbackStyle ?? 'primary';
@@ -119,7 +146,7 @@ async function HeroSection({ data }: { data: Extract<RenderableSection, { type: 
             sizes="100vw"
             className="object-cover opacity-25"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-base)]/60 via-[var(--color-base)]/70 to-[var(--color-base)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-canvas)]/60 via-[var(--color-canvas)]/70 to-[var(--color-canvas)]" />
         </div>
       ) : null}
 
@@ -162,15 +189,18 @@ async function HeroSection({ data }: { data: Extract<RenderableSection, { type: 
   );
 }
 
-function TextSection({ data }: { data: Extract<RenderableSection, { type: 'TEXT' }>['data'] }) {
+async function TextSection({ data }: { data: Extract<RenderableSection, { type: 'TEXT' }>['data'] }) {
+  const settings = await getSettings();
+  const body = applySettingsTokens(data.text, settings);
+
   return (
     <section className={`section ${TONE_CLASS[data.tone]}`}>
       <div className="shell">
         <div className={`max-w-3xl ${data.align === 'center' ? 'mx-auto text-center' : ''}`}>
           {data.eyebrow ? <p className={`eyebrow ${data.align === 'center' ? 'justify-center' : ''}`}>{data.eyebrow}</p> : null}
           {data.headline ? <h2 className="heading-lg mb-4">{data.headline}</h2> : null}
-          {data.text
-            ? data.text
+          {body
+            ? body
                 .split(/\n{2,}/)
                 .map((paragraph, index) => (
                   <p key={index} className="lead mb-4 last:mb-0">
@@ -184,8 +214,9 @@ function TextSection({ data }: { data: Extract<RenderableSection, { type: 'TEXT'
   );
 }
 
-function RichTextSection({ data }: { data: Extract<RenderableSection, { type: 'RICH_TEXT' }>['data'] }) {
-  const html = renderRichText(data.markdown);
+async function RichTextSection({ data }: { data: Extract<RenderableSection, { type: 'RICH_TEXT' }>['data'] }) {
+  const settings = await getSettings();
+  const html = renderRichText(applySettingsTokens(data.markdown, settings));
   if (!html && !data.headline) return null;
 
   return (

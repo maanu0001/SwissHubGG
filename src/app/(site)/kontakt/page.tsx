@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { ContactForm } from '@/components/site/ContactForm';
 import { JsonLd } from '@/components/site/JsonLd';
 import { Icons } from '@/components/ui/Icon';
@@ -133,9 +134,9 @@ export default async function ContactPage({ searchParams }: PageProps) {
             <h2 className="mb-2 text-base font-semibold text-[var(--color-ink)]">Datenschutz</h2>
             <p className="muted">
               Deine Angaben nutzen wir ausschliesslich zur Bearbeitung deiner Anfrage. Details findest du in der{' '}
-              <a href="/datenschutz" className="text-[var(--color-brand-text)] underline underline-offset-2">
+              <Link href="/datenschutz" className="text-[var(--color-brand-text)] underline underline-offset-2">
                 Datenschutzerklärung
-              </a>
+              </Link>
               .
             </p>
           </div>
