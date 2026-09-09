@@ -5,9 +5,10 @@ import { TournamentCard } from '@/components/site/TournamentCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { JsonLd } from '@/components/site/JsonLd';
 import { Icons } from '@/components/ui/Icon';
-import { getAllPublicTournaments, getTournamentGames, PAST_STATUSES, UPCOMING_STATUSES } from '@/lib/content/queries';
+import { getTournamentGames, getVisiblePublicTournaments, PAST_STATUSES, UPCOMING_STATUSES } from '@/lib/content/queries';
 import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 import { getSettings } from '@/lib/settings';
+import { FEATURE_FLAGS, isFeatureEnabled } from '@/lib/featureFlags';
 import { safeUrl } from '@/lib/sanitize';
 
 /**
@@ -25,7 +26,7 @@ const STATUS_FILTERS = [
   { key: 'alle', label: 'Alle' },
   { key: 'anstehend', label: 'Anstehend' },
   { key: 'laufend', label: 'Laufend' },
-  { key: 'vergangen', label: 'Archiv' },
+  { key: 'vergangen', label: 'Archiv', requiresArchive: true },
 ] as const;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -49,7 +50,16 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
   const statusFilter = STATUS_FILTERS.some((filter) => filter.key === params.status) ? (params.status as string) : 'alle';
   const gameFilter = params.spiel ?? 'alle';
 
-  const [all, games, settings] = await Promise.all([getAllPublicTournaments(), getTournamentGames(), getSettings()]);
+  // Ist das Archiv abgeschaltet, erscheinen vergangene Turniere weder in der
+  // Liste noch als Filter.
+  const [all, games, settings, archiveEnabled] = await Promise.all([
+    getVisiblePublicTournaments(),
+    getTournamentGames(),
+    getSettings(),
+    isFeatureEnabled(FEATURE_FLAGS.tournamentArchive),
+  ]);
+
+  const statusFilters = STATUS_FILTERS.filter((filter) => archiveEnabled || !('requiresArchive' in filter));
 
   const filtered = all.filter(
     (tournament) =>
@@ -101,7 +111,7 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
         <div className="mb-8 space-y-4">
           <nav aria-label="Nach Status filtern">
             <ul className="flex flex-wrap gap-2">
-              {STATUS_FILTERS.map((filter) => {
+              {statusFilters.map((filter) => {
                 const active = filter.key === statusFilter;
                 return (
                   <li key={filter.key}>

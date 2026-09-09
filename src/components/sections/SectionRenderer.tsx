@@ -13,7 +13,7 @@ import { renderRichText, safeUrl } from '@/lib/sanitize';
 import { resolveEmbed } from '@/lib/content/embeds';
 import { publishedStats, getSettings, type SiteSettings } from '@/lib/settings';
 import {
-  getAllPublicTournaments,
+  getVisiblePublicTournaments,
   getFeaturedTournaments,
   getPastTournaments,
   getRunningTournaments,
@@ -24,6 +24,7 @@ import {
   getUpcomingTournaments,
 } from '@/lib/content/queries';
 import { prisma } from '@/lib/db';
+import { FEATURE_FLAGS, isFeatureEnabled } from '@/lib/featureFlags';
 
 /**
  * Rendert die im Website-Builder zusammengestellten Abschnitte.
@@ -532,6 +533,9 @@ async function SocialHighlightsSection({
 }: {
   data: Extract<RenderableSection, { type: 'SOCIAL_HIGHLIGHTS' }>['data'];
 }) {
+  // Der Bereich lässt sich im Dashboard vollständig abschalten.
+  if (!(await isFeatureEnabled(FEATURE_FLAGS.socialHighlights))) return null;
+
   const posts = await getSocialPosts({
     platforms: data.platforms.length > 0 ? data.platforms : undefined,
     onlyFeatured: data.onlyFeatured,
@@ -567,6 +571,10 @@ async function TournamentListSection({
 }: {
   data: Extract<RenderableSection, { type: 'TOURNAMENT_LIST' }>['data'];
 }) {
+  // Ist das Turnierarchiv abgeschaltet, entfällt der Rückblick auf der Website.
+  const archiveEnabled = await isFeatureEnabled(FEATURE_FLAGS.tournamentArchive);
+  if (data.filter === 'past' && !archiveEnabled) return null;
+
   const tournaments =
     data.filter === 'featured'
       ? await getFeaturedTournaments(data.limit)
@@ -575,7 +583,7 @@ async function TournamentListSection({
         : data.filter === 'running'
           ? await getRunningTournaments(data.limit)
           : data.filter === 'all'
-            ? (await getAllPublicTournaments()).slice(0, data.limit)
+            ? (await getVisiblePublicTournaments()).slice(0, data.limit)
             : await getUpcomingTournaments(data.limit);
 
   return (
@@ -586,8 +594,12 @@ async function TournamentListSection({
         {tournaments.length === 0 ? (
           <EmptyState
             title="Aktuell sind keine Turniere ausgeschrieben"
-            description="Neue Turniere kündigen wir zuerst auf unserem Discord an. Schau im Archiv, was bisher gespielt wurde."
-            action={{ href: '/turniere', label: 'Turnierarchiv ansehen' }}
+            description={
+              archiveEnabled
+                ? 'Neue Turniere kündigen wir zuerst auf unserem Discord an. Im Archiv siehst du, was bisher gespielt wurde.'
+                : 'Neue Turniere kündigen wir zuerst auf unserem Discord an.'
+            }
+            action={{ href: '/turniere', label: 'Zur Turnierübersicht' }}
           />
         ) : (
           <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -640,6 +652,8 @@ async function SponsorListSection({ data }: { data: Extract<RenderableSection, {
 }
 
 async function TeamMembersSection({ data }: { data: Extract<RenderableSection, { type: 'TEAM_MEMBERS' }>['data'] }) {
+  if (!(await isFeatureEnabled(FEATURE_FLAGS.teamSection))) return null;
+
   const members = await getTeamMembers(data.limit);
   if (members.length === 0) return null;
 

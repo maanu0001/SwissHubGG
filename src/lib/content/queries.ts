@@ -2,6 +2,7 @@ import 'server-only';
 import { PageStatus, SponsorStatus, TournamentStatus, type SocialPlatform } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { CacheTag, cached } from '@/lib/cache';
+import { FEATURE_FLAGS, isFeatureEnabled } from '@/lib/featureFlags';
 import { parseSections, type RenderableSection } from '@/lib/content/sections';
 
 /**
@@ -171,6 +172,26 @@ export async function getFeaturedTournaments(limit = 3) {
 
 export async function getAllPublicTournaments() {
   return cached('tournaments:all', [CacheTag.tournaments], () => fetchTournaments({ limit: 200, order: 'desc' }));
+}
+
+/**
+ * Ist das Turnierarchiv abgeschaltet, sind vergangene Turniere nirgends
+ * öffentlich sichtbar – weder in Listen noch als Detailseite noch in der
+ * Sitemap. Der Schalter im Dashboard wirkt damit überall gleich.
+ */
+export async function isTournamentPubliclyVisible(status: TournamentStatus): Promise<boolean> {
+  if (!PAST_STATUSES.includes(status)) return true;
+  return isFeatureEnabled(FEATURE_FLAGS.tournamentArchive);
+}
+
+/** Wie {@link getAllPublicTournaments}, aber ohne durch Schalter ausgeblendete Turniere. */
+export async function getVisiblePublicTournaments() {
+  const [tournaments, archiveEnabled] = await Promise.all([
+    getAllPublicTournaments(),
+    isFeatureEnabled(FEATURE_FLAGS.tournamentArchive),
+  ]);
+
+  return archiveEnabled ? tournaments : tournaments.filter((t) => !PAST_STATUSES.includes(t.status));
 }
 
 export async function getTournamentBySlug(slug: string) {
@@ -397,16 +418,4 @@ export async function getNavigation(key: 'main' | 'footer'): Promise<NavItem[]> 
 
     return attach(byParent.get(null) ?? []);
   }, 900);
-}
-
-export async function getFeatureFlags(): Promise<Record<string, boolean>> {
-  return cached(
-    'feature-flags',
-    [CacheTag.featureFlags],
-    async () => {
-      const flags = await prisma.featureFlag.findMany();
-      return Object.fromEntries(flags.map((flag) => [flag.key, flag.enabled]));
-    },
-    600,
-  );
 }

@@ -8,7 +8,7 @@ import { SponsorLogo } from '@/components/site/SponsorCard';
 import { TOURNAMENT_STATUS_META } from '@/components/site/TournamentCard';
 import { JsonLd } from '@/components/site/JsonLd';
 import { Icons } from '@/components/ui/Icon';
-import { getTournamentBySlug } from '@/lib/content/queries';
+import { getTournamentBySlug, isTournamentPubliclyVisible } from '@/lib/content/queries';
 import { breadcrumbJsonLd, buildMetadata, tournamentJsonLd } from '@/lib/seo';
 import { env } from '@/lib/env';
 import { formatDate, formatDateRange, formatDateTime } from '@/lib/format';
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const tournament = await getTournamentBySlug(slug);
 
-  if (!tournament) {
+  if (!tournament || !(await isTournamentPubliclyVisible(tournament.status))) {
     return { title: 'Turnier nicht gefunden', robots: { index: false, follow: false } };
   }
 
@@ -42,7 +42,8 @@ export default async function TournamentDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const tournament = await getTournamentBySlug(slug);
 
-  if (!tournament) {
+  // Bei abgeschaltetem Archiv ist auch die Detailseite nicht erreichbar.
+  if (!tournament || !(await isTournamentPubliclyVisible(tournament.status))) {
     notFound();
   }
 

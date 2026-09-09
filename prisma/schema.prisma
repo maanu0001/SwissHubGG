@@ -880,14 +880,3 @@ model RateLimitCounter {
   @@unique([bucket, identifier, windowStart])
   @@index([expiresAt])
 }
-
-/// Nachweis erteilter Einwilligungen ohne Personenbezug.
-model ConsentRecord {
-  id         String   @id @default(cuid())
-  consentId  String   @unique
-  categories String[]
-  policyVersion String
-  createdAt  DateTime @default(now())
-
-  @@index([createdAt])
-}

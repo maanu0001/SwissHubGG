@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { env } from '@/lib/env';
-import { getAllPublicTournaments, listPublishedPageSlugs } from '@/lib/content/queries';
+import { getVisiblePublicTournaments, listPublishedPageSlugs } from '@/lib/content/queries';
 
 // Wird pro Anfrage erzeugt, damit der Produktions-Build keine Datenbank benötigt.
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = env().APP_URL;
-  const [pages, tournaments] = await Promise.all([listPublishedPageSlugs(), getAllPublicTournaments()]);
+  const [pages, tournaments] = await Promise.all([listPublishedPageSlugs(), getVisiblePublicTournaments()]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: base, changeFrequency: 'weekly', priority: 1 },
