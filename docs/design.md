@@ -138,6 +138,27 @@ auslösen und der Inhalt dauerhaft unsichtbar bleiben.
   verändert, trägt das Element `suppressHydrationWarning` – sonst könnte das
   Hochzählen mit der Hydration zusammenfallen.
 
+### Scrollposition beim Seitenwechsel
+
+`html` trägt `scroll-behavior: smooth`, damit Ankersprünge weich laufen. Genau
+das macht aber auch das Zurücksetzen der Scrollposition durch den Router zu
+einer Animation – und der Router ruft nach einem Wechsel selbst
+`scrollIntoView()` auf den Abschnitten der neuen Seite auf. Ohne Gegenmassnahme
+öffnet sich eine Unterseite dadurch mitten im Inhalt und scrollt erst langsam
+nach oben.
+
+`RouteScrollReset` (einmal im Wurzel-Layout) löst das zentral:
+
+- Nur bei einem echten Wechsel des Pfads – Ankersprünge, der Sprunglink und
+  Filterwechsel auf derselben Seite bleiben unberührt.
+- Weiches Scrollen wird für die Dauer des Wechsels ausgesetzt und der
+  Seitenanfang aktiv gehalten; eine bereits laufende weiche Bewegung würde
+  sonst weiterlaufen, sobald sie wieder erlaubt ist.
+- Eigene Eingaben (Rad, Berührung, Taste, Zeiger) beenden das Festhalten
+  sofort.
+- Bei „Zurück“ und „Vorwärts“ bleibt die wiederhergestellte Position bestehen.
+- Ein Ankerlink auf die Startseite springt weiterhin zum Abschnitt.
+
 ### Interaktion
 
 Karten heben sich an, neigen sich leicht, ziehen eine Akzentlinie auf und

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { RouteScrollReset } from '@/components/site/RouteScrollReset';
 import { env } from '@/lib/env';
 import { getSettings } from '@/lib/settings';
 
@@ -51,6 +52,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="de-CH" suppressHydrationWarning>
       <body className="flex min-h-dvh flex-col bg-[var(--color-canvas)] text-[var(--color-ink)] antialiased">
+        {/* Zentral für alle Bereiche: ein Seitenwechsel beginnt oben. */}
+        <RouteScrollReset />
         {children}
       </body>
     </html>
