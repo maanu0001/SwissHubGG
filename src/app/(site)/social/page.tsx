@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { FilterLink } from '@/components/site/FilterLink';
 import type { SocialPlatform } from '@prisma/client';
 import { SocialPostCard } from '@/components/site/SocialPostCard';
 import { SOCIAL_PLATFORM_META } from '@/components/site/socialMeta';
@@ -51,11 +51,6 @@ export default async function SocialPage({ searchParams }: PageProps) {
   });
 
   const discordUrl = safeUrl(settings.discordInviteUrl);
-
-  const filterClass = (active: boolean) =>
-    active
-      ? 'badge border-[color-mix(in_srgb,var(--color-brand)_65%,transparent)] bg-[var(--color-brand)] px-4 py-2 font-semibold text-white'
-      : 'badge-neutral px-4 py-2 transition-colors duration-200 hover:border-[var(--color-line-strong)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)]';
 
   return (
     <>
@@ -165,25 +160,29 @@ export default async function SocialPage({ searchParams }: PageProps) {
               <nav aria-label="Nach Plattform filtern">
                 <ul className="flex flex-wrap gap-2">
                   <li>
-                    <Link href="/social" aria-current={selected === null ? 'true' : undefined} className={filterClass(selected === null)}>
+                    <FilterLink href="/social" active={selected === null}>
                       Alle
-                    </Link>
+                    </FilterLink>
                   </li>
                   {availablePlatforms.map((platform) => (
                     <li key={platform}>
-                      <Link
+                      <FilterLink
                         href={`/social?plattform=${platform.toLowerCase()}`}
-                        aria-current={selected === platform ? 'true' : undefined}
-                        className={filterClass(selected === platform)}
+                        active={selected === platform}
                       >
                         {SOCIAL_PLATFORM_META[platform].label}
-                      </Link>
+                      </FilterLink>
                     </li>
                   ))}
                 </ul>
               </nav>
             ) : null}
           </div>
+
+          {/* Meldet den Wechsel des Filters, ohne den Fokus zu verschieben. */}
+          <p className="meta mb-7" role="status">
+            {posts.length === 1 ? '1 Beitrag gefunden' : `${posts.length} Beiträge gefunden`}
+          </p>
 
           {posts.length === 0 ? (
             <EmptyState

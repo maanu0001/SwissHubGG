@@ -259,7 +259,8 @@ Komponente, die auch über die Einfluganimation entscheidet: Beide Aufgaben
 brauchen die unmittelbar vorherige Route und müssen im selben Moment greifen.
 
 - Nur bei einem echten Wechsel des Pfads – Ankersprünge, der Sprunglink und
-  Filterwechsel auf derselben Seite bleiben unberührt.
+  Filterwechsel auf derselben Seite bleiben unberührt. Die Regel steht als
+  reine Funktion in `src/lib/navigation/scrollReset.ts` und ist geprüft.
 - Weiches Scrollen wird für die Dauer des Wechsels ausgesetzt und der
   Seitenanfang aktiv gehalten; eine bereits laufende weiche Bewegung würde
   sonst weiterlaufen, sobald sie wieder erlaubt ist.
@@ -267,6 +268,21 @@ brauchen die unmittelbar vorherige Route und müssen im selben Moment greifen.
   sofort.
 - Bei „Zurück“ und „Vorwärts“ bleibt die wiederhergestellte Position bestehen.
 - Ein Ankerlink auf die Startseite springt weiterhin zum Abschnitt.
+
+### Filter
+
+Filter (Turnierstatus, Spiel, Social-Plattform) bleiben Links mit
+Suchparametern: Die Auswahl ist teilbar, „Zurück“ und „Vorwärts“ funktionieren,
+und ohne JavaScript lässt sich weiterhin filtern.
+
+Sie entstehen alle aus `FilterLink`. Dort steht das Entscheidende:
+`scroll={false}`. Der Router scrollt nach einer Navigation sonst an den Anfang
+der neuen Ansicht – er ruft dafür `scrollIntoView()` auf den Abschnitten auf.
+Beim Filtern ist das falsch: Der Pfad bleibt derselbe, es ist kein
+Seitenwechsel, und die Ansicht spränge vom Filter weg an den Seitenanfang.
+
+Weil jeder Filter über diese eine Komponente läuft, verhalten sich künftig
+ergänzte Status, Spiele und Plattformen ohne Zutun richtig.
 
 ### Mobile Navigation
 

@@ -2,7 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { HOME_PATH, INTRO_ATTRIBUTE, introState } from '@/lib/motion/intro';
+import { INTRO_ATTRIBUTE, introState } from '@/lib/motion/intro';
+import { shouldResetScroll } from '@/lib/navigation/scrollReset';
 
 /**
  * Zentrale Stelle für alles, was bei einem Seitenwechsel passieren muss.
@@ -72,13 +73,18 @@ export function RouteTransition() {
     const wasHistoryNavigation = cameFromHistory.current;
     cameFromHistory.current = false;
 
-    // Erstaufruf: Der Browser hat die Scrollposition bereits gesetzt – auch bei
-    // einem geteilten Link mit Anker – und die Bewegungs-Laufzeit hat den
-    // Zustand der Einfluganimation vor dem ersten Zeichnen festgelegt.
-    if (previous === null) return;
+    /*
+      Erstaufruf: Der Browser hat die Scrollposition bereits gesetzt – auch bei
+      einem geteilten Link mit Anker – und die Bewegungs-Laufzeit hat den
+      Zustand der Einfluganimation vor dem ersten Zeichnen festgelegt.
 
-    // Kein Seitenwechsel (z. B. nur ein Anker oder ein Suchparameter).
-    if (previous === pathname) return;
+      Kein Pfadwechsel: Ein Filterwechsel wie `/turniere?status=laufend` ist
+      kein Seitenwechsel. `usePathname` enthält keine Suchparameter, der
+      Effekt läuft dafür also ohnehin nicht erneut – die Prüfung steht hier
+      trotzdem ausdrücklich, damit die Zusicherung an einer Stelle nachlesbar
+      und geprüft ist.
+    */
+    if (previous === null || previous === pathname) return;
 
     const root = document.documentElement;
 
@@ -97,12 +103,19 @@ export function RouteTransition() {
       introState({ to: pathname, from: previous, reducedMotion: prefersReducedMotion() }),
     );
 
-    // Zurück und Vorwärts: die wiederhergestellte Position bleibt bestehen.
-    if (wasHistoryNavigation) return;
-
-    // Einzige Ausnahme: ein Ankerlink auf die Startseite darf weiterhin zum
-    // gewünschten Abschnitt springen.
-    if (pathname === HOME_PATH && window.location.hash.length > 1) return;
+    // Ob überhaupt oben begonnen wird, entscheidet `shouldResetScroll`:
+    // nicht bei „Zurück“/„Vorwärts“ und nicht bei einem Anker auf die
+    // Startseite.
+    if (
+      !shouldResetScroll({
+        to: pathname,
+        from: previous,
+        viaHistory: wasHistoryNavigation,
+        hash: window.location.hash,
+      })
+    ) {
+      return;
+    }
 
     /*
       Weiches Scrollen für die Dauer des Seitenwechsels aussetzen.

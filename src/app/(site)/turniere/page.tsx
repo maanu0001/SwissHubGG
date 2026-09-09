@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { TournamentStatus } from '@prisma/client';
+import { FilterLink } from '@/components/site/FilterLink';
 import { TournamentCard } from '@/components/site/TournamentCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { JsonLd } from '@/components/site/JsonLd';
@@ -44,13 +44,6 @@ function matchesStatus(status: TournamentStatus, filter: string): boolean {
   if (filter === 'laufend') return status === TournamentStatus.RUNNING;
   if (filter === 'vergangen') return PAST_STATUSES.includes(status);
   return true;
-}
-
-/** Einheitliche Darstellung der Filterschaltflächen. */
-function filterClass(active: boolean): string {
-  return active
-    ? 'badge border-[color-mix(in_srgb,var(--color-brand)_65%,transparent)] bg-[var(--color-brand)] px-4 py-2 font-semibold text-white shadow-[var(--shadow-card)]'
-    : 'badge-neutral px-4 py-2 transition-[color,border-color,background-color] duration-200 hover:border-[var(--color-line-strong)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)]';
 }
 
 export default async function TournamentsPage({ searchParams }: PageProps) {
@@ -123,20 +116,13 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
         <div className="mb-9 space-y-4">
           <nav aria-label="Nach Status filtern" {...revealProps('up', 0)}>
             <ul className="flex flex-wrap gap-2">
-              {statusFilters.map((filter) => {
-                const active = filter.key === statusFilter;
-                return (
-                  <li key={filter.key}>
-                    <Link
-                      href={buildHref(filter.key, gameFilter)}
-                      aria-current={active ? 'true' : undefined}
-                      className={filterClass(active)}
-                    >
-                      {filter.label}
-                    </Link>
-                  </li>
-                );
-              })}
+              {statusFilters.map((filter) => (
+                <li key={filter.key}>
+                  <FilterLink href={buildHref(filter.key, gameFilter)} active={filter.key === statusFilter}>
+                    {filter.label}
+                  </FilterLink>
+                </li>
+              ))}
             </ul>
           </nav>
 
@@ -144,31 +130,19 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
             <nav aria-label="Nach Spiel filtern" {...revealProps('up', 1)}>
               <ul className="flex flex-wrap gap-2">
                 <li>
-                  <Link
-                    href={buildHref(statusFilter, 'alle')}
-                    aria-current={gameFilter === 'alle' ? 'true' : undefined}
-                    className={
-                      gameFilter === 'alle'
-                        ? 'badge-tech border-[var(--color-line-strong)] bg-[var(--color-surface-hover)] px-3 py-1.5 text-[var(--color-ink)]'
-                        : 'badge-tech px-3 py-1.5 transition-colors hover:text-[var(--color-ink)]'
-                    }
-                  >
+                  <FilterLink href={buildHref(statusFilter, 'alle')} active={gameFilter === 'alle'} variant="tech">
                     Alle Spiele
-                  </Link>
+                  </FilterLink>
                 </li>
                 {games.map((game) => (
                   <li key={game.slug}>
-                    <Link
+                    <FilterLink
                       href={buildHref(statusFilter, game.slug)}
-                      aria-current={gameFilter === game.slug ? 'true' : undefined}
-                      className={
-                        gameFilter === game.slug
-                          ? 'badge-tech border-[var(--color-line-strong)] bg-[var(--color-surface-hover)] px-3 py-1.5 text-[var(--color-ink)]'
-                          : 'badge-tech px-3 py-1.5 transition-colors hover:text-[var(--color-ink)]'
-                      }
+                      active={gameFilter === game.slug}
+                      variant="tech"
                     >
                       {game.shortName ?? game.name}
-                    </Link>
+                    </FilterLink>
                   </li>
                 ))}
               </ul>
