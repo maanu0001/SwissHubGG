@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SectionRenderer } from '@/components/sections/SectionRenderer';
+import { CmsPageHero } from '@/components/site/CmsPageHero';
+import { splitPageHeader } from '@/lib/content/pageHeader';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { PreviewFrame } from '@/components/admin/builder/PreviewFrame';
@@ -52,6 +54,14 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
 
   const invalidCount = page.sections.length - sections.length;
   const viewport = ansicht === 'tablet' || ansicht === 'mobil' ? ansicht : 'desktop';
+
+  /*
+    Die Vorschau zeigt exakt dieselbe Seite wie die Veröffentlichung – also
+    auch denselben Kopfbereich. Nur die Startseite behält ihren eigenen
+    grossen Auftritt und bekommt keinen.
+  */
+  const isHome = page.slug === 'home';
+  const { header, sections: bodySections } = splitPageHeader(sections, page.title);
 
   return (
     <div className="min-h-dvh bg-[var(--color-canvas)]">
@@ -108,13 +118,15 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
         <div className="flex min-h-dvh flex-col bg-[var(--color-canvas)]">
           <SiteHeader />
           <main className="flex-1">
+            {isHome ? null : <CmsPageHero header={header} />}
+
             {sections.length === 0 ? (
               <div className="mx-auto max-w-xl px-6 py-24 text-center">
-                <h1 className="heading-md">Diese Seite hat noch keine Abschnitte</h1>
+                <p className="heading-md">Diese Seite hat noch keine Abschnitte</p>
                 <p className="lead mt-3">Füge im Builder den ersten Abschnitt hinzu.</p>
               </div>
             ) : (
-              <SectionRenderer sections={sections} />
+              <SectionRenderer sections={isHome ? sections : bodySections} />
             )}
           </main>
           <SiteFooter />

@@ -2,17 +2,21 @@
 
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { HOME_PATH, INTRO_ATTRIBUTE, introState } from '@/lib/motion/intro';
 
 /**
- * Setzt die Scrollposition bei einem Seitenwechsel zurück.
+ * Zentrale Stelle für alles, was bei einem Seitenwechsel passieren muss.
  *
- * Hintergrund: `html` hat `scroll-behavior: smooth`, damit Ankersprünge weich
- * laufen. Dadurch wird aber auch das Zurücksetzen der Scrollposition durch den
- * Router zu einer Animation – die neue Seite öffnet sich mitten im Inhalt und
- * scrollt erst langsam nach oben. Eine noch laufende weiche Scrollbewegung
- * läuft sogar auf der neuen Seite weiter.
+ * Beide Aufgaben brauchen dieselbe Information – die unmittelbar vorherige
+ * Route – und müssen im selben Moment greifen, nämlich nach dem Einfügen der
+ * neuen Seite und vor dem ersten Zeichnen. Deshalb liegen sie in einer
+ * Komponente statt in zwei parallel laufenden Beobachtern.
  *
- * Diese Komponente hängt einmal im Wurzel-Layout und greift zentral ein:
+ * **1. Scrollposition zurücksetzen.** `html` trägt `scroll-behavior: smooth`,
+ * damit Ankersprünge weich laufen. Dadurch wird aber auch das Zurücksetzen der
+ * Scrollposition durch den Router zu einer Animation – die neue Seite öffnet
+ * sich mitten im Inhalt und scrollt erst langsam nach oben. Eine noch laufende
+ * weiche Scrollbewegung läuft sogar auf der neuen Seite weiter.
  *
  * - Nur bei einem echten Wechsel des Pfads, nicht bei Hash-Sprüngen oder
  *   Filterwechseln innerhalb derselben Seite. Der Sprunglink „Direkt zum
@@ -22,12 +26,17 @@ import { usePathname } from 'next/navigation';
  *   Abschnittsverhalten. Auf allen anderen Seiten wird immer oben begonnen.
  * - Bei „Zurück“ und „Vorwärts“ bleibt die vom Browser wiederhergestellte
  *   Position erhalten – das erwarten Besucherinnen und Besucher dort.
- * - Der Sprung erfolgt vor dem ersten Zeichnen und ohne Animation, damit weder
- *   ein Flackern noch ein sichtbares Hochscrollen entsteht.
+ *
+ * **2. Einfluganimation freigeben oder unterdrücken.** Die Einblendungen sollen
+ * den Wechsel von der Startseite in einen Bereich begleiten und danach nicht
+ * mehr stören. Die Regel steckt in `shouldPlayIntro`; hier wird sie nur auf den
+ * tatsächlichen Routenverlauf angewendet und als Attribut am `<html>`-Element
+ * abgelegt. Der Erstaufruf ist bereits durch die Bewegungs-Laufzeit gesetzt,
+ * die noch vor dem ersten Zeichnen läuft.
  *
  * Bewegungsempfindliche Einstellungen bleiben unberührt: Ein harter Sprung ist
  * bei `prefers-reduced-motion` ohnehin das gewünschte Verhalten, und die
- * Einblendungen beim Scrollen laufen unverändert weiter.
+ * Einfluganimation ist dort grundsätzlich abgeschaltet.
  */
 
 /** Eigene Eingaben, die das Festhalten des Seitenanfangs sofort beenden. */
@@ -36,7 +45,11 @@ const USER_SCROLL_EVENTS = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as 
 /** Vor dem Zeichnen ausführen, ohne bei der Server-Ausgabe zu warnen. */
 const useBeforePaint = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
-export function RouteScrollReset() {
+function prefersReducedMotion(): boolean {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+}
+
+export function RouteTransition() {
   const pathname = usePathname();
   const previousPath = useRef<string | null>(null);
   const cameFromHistory = useRef(false);
@@ -59,21 +72,37 @@ export function RouteScrollReset() {
     const wasHistoryNavigation = cameFromHistory.current;
     cameFromHistory.current = false;
 
-    // Erstaufruf: Der Browser hat die Position bereits gesetzt – auch bei
-    // einem geteilten Link mit Anker.
+    // Erstaufruf: Der Browser hat die Scrollposition bereits gesetzt – auch bei
+    // einem geteilten Link mit Anker – und die Bewegungs-Laufzeit hat den
+    // Zustand der Einfluganimation vor dem ersten Zeichnen festgelegt.
     if (previous === null) return;
 
     // Kein Seitenwechsel (z. B. nur ein Anker oder ein Suchparameter).
     if (previous === pathname) return;
+
+    const root = document.documentElement;
+
+    /*
+      Einfluganimation: Der Zustand wird bei jedem Wechsel neu bestimmt, auch
+      bei „Zurück“ und „Vorwärts“. Entscheidend ist ausschliesslich, welche
+      Route unmittelbar zuvor angezeigt wurde – ein früherer Besuch der
+      Startseite genügt ausdrücklich nicht.
+
+      Das geschieht vor dem Zeichnen: Die neue Seite ist bereits im Dokument,
+      aber noch nicht sichtbar. Wird abgeschaltet, gilt die Ausgangsdarstellung
+      ohne Ausblendung – die Inhalte erscheinen sofort und vollständig.
+    */
+    root.setAttribute(
+      INTRO_ATTRIBUTE,
+      introState({ to: pathname, from: previous, reducedMotion: prefersReducedMotion() }),
+    );
 
     // Zurück und Vorwärts: die wiederhergestellte Position bleibt bestehen.
     if (wasHistoryNavigation) return;
 
     // Einzige Ausnahme: ein Ankerlink auf die Startseite darf weiterhin zum
     // gewünschten Abschnitt springen.
-    if (pathname === '/' && window.location.hash.length > 1) return;
-
-    const root = document.documentElement;
+    if (pathname === HOME_PATH && window.location.hash.length > 1) return;
 
     /*
       Weiches Scrollen für die Dauer des Seitenwechsels aussetzen.

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { SectionRenderer } from '@/components/sections/SectionRenderer';
+import { CmsPageHero } from '@/components/site/CmsPageHero';
+import { splitPageHeader } from '@/lib/content/pageHeader';
 import { getPublishedPage } from '@/lib/content/queries';
 import { buildMetadata, breadcrumbJsonLd } from '@/lib/seo';
 import { prisma } from '@/lib/db';
@@ -68,6 +70,10 @@ export default async function CmsPage({ params }: PageProps) {
     notFound();
   }
 
+  // Jede CMS-Seite beginnt mit demselben Kopfbereich wie die fest gebauten
+  // Unterseiten – auch jede künftig im Website-Builder angelegte Seite.
+  const { header, sections } = splitPageHeader(page.sections, page.title);
+
   return (
     <>
       <JsonLd
@@ -76,7 +82,8 @@ export default async function CmsPage({ params }: PageProps) {
           { name: page.title, path: `/${slug}` },
         ])}
       />
-      <SectionRenderer sections={page.sections} />
+      <CmsPageHero header={header} />
+      <SectionRenderer sections={sections} />
     </>
   );
 }

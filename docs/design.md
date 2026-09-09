@@ -73,7 +73,37 @@ Gebündelt werden sie über:
   Hintergrundkomposition.
 - `SectionShell` und `SectionHeading` – gemeinsamer Rahmen für jeden Abschnitt,
   inklusive Abschnittsnummer und Verbindungslinie.
-- `PageHero` – Kopfbereich aller Unterseiten.
+- `PageHero` – der gemeinsame Kopfbereich aller Unterseiten (siehe unten).
+- `CmsPageHero` – dünne Schicht darüber für die Seiten aus dem
+  Website-Builder.
+
+## Kopfbereich der Unterseiten
+
+Jede Seite ausser der Startseite beginnt mit demselben Kopfbereich. Er ist
+**einmal** gestaltet, in `PageHero`: dunkler technischer Hintergrund mit feinem
+Raster und rotem Lichtverlauf, kleines Kategorie-Label in Markenfarbe mit
+Symbol, grosse weisse Überschrift (`display-hero`, `clamp()`), optionaler
+Einleitungstext, waagrechte Akzentlinie in Markenfarbe und die schräg
+angeschnittene Kante zum Inhalt (`edge-diagonal`). Abstände und Inhaltsbreite
+kommen aus `shell`, das responsive Verhalten also ebenfalls.
+
+Diese eine Komponente verwenden:
+
+- die fest gebauten Seiten Turniere, Partner, Social Media und Kontakt,
+- und über `CmsPageHero` **jede** im Website-Builder gepflegte Seite – die
+  bestehenden ebenso wie jede künftig angelegte, im Entwurf, in der Vorschau
+  und veröffentlicht.
+
+Dafür braucht es kein neues CMS-Feld. Führt eine Seite bereits einen
+Auftaktblock (`HERO`), liefert dieser die Angaben – Label, Hauptaussage, Text,
+Motto und Schaltflächen wandern in den Kopfbereich, der Block wird nicht
+zusätzlich ausgegeben (`splitPageHeader` in `src/lib/content/pageHeader.ts`).
+Fehlt er, genügt der Seitentitel; ohne gepflegtes Label steht dort der Name der
+Website, ohne Einleitung entfällt der Absatz ersatzlos. Es wird nichts
+erfunden.
+
+Die Startseite ist ausgenommen: Sie behält ihren eigenen, grossen Auftritt mit
+der Bildmarke (`HeroSection`) und verwendet `PageHero` nicht.
 
 ## Bewegung
 
@@ -82,8 +112,10 @@ Die gesamte Bewegungslogik steckt in **einem** Inline-Skript
 gibt dafür keine Animationsbibliothek und keine zusätzlichen Client
 Components.
 
-Das Skript übernimmt sieben Aufgaben:
+Das Skript übernimmt acht Aufgaben:
 
+0. Zustand der Einfluganimation für den Erstaufruf festlegen (`data-intro` am
+   `<html>`) – siehe „Einfluganimation“ weiter unten.
 1. Einblenden beim Scrollen für alle `[data-reveal]`-Elemente.
 2. Dekorative Ebenen (`[data-ambient]`) nur animieren, solange sie sichtbar sind.
 3. Hochzählen echter, veröffentlichter Zahlen (`[data-countup]`).
@@ -140,6 +172,40 @@ auslösen und der Inhalt dauerhaft unsichtbar bleiben.
   verändert, trägt das Element `suppressHydrationWarning` – sonst könnte das
   Hochzählen mit der Hydration zusammenfallen.
 
+### Einfluganimation
+
+Die Einblendungen sind ein Auftritt, kein Dauerzustand: Sie begleiten den
+Wechsel von der Startseite in einen Bereich und stören danach nicht mehr.
+Entscheidend ist ausschliesslich die **unmittelbar vorherige** interne Route –
+nicht der Verlauf, nicht ein Merker, nicht `document.referrer` und kein
+sichtbarer Parameter in der Adresse.
+
+| Weg | Einflug |
+| --- | --- |
+| Startseite → Unterseite | ja |
+| Unterseite → Startseite | ja (die Startseite behält ihren Auftritt) |
+| Unterseite → Unterseite | nein |
+| Direktaufruf, Neuladen, neuer Tab, Verweis von aussen | nein |
+| Zurück/Vorwärts, sofern der Schritt davor nicht die Startseite war | nein |
+| Vorschau und Dashboard | nein |
+| `prefers-reduced-motion: reduce` | nie |
+
+Die Regel steht als reine Funktion in `src/lib/motion/intro.ts` und ist damit
+prüfbar. Angewendet wird sie an genau zwei Stellen:
+
+- **Erstaufruf:** die Bewegungs-Laufzeit setzt `data-intro` noch vor dem ersten
+  Zeichnen – nur auf der Startseite auf `on`.
+- **Seitenwechsel:** `RouteTransition` setzt das Attribut neu, nachdem die neue
+  Seite im Dokument steht und bevor sie gezeichnet wird.
+
+Das CSS blendet Inhalte **nur** bei `data-intro='on'` aus. Der ruhige Zustand
+ist damit der Normalfall: Ohne das Attribut gibt es keinen unsichtbaren
+Ausgangszustand, keine Verzögerung, kein Nachblenden und keine Verschiebung –
+die Inhalte stehen unmittelbar vollständig da. Fortlaufende
+Hintergrundbewegungen, Hover-Zustände und alle Interaktionen hängen nicht an
+diesem Attribut und bleiben überall aktiv. Auch das Hochzählen von Zahlen
+pausiert, solange der Einflug aus ist; der gepflegte Wert steht dann sofort da.
+
 ### Scrollposition beim Seitenwechsel
 
 `html` trägt `scroll-behavior: smooth`, damit Ankersprünge weich laufen. Genau
@@ -149,7 +215,9 @@ einer Animation – und der Router ruft nach einem Wechsel selbst
 öffnet sich eine Unterseite dadurch mitten im Inhalt und scrollt erst langsam
 nach oben.
 
-`RouteScrollReset` (einmal im Wurzel-Layout) löst das zentral:
+`RouteTransition` (einmal im Wurzel-Layout) löst das zentral – dieselbe
+Komponente, die auch über die Einfluganimation entscheidet: Beide Aufgaben
+brauchen die unmittelbar vorherige Route und müssen im selben Moment greifen.
 
 - Nur bei einem echten Wechsel des Pfads – Ankersprünge, der Sprunglink und
   Filterwechsel auf derselben Seite bleiben unberührt.

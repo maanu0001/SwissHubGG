@@ -14,6 +14,9 @@ import { headers } from 'next/headers';
  *   Beobachter angelegt noch Animationen gestartet.
  *
  * Aufgaben:
+ * 0. Zustand der Einfluganimation für den Erstaufruf festlegen (`data-intro`
+ *    am <html>): nur die Startseite beginnt mit ihrem Auftritt. Bei jedem
+ *    weiteren Seitenwechsel entscheidet `RouteTransition` neu.
  * 1. Reveal beim Scrollen für alle `[data-reveal]`-Elemente (mehrere Varianten).
  * 2. Dekorative Ebenen (`[data-ambient]`) nur animieren, solange sie sichtbar sind.
  * 3. Hochzählen echter, veröffentlichter Zahlen (`[data-countup]`).
@@ -37,6 +40,12 @@ if(!w.matchMedia||w.matchMedia('(prefers-reduced-motion: reduce)').matches)retur
 if(!('IntersectionObserver' in w))return;
 r.classList.add('motion-ready');
 
+/* 0) Einfluganimation für den Erstaufruf festlegen -------------------- */
+/* Nur die Startseite beginnt mit ihrem Auftritt. Direktaufruf, Neuladen,
+   neuer Tab, Vorschau und Verweise von aussen zeigen ihre Inhalte sofort.
+   Das geschieht vor dem ersten Zeichnen, deshalb blitzt nichts auf. */
+r.setAttribute('data-intro',(w.location&&w.location.pathname)==='/'?'on':'off');
+
 /* 1) Reveal ---------------------------------------------------------- */
 var seen=new WeakSet();
 var io=new IntersectionObserver(function(es){
@@ -53,6 +62,8 @@ var ao=new IntersectionObserver(function(es){
 /* 3) Zahlen hochzählen ------------------------------------------------ */
 var nf=new Intl.NumberFormat('de-CH');
 function count(el){
+  /* Ist die Einfluganimation aus, steht der gepflegte Wert sofort da. */
+  if(r.getAttribute('data-intro')!=='on')return;
   var target=parseFloat(el.getAttribute('data-countup')||'');
   if(!isFinite(target)||target<=0)return;
   var pre=el.getAttribute('data-countup-prefix')||'';

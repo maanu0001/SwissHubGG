@@ -4,12 +4,28 @@ import { TechBackdrop } from '@/components/visual/TechBackdrop';
 import { Reveal } from '@/components/visual/Reveal';
 
 /**
- * Kopfbereich der Unterseiten.
+ * Der gemeinsame Kopfbereich aller Unterseiten.
  *
- * Nimmt die Bildsprache der Startseite auf – technischer Hintergrund, grosse
- * Typografie, ein halbtransparentes Wort im Hintergrund – bleibt aber flacher
- * als der Hero, damit der eigentliche Inhalt früh sichtbar ist. Auch auf
- * Smartphones nimmt der Bereich nie mehr als einen Bildschirm ein.
+ * Das ist die einzige Stelle, an der dieser Bereich gestaltet wird – die
+ * fest gebauten Seiten (Turniere, Partner, Social Media, Kontakt) und alle
+ * über den Website-Builder gepflegten Seiten verwenden dieselbe Komponente.
+ * Neue Seiten bekommen dadurch ohne Zutun denselben Auftritt; es gibt kein
+ * zweites Markup und keine zweite Regelmenge, die auseinanderlaufen könnte.
+ *
+ * Aufbau, von oben nach unten:
+ *
+ * - dunkler technischer Hintergrund mit feinem Raster und Lichtverlauf
+ *   (`TechBackdrop`), dazu optional ein grosses Wort im Hintergrund
+ * - kleines Kategorie-Label in Markenfarbe, optional mit Symbol
+ * - grosse, markante Überschrift (`display-hero`, `clamp()`-basiert)
+ * - optionaler Einleitungstext
+ * - waagrechte Akzentlinie in Markenfarbe
+ * - optionale Signale und ein freier Bereich für Schaltflächen
+ * - schräg angeschnittener Übergang in den Seiteninhalt
+ *
+ * Der Bereich bleibt bewusst flacher als der Hero der Startseite, damit der
+ * eigentliche Inhalt früh sichtbar ist. Die Startseite behält ihren eigenen,
+ * grossen Auftritt mit der Bildmarke und verwendet diese Komponente nicht.
  *
  * „Signale“ sind kleine Statusmodule. Sie zeigen ausschliesslich real
  * vorhandene Angaben; ohne Daten wird nichts angezeigt.
@@ -23,6 +39,7 @@ export type HeroSignal = {
 };
 
 type PageHeroProps = {
+  /** Kategorie-Label über der Überschrift. */
   eyebrow: string;
   title: string;
   lead?: string;
@@ -68,9 +85,17 @@ export function PageHero({ eyebrow, title, lead, icon, ghost, signals, children 
           </Reveal>
         ) : null}
 
+        {/* Akzentlinie in Markenfarbe – schliesst die Aussage sichtbar ab. */}
+        <span
+          aria-hidden="true"
+          data-reveal="line"
+          style={{ '--reveal-delay': '210ms' } as React.CSSProperties}
+          className="mt-8 block h-0.5 w-20 bg-[var(--color-brand)] sm:w-28"
+        />
+
         {signals && signals.length > 0 ? (
           <Reveal index={3}>
-            <ul className="mt-9 flex flex-wrap gap-2.5">
+            <ul className="mt-8 flex flex-wrap gap-2.5">
               {signals.map((signal) => (
                 <li
                   key={signal.label}
