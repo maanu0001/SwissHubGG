@@ -6,8 +6,8 @@ import { Reveal } from '@/components/visual/Reveal';
  * Gemeinsamer Rahmen für alle Abschnitte der Website.
  *
  * Sorgt für den durchgehenden Seitenfluss: kontrollierte Hintergrundwechsel,
- * eine feine Verbindungslinie zwischen den Bereichen und – wo sinnvoll – ein
- * kleines Interface-Label mit Abschnittsnummer.
+ * schräg angeschnittene Flächen, grosse halbtransparente Typografie im
+ * Hintergrund und eine Verbindungslinie zwischen den Bereichen.
  *
  * Die Varianten sind bewusst begrenzt, damit die Redaktion nicht in ein
  * beliebiges Baukastensystem gerät, sondern im SwissHub-Designsystem bleibt.
@@ -30,6 +30,10 @@ type SectionShellProps = {
   compact?: boolean;
   /** Feine Linie, die den Abschnitt optisch mit dem vorherigen verbindet. */
   connect?: boolean;
+  /** Schräg angeschnittene Ober- oder Unterkante. */
+  cut?: 'top' | 'bottom' | 'both';
+  /** Grosses, halbtransparentes Wort im Hintergrund. */
+  ghost?: string;
   className?: string;
   id?: string;
   ariaLabelledBy?: string;
@@ -41,26 +45,41 @@ export function SectionShell({
   narrow = false,
   compact = false,
   connect = false,
+  cut,
+  ghost,
   className = '',
   id,
   ariaLabelledBy,
 }: SectionShellProps) {
-  const bordered = tone !== 'default';
+  const bordered = tone !== 'default' && !cut;
+  const cutClass = cut === 'top' ? 'cut-top' : cut === 'bottom' ? 'cut-bottom' : cut === 'both' ? 'cut-both' : '';
 
   return (
     <section
       id={id}
       aria-labelledby={ariaLabelledBy}
-      className={`relative ${TONE_SURFACE[tone]} ${
+      className={`relative isolate overflow-hidden ${TONE_SURFACE[tone]} ${cutClass} ${
         bordered ? 'border-y border-[var(--color-line)]' : ''
       } ${className}`}
     >
       {tone === 'tech' ? <TechBackdrop variant="soft" /> : null}
 
+      {/* Grosses Wort im Hintergrund, das sich beim Scrollen langsamer bewegt. */}
+      {ghost ? (
+        <span
+          aria-hidden="true"
+          data-scroll-parallax="70"
+          className="ghost-type absolute -right-8 top-0 -z-10 -translate-y-[42%] opacity-[0.13] sm:right-2"
+        >
+          {ghost}
+        </span>
+      ) : null}
+
       {connect ? (
         <span
           aria-hidden="true"
-          className="connector absolute left-1/2 top-0 h-12 -translate-x-1/2 -translate-y-1/2"
+          data-reveal="line-y"
+          className="connector absolute left-1/2 top-0 h-14 -translate-x-1/2 -translate-y-1/2"
         />
       ) : null}
 
@@ -83,6 +102,13 @@ type SectionHeadingProps = {
   id?: string;
 };
 
+/**
+ * Abschnittskopf mit grosser Nummer.
+ *
+ * Nummer und Label kommen bewusst aus einer anderen Richtung als die
+ * Überschrift – dadurch entsteht beim Scrollen ein spürbarer Rhythmus statt
+ * eines gleichförmigen Einblendens.
+ */
 export function SectionHeading({
   eyebrow,
   headline,
@@ -98,29 +124,46 @@ export function SectionHeading({
 
   return (
     <div
-      className={`mb-9 flex flex-col gap-5 sm:mb-11 ${
+      className={`mb-10 flex flex-col gap-6 sm:mb-14 ${
         action && !centered ? 'sm:flex-row sm:items-end sm:justify-between' : ''
       }`}
     >
-      <Reveal className={`max-w-2xl ${centered ? 'mx-auto text-center' : ''}`}>
-        {eyebrow || index ? (
-          <p className={`eyebrow ${centered ? 'justify-center' : ''}`}>
-            {index ? <span className="text-[var(--color-ink-subtle)]">{String(index).padStart(2, '0')}</span> : null}
-            <span aria-hidden="true" className="h-px w-7 bg-[var(--color-brand)]" />
-            {eyebrow}
-          </p>
+      <div className={`max-w-2xl ${centered ? 'mx-auto text-center' : ''}`}>
+        {index || eyebrow ? (
+          <Reveal
+            variant={centered ? 'fade' : 'left'}
+            className={`mb-4 flex items-center gap-4 ${centered ? 'justify-center' : ''}`}
+          >
+            {index ? <span className="index-xl">{String(index).padStart(2, '0')}</span> : null}
+            {eyebrow ? (
+              <span className="flex items-center gap-3">
+                <span aria-hidden="true" className="h-px w-8 bg-[var(--color-brand)]" />
+                <span className="meta-brand">{eyebrow}</span>
+              </span>
+            ) : null}
+          </Reveal>
         ) : null}
 
         {headline ? (
-          <h2 id={id} className="heading-lg">
-            {headline}
-          </h2>
+          <Reveal variant="mask" index={1}>
+            <h2 id={id} className="display-1">
+              {headline}
+            </h2>
+          </Reveal>
         ) : null}
 
-        {intro ? <p className={`lead mt-3.5 ${centered ? 'mx-auto' : ''}`}>{intro}</p> : null}
-      </Reveal>
+        {intro ? (
+          <Reveal index={2}>
+            <p className={`lead mt-4 ${centered ? 'mx-auto' : ''}`}>{intro}</p>
+          </Reveal>
+        ) : null}
+      </div>
 
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? (
+        <Reveal variant="right" index={2} className="shrink-0">
+          {action}
+        </Reveal>
+      ) : null}
     </div>
   );
 }

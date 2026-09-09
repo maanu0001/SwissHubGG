@@ -89,6 +89,9 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
 
   const running = all.filter((tournament) => tournament.status === TournamentStatus.RUNNING).length;
 
+  // Ab zwei Treffern wird das erste Turnier gross dargestellt.
+  const [highlight, rest] = sorted.length > 1 ? [sorted[0], sorted.slice(1)] : [null, sorted];
+
   const buildHref = (nextStatus: string, nextGame: string) => {
     const query = new URLSearchParams();
     if (nextStatus !== 'alle') query.set('status', nextStatus);
@@ -106,6 +109,7 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
       <PageHero
         eyebrow="Turniere & Events"
         icon="tournament"
+        ghost="Esports"
         title="Turniere der Schweizer Gaming-Community"
         lead="SwissHub organisiert regelmässig Turniere in verschiedenen Spielen – vom lockeren Community-Cup bis zum grösseren Wettbewerb. Alle Ausschreibungen, laufenden Turniere und das vollständige Archiv findest du hier."
         signals={
@@ -192,13 +196,24 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
             }
           />
         ) : (
-          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {sorted.map((tournament, index) => (
-              <li key={tournament.id} {...revealProps('up', index)}>
-                <TournamentCard tournament={tournament} priority={index < 3} />
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-5">
+            {/* Das relevanteste Turnier bekommt deutlich mehr Gewicht. */}
+            {highlight ? (
+              <div {...revealProps('scale', 0)}>
+                <TournamentCard tournament={highlight} featured priority />
+              </div>
+            ) : null}
+
+            {rest.length > 0 ? (
+              <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {rest.map((tournament, index) => (
+                  <li key={tournament.id} {...revealProps('up', index + 1)}>
+                    <TournamentCard tournament={tournament} priority={index < 2} />
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         )}
       </div>
     </>

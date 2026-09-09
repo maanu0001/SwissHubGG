@@ -10,7 +10,19 @@ import type { CSSProperties, ElementType, ReactNode } from 'react';
  * Ohne JavaScript oder bei reduzierter Bewegung bleibt alles sofort sichtbar.
  */
 
-export type RevealVariant = 'up' | 'left' | 'right' | 'scale' | 'fade';
+/**
+ * Die Varianten des Bewegungssystems.
+ *
+ * - `up`      – Standard: Inhalt steigt auf
+ * - `left`/`right` – seitlicher Einsatz, z. B. für Labels und Spalten
+ * - `scale`   – ruhiges Heranfahren für Flächen
+ * - `fade`    – nur Einblenden, ohne Versatz
+ * - `mask`    – Überschrift wird von einer Maske freigegeben
+ * - `line`    – waagrechte Linie baut sich auf
+ * - `line-y`  – senkrechte Verbindung baut sich auf
+ * - `zoom`    – Bild fährt aus einer Überdeckung heran
+ */
+export type RevealVariant = 'up' | 'left' | 'right' | 'scale' | 'fade' | 'mask' | 'line' | 'line-y' | 'zoom';
 
 /**
  * Attribute zum Anhängen an ein beliebiges Element – praktisch für Listen,

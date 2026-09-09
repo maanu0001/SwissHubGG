@@ -222,12 +222,47 @@
     @apply mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-brand-text)];
   }
 
-  /* Marketing-Headlines: responsiv über clamp, ohne Riesenzeilen auf dem Handy. */
+  /*
+    Marketing-Headlines. Bewusst grosse Sprünge zwischen den Stufen – der
+    Grössenkontrast ist ein tragendes Gestaltungsmittel. `clamp()` verhindert
+    dabei überdimensionierte Zeilen auf Smartphones.
+  */
+  .display-hero {
+    font-size: clamp(2.35rem, 1.1rem + 4.6vw, 5rem);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    font-weight: 800;
+  }
+
   .display-1 {
     font-size: clamp(2.15rem, 1.35rem + 3.4vw, 4.25rem);
     line-height: 1.04;
     letter-spacing: -0.035em;
     font-weight: 800;
+  }
+
+  /* Grosse, halbtransparente Typografie als Hintergrundmotiv. */
+  .ghost-type {
+    font-size: clamp(5rem, 17vw, 15rem);
+    line-height: 0.8;
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--color-line-strong) 100%, transparent);
+    user-select: none;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* Abschnittsnummer als eigenständiges gestalterisches Element. */
+  .index-xl {
+    font-family: var(--font-mono);
+    font-size: clamp(2.75rem, 6vw, 5rem);
+    line-height: 0.85;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px color-mix(in srgb, var(--color-brand-bright) 85%, transparent);
   }
 
   .display-2 {
@@ -279,9 +314,18 @@
   }
 
   .card-interactive:hover {
-    border-color: var(--color-line-strong);
+    border-color: color-mix(in srgb, var(--color-brand) 45%, var(--color-line-strong));
     background-color: var(--color-surface-raised);
     box-shadow: var(--shadow-lift);
+    transform: translateY(-6px);
+  }
+
+  /* Inhalte rücken beim Überfahren minimal nach – die Karte „öffnet“ sich. */
+  .card-interactive .card-shift {
+    transition: transform 0.4s var(--ease-out-soft);
+  }
+
+  .card-interactive:hover .card-shift {
     transform: translateY(-3px);
   }
 
@@ -358,8 +402,43 @@
     transform: translateY(-1px);
   }
 
+  /* Spürbares Druckfeedback statt reiner Farbänderung. */
   .btn-primary:active {
-    transform: translateY(0);
+    transform: translateY(1px) scale(0.985);
+  }
+
+  /* Lichtstreifen, der beim Überfahren einmal durchläuft. */
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.3s var(--ease-out-soft);
+    background: linear-gradient(
+      100deg,
+      transparent 30%,
+      rgb(255 255 255 / 0.22) 50%,
+      transparent 70%
+    );
+    background-size: 250% 100%;
+    background-position: 130% 0;
+  }
+
+  .motion-ready .btn-primary:hover::before {
+    opacity: 1;
+    animation: sh-sheen 0.75s var(--ease-out-soft);
+  }
+
+  @keyframes sh-sheen {
+    to {
+      background-position: -30% 0;
+    }
+  }
+
+  .btn-primary > * {
+    position: relative;
   }
 
   .btn-secondary {
@@ -373,7 +452,18 @@
   }
 
   .btn-secondary:active {
-    transform: translateY(0);
+    transform: translateY(1px) scale(0.985);
+  }
+
+  /* Pfeile und Icons in Schaltflächen gehen beim Überfahren mit. */
+  .btn-primary svg:last-child,
+  .btn-secondary svg:last-child {
+    transition: transform 0.3s var(--ease-out-soft);
+  }
+
+  .btn-primary:hover svg:last-child,
+  .btn-secondary:hover svg:last-child {
+    transform: translateX(3px);
   }
 
   .btn-ghost {
@@ -654,6 +744,131 @@
     );
   }
 
+  /*
+    Schräg angeschnittene Flächen. Der Abschnitt bekommt dadurch eine eigene
+    Silhouette statt der immer gleichen Rechteckfolge.
+  */
+  .cut-top {
+    clip-path: polygon(0 3.5vw, 100% 0, 100% 100%, 0 100%);
+  }
+
+  .cut-bottom {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 3.5vw), 0 100%);
+  }
+
+  .cut-both {
+    clip-path: polygon(0 3.5vw, 100% 0, 100% calc(100% - 3.5vw), 0 100%);
+  }
+
+  /* Diagonale Trennkante zwischen zwei Flächen. */
+  .edge-diagonal {
+    height: clamp(2.5rem, 6vw, 6rem);
+    background: linear-gradient(
+      to bottom right,
+      transparent 49.6%,
+      color-mix(in srgb, var(--color-brand) 55%, transparent) 49.6%,
+      color-mix(in srgb, var(--color-brand) 55%, transparent) 50.2%,
+      transparent 50.2%
+    );
+  }
+
+  /* Rotierende Interface-Ringe rund um das Logo. */
+  .orbit-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 1px dashed color-mix(in srgb, var(--color-line-strong) 90%, transparent);
+  }
+
+  .motion-ready .orbit-spin {
+    animation: sh-orbit 44s linear infinite;
+  }
+
+  .motion-ready .orbit-spin-reverse {
+    animation: sh-orbit 66s linear infinite reverse;
+  }
+
+  @keyframes sh-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Langsames Atmen des Lichtkranzes hinter der Marke. */
+  .motion-ready .breathe {
+    animation: sh-breathe 7s var(--ease-in-out-soft) infinite alternate;
+  }
+
+  @keyframes sh-breathe {
+    from {
+      opacity: 0.35;
+      transform: scale(0.94);
+    }
+    to {
+      opacity: 0.7;
+      transform: scale(1.06);
+    }
+  }
+
+  /* Signalimpuls entlang einer Verbindung. */
+  .motion-ready .signal {
+    animation: sh-signal 4.5s var(--ease-in-out-soft) infinite;
+  }
+
+  @keyframes sh-signal {
+    0%,
+    100% {
+      opacity: 0;
+      transform: translateX(0);
+    }
+    12% {
+      opacity: 1;
+    }
+    60% {
+      opacity: 1;
+    }
+    75%,
+    100% {
+      opacity: 0;
+      transform: translateX(var(--signal-distance, 4rem));
+    }
+  }
+
+  /* Hinweis, dass es unterhalb weitergeht. */
+  .motion-ready .scroll-cue {
+    animation: sh-cue 2.4s var(--ease-in-out-soft) infinite;
+  }
+
+  @keyframes sh-cue {
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.5;
+    }
+    50% {
+      transform: translateY(7px);
+      opacity: 1;
+    }
+  }
+
+  /* Enthüllung des Logos beim Laden – einmalig, ohne Dauerbewegung. */
+  .motion-ready .logo-entrance {
+    animation: sh-logo-in 1.1s var(--ease-out-soft) both;
+  }
+
+  @keyframes sh-logo-in {
+    from {
+      opacity: 0;
+      transform: scale(0.86);
+      filter: blur(6px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0);
+    }
+  }
+
   /* Eckmarken für technische Panels. */
   .corner-ticks::before,
   .corner-ticks::after {
@@ -700,34 +915,100 @@
   /* ------------------------------------------------------------------ */
 
   /*
-    Reveal beim Scrollen.
+    Bewegungssystem beim Scrollen.
+
+    Mehrere Varianten mit unterschiedlichem Charakter, damit nicht jeder
+    Abschnitt gleich erscheint: Text steigt auf, Überschriften werden von einer
+    Maske freigegeben, Labels kommen seitlich, Linien bauen sich auf, Bilder
+    zoomen weich heran.
 
     Ohne JavaScript und bei reduzierter Bewegung wird `motion-ready` nie
     gesetzt – dann ist jeder Inhalt sofort und unverändert sichtbar.
   */
   .motion-ready [data-reveal] {
     opacity: 0;
-    transform: translate3d(0, 14px, 0);
+    transform: translate3d(0, 26px, 0);
     transition:
-      opacity 0.6s var(--ease-out-soft),
-      transform 0.6s var(--ease-out-soft);
+      opacity 0.7s var(--ease-out-soft),
+      transform 0.7s var(--ease-out-soft);
     transition-delay: var(--reveal-delay, 0ms);
     will-change: opacity, transform;
   }
 
   .motion-ready [data-reveal='left'] {
-    transform: translate3d(-16px, 0, 0);
+    transform: translate3d(-38px, 0, 0);
   }
 
   .motion-ready [data-reveal='right'] {
-    transform: translate3d(16px, 0, 0);
+    transform: translate3d(38px, 0, 0);
   }
 
   .motion-ready [data-reveal='scale'] {
-    transform: scale(0.97);
+    transform: scale(0.94);
   }
 
   .motion-ready [data-reveal='fade'] {
+    transform: none;
+  }
+
+  /*
+    Überschrift wird von unten nach oben freigegeben.
+
+    Wichtig: Das beobachtete Element bleibt selbst unbeschnitten – ein
+    Beschnitt darauf würde seine Schnittfläche auf null setzen und die
+    Sichtbarkeitsbeobachtung damit nie auslösen. Deshalb liegt die Maske auf
+    dem Element (overflow) und bewegt wird der Inhalt darin.
+  */
+  .motion-ready [data-reveal='mask'] {
+    opacity: 1;
+    overflow: hidden;
+    /* Platz für Unterlängen, damit die Maske sie nicht abschneidet. */
+    padding-bottom: 0.14em;
+    margin-bottom: -0.14em;
+    transform: none;
+  }
+
+  .motion-ready [data-reveal='mask'] > * {
+    transform: translate3d(0, 108%, 0);
+    transition: transform 0.95s var(--ease-out-soft);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .motion-ready [data-reveal='mask'].is-revealed > * {
+    transform: none;
+  }
+
+  /* Linie baut sich von links auf. */
+  .motion-ready [data-reveal='line'] {
+    opacity: 1;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.9s var(--ease-out-soft);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  /* Senkrechte Verbindung baut sich von oben auf. */
+  .motion-ready [data-reveal='line-y'] {
+    opacity: 1;
+    transform: scaleY(0);
+    transform-origin: top center;
+    transition: transform 0.9s var(--ease-out-soft);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  /* Bild fährt sanft aus einer Überdeckung heraus. */
+  .motion-ready [data-reveal='zoom'] {
+    opacity: 1;
+    overflow: hidden;
+  }
+
+  .motion-ready [data-reveal='zoom'] > * {
+    transform: scale(1.12);
+    transition: transform 1.1s var(--ease-out-soft);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .motion-ready [data-reveal='zoom'].is-revealed > * {
     transform: none;
   }
 
@@ -735,6 +1016,59 @@
     opacity: 1;
     transform: none;
     will-change: auto;
+  }
+
+  .motion-ready [data-reveal='line'].is-revealed,
+  .motion-ready [data-reveal='line-y'].is-revealed {
+    transform: none;
+  }
+
+  /*
+    Ebenen, die sich beim Scrollen langsamer bewegen. Der Versatz kommt als
+    CSS-Variable aus der Bewegungs-Laufzeit; ohne JavaScript bleibt er 0.
+  */
+  [data-scroll-parallax] {
+    transform: translate3d(0, var(--parallax, 0px), 0);
+  }
+
+  .motion-ready [data-scroll-parallax] {
+    will-change: transform;
+  }
+
+  /*
+    Maus-Parallaxe im Hero. Die Laufzeit setzt `--px`/`--py` (−1 bis 1) auf der
+    Bühne; jede Ebene bestimmt über `--depth`, wie stark sie mitgeht.
+  */
+  .motion-ready [data-parallax-layer] {
+    transform: translate3d(
+      calc(var(--px, 0) * var(--depth, 10) * 1px),
+      calc(var(--py, 0) * var(--depth, 10) * 1px),
+      0
+    );
+    transition: transform 0.5s var(--ease-out-soft);
+  }
+
+  /* Lichtfläche, die der Maus folgt – sehr dezent, nur auf Zeigegeräten. */
+  .spotlight::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s var(--ease-out-soft);
+    background: radial-gradient(
+      22rem circle at var(--mx, 50%) var(--my, 0%),
+      color-mix(in srgb, var(--color-brand-bright) 20%, transparent),
+      transparent 62%
+    );
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .spotlight:hover::after,
+    .spotlight:focus-within::after {
+      opacity: 1;
+    }
   }
 
   /* Sicherheitsnetz: Sollte die Beobachtung ausfallen, wird alles sichtbar. */

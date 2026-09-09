@@ -53,9 +53,20 @@ type TournamentCardProps = {
     game: { name: string; shortName: string | null } | null;
   };
   priority?: boolean;
+  /**
+   * Grosse Darstellung für das wichtigste Turnier: quer über die volle Breite,
+   * mit deutlich mehr Gewicht für Banner, Status und Anmeldung.
+   */
+  featured?: boolean;
 };
 
-export function TournamentCard({ tournament, priority = false }: TournamentCardProps) {
+export function TournamentCard({ tournament, priority = false, featured = false }: TournamentCardProps) {
+  if (featured) return <FeaturedTournamentCard tournament={tournament} priority={priority} />;
+
+  return <CompactTournamentCard tournament={tournament} priority={priority} />;
+}
+
+function CompactTournamentCard({ tournament, priority = false }: TournamentCardProps) {
   const status = TOURNAMENT_STATUS_META[tournament.status];
   const isPast = PAST.includes(tournament.status);
   const isRunning = tournament.status === TournamentStatus.RUNNING;
@@ -65,7 +76,10 @@ export function TournamentCard({ tournament, priority = false }: TournamentCardP
   const countdown = isPast || isRunning ? null : formatCountdown(tournament.startsAt);
 
   return (
-    <article className="card-interactive tilt group relative flex h-full flex-col overflow-hidden">
+    <article
+      data-spotlight
+      className="card-interactive spotlight tilt group relative flex h-full flex-col overflow-hidden"
+    >
       {/* Statusleiste: fährt beim Überfahren durch. */}
       <span
         aria-hidden="true"
@@ -164,9 +178,131 @@ export function TournamentCard({ tournament, priority = false }: TournamentCardP
           ) : null}
         </dl>
 
-        <p className="link-arrow mt-auto pt-5">
+        <p className="link-arrow card-shift mt-auto pt-5">
           {isOpen ? 'Zur Anmeldung' : isPast ? 'Rückblick ansehen' : 'Details ansehen'}
           <Icons.arrowRight size={15} />
+        </p>
+      </div>
+    </article>
+  );
+}
+
+/**
+ * Grosse Variante für das wichtigste Turnier: quer über die volle Breite mit
+ * Banner, Statusleiste, Eckdaten und klarer Handlungsaufforderung.
+ */
+function FeaturedTournamentCard({ tournament, priority = false }: TournamentCardProps) {
+  const status = TOURNAMENT_STATUS_META[tournament.status];
+  const isPast = PAST.includes(tournament.status);
+  const isRunning = tournament.status === TournamentStatus.RUNNING;
+  const isOpen = tournament.status === TournamentStatus.REGISTRATION_OPEN;
+  const countdown = isPast || isRunning ? null : formatCountdown(tournament.startsAt);
+
+  return (
+    <article
+      data-spotlight
+      className="card-interactive spotlight group relative grid overflow-hidden lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]"
+    >
+      <span
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 z-10 h-1 opacity-80 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ backgroundColor: status.accent }}
+      />
+      <span
+        aria-hidden="true"
+        className="accent-line absolute inset-x-0 top-0 z-10 h-1 bg-[var(--color-brand-bright)]"
+      />
+
+      {/* Banner */}
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-[var(--color-void)] lg:aspect-auto lg:min-h-[22rem]">
+        {tournament.banner ? (
+          <MediaImage
+            storageKey={tournament.banner.storageKey}
+            alt={tournament.banner.alt ?? ''}
+            fill
+            priority={priority}
+            sizes="(min-width: 1024px) 640px, 96vw"
+            className="object-cover transition-transform duration-700 ease-[var(--ease-out-soft)] group-hover:scale-[1.06]"
+          />
+        ) : (
+          <div className="relative flex h-full items-center justify-center">
+            <span aria-hidden="true" className="absolute inset-0 tech-grid opacity-70" />
+            <span
+              aria-hidden="true"
+              data-ambient
+              className="glow-orb glow-brand drift-slow left-[calc(50%-9rem)] top-[calc(50%-9rem)] h-72 w-72 opacity-35"
+            />
+            <Icons.tournament size={56} className="relative text-[var(--color-line-strong)]" />
+          </div>
+        )}
+
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-[var(--color-surface)] via-transparent to-[color-mix(in_srgb,var(--color-void)_45%,transparent)] lg:bg-gradient-to-r"
+        />
+
+        <div className="absolute inset-x-4 top-4 flex flex-wrap items-start gap-2">
+          <span className={status.badge}>
+            {isRunning ? <span className="pulse-dot h-1.5 w-1.5" /> : null}
+            {status.label}
+          </span>
+          {tournament.game ? (
+            <span className="badge-tech">{tournament.game.shortName ?? tournament.game.name}</span>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Inhalt */}
+      <div className="relative flex flex-col justify-center p-6 sm:p-9">
+        <p className="meta-brand mb-3">Im Fokus</p>
+
+        <h3 className="display-2 text-[var(--color-ink)]">
+          <Link href={`/turniere/${tournament.slug}`} className="after:absolute after:inset-0">
+            {tournament.title}
+          </Link>
+        </h3>
+
+        {tournament.summary ? (
+          <p className="mt-4 max-w-md text-[0.9375rem] leading-relaxed text-[var(--color-ink-muted)]">
+            {tournament.summary}
+          </p>
+        ) : null}
+
+        <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-4 border-t border-[var(--color-line)] pt-5">
+          <div>
+            <dt className="meta">Zeitraum</dt>
+            <dd className="numeric mt-1 text-sm font-semibold text-[var(--color-ink)]">
+              {tournament.startsAt ? (
+                <time dateTime={toIsoString(tournament.startsAt)}>
+                  {formatDateRange(tournament.startsAt, tournament.endsAt)}
+                </time>
+              ) : (
+                formatDateRange(tournament.startsAt, tournament.endsAt)
+              )}
+            </dd>
+          </div>
+
+          {countdown ? (
+            <div>
+              <dt className="meta">Start</dt>
+              <dd className="mt-1 text-sm font-semibold text-[var(--color-brand-text)]">{countdown}</dd>
+            </div>
+          ) : null}
+
+          {tournament.winnerName ? (
+            <div>
+              <dt className="meta">Sieg</dt>
+              <dd className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-[var(--color-ink)]">
+                <Icons.star size={14} className="text-[var(--color-warning-text)]" />
+                {tournament.winnerName}
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+
+        <p className="link-arrow card-shift mt-7 text-base">
+          {isOpen ? 'Jetzt anmelden' : isPast ? 'Rückblick ansehen' : 'Details ansehen'}
+          <Icons.arrowRight size={17} />
         </p>
       </div>
     </article>

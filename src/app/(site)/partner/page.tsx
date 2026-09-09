@@ -6,6 +6,7 @@ import { JsonLd } from '@/components/site/JsonLd';
 import { Icons } from '@/components/ui/Icon';
 import { PageHero } from '@/components/site/PageHero';
 import { Reveal, revealProps } from '@/components/visual/Reveal';
+import { SectionHeading } from '@/components/visual/Section';
 import { getSponsors } from '@/lib/content/queries';
 import { getSettings } from '@/lib/settings';
 import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
@@ -52,17 +53,14 @@ export default async function PartnerPage() {
       <PageHero
         eyebrow={settings.sponsorSectionLabel}
         icon="shield"
+        ghost="Partner"
         title="Gemeinsam mit starken Partnern"
         lead="Turniere, Events und der Betrieb unserer Infrastruktur sind nur möglich, weil uns Partner unterstützen. Hier stellen wir sie vor."
       />
 
       <div className="shell section space-y-16 sm:space-y-20">
         <section aria-labelledby="aktive-partner">
-          <Reveal>
-            <h2 id="aktive-partner" className="heading-lg mb-8">
-              Aktuelle Partner
-            </h2>
-          </Reveal>
+          <SectionHeading id="aktive-partner" index={1} eyebrow="Aktuell" headline="Unsere Partner" />
 
           {grouped.length === 0 ? (
             <EmptyState
@@ -84,12 +82,13 @@ export default async function PartnerPage() {
 
         {former.length > 0 ? (
           <section aria-labelledby="ehemalige-partner">
-            <Reveal>
-              <h2 id="ehemalige-partner" className="heading-lg mb-3">
-                Ehemalige Partner
-              </h2>
-              <p className="lead mb-8">Diesen Partnern danken wir für die Unterstützung in der Vergangenheit.</p>
-            </Reveal>
+            <SectionHeading
+              id="ehemalige-partner"
+              index={2}
+              eyebrow="Rückblick"
+              headline="Ehemalige Partner"
+              intro="Diesen Partnern danken wir für die Unterstützung in der Vergangenheit."
+            />
 
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {former.map((sponsor, index) => (
@@ -112,7 +111,7 @@ export default async function PartnerPage() {
 
             <div className="relative max-w-2xl">
               <p className="meta-brand mb-4">Zusammenarbeit</p>
-              <h2 className="display-2">Partner werden</h2>
+              <h2 className="display-hero">Partner werden</h2>
               <p className="lead mt-4">
                 Du möchtest eine Schweizer Gaming-Community erreichen und Turniere oder Events unterstützen? Erzähl uns
                 von deiner Idee – wir melden uns mit einem passenden Vorschlag.

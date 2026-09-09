@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
-import { LogoStage } from '@/components/brand/Logo';
+import { HeroStage } from '@/components/site/HeroStage';
 import { Icons, type IconName } from '@/components/ui/Icon';
 import { MediaImage } from '@/components/site/MediaImage';
 import { LazyEmbed } from '@/components/site/LazyEmbed';
@@ -8,7 +8,6 @@ import { TournamentCard } from '@/components/site/TournamentCard';
 import { SponsorCard, SponsorLogo } from '@/components/site/SponsorCard';
 import { SocialPostCard } from '@/components/site/SocialPostCard';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { TechBackdrop } from '@/components/visual/TechBackdrop';
 import { Reveal, revealProps } from '@/components/visual/Reveal';
 import { SectionHeading, SectionShell, type SectionTone } from '@/components/visual/Section';
 import { AnimatedNumber } from '@/components/visual/AnimatedNumber';
@@ -123,9 +122,15 @@ async function SectionLinkButton({
 // ---------------------------------------------------------------------------
 
 /**
- * Hero: räumliche Komposition aus Logo, technischem Hintergrund und
- * Community-Signalen. Auf kleinen Geräten wird die Komposition umgestellt,
- * aber nicht auf einen einfachen Textblock reduziert.
+ * Hero – der erste Eindruck.
+ *
+ * Vollflächiger Auftakt über rund eine Bildschirmhöhe mit der Bildmarke als
+ * unübersehbarem Mittelpunkt. Hauptaussage, Motto und Handlungsaufforderungen
+ * ordnen sich um die Marke an; der Hintergrund besteht aus mehreren räumlichen
+ * Ebenen, die sich unterschiedlich schnell bewegen.
+ *
+ * Auf Smartphones bleibt die Komposition erhalten: die Marke steht weiterhin
+ * gross und zentral, nur die Ebenen und Abstände werden reduziert.
  */
 async function HeroSection({ data, index }: { data: Extract<RenderableSection, { type: 'HERO' }>['data']; index: number }) {
   const [settings, background] = await Promise.all([
@@ -137,8 +142,11 @@ async function HeroSection({ data, index }: { data: Extract<RenderableSection, {
   const first = index === 0;
 
   return (
-    <section className="relative isolate overflow-hidden">
-      <TechBackdrop variant="hero" />
+    <section
+      data-parallax-scene
+      className="relative isolate flex min-h-[94svh] flex-col justify-center overflow-hidden pb-14 pt-16 sm:pt-20"
+    >
+      <HeroBackdrop />
 
       {background ? (
         <div className="absolute inset-0 -z-10" aria-hidden="true">
@@ -150,94 +158,141 @@ async function HeroSection({ data, index }: { data: Extract<RenderableSection, {
             sizes="100vw"
             className="object-cover opacity-20"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-void)]/70 via-[var(--color-void)]/75 to-[var(--color-canvas)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-void)]/75 via-[var(--color-void)]/80 to-[var(--color-canvas)]" />
         </div>
       ) : null}
 
-      <div className="shell relative py-16 sm:py-24 lg:py-28">
-        <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-16">
-          {/* Textspalte */}
-          <div>
-            {data.eyebrow ? (
-              <Reveal>
-                <p className="eyebrow">
-                  <Icons.swiss size={14} />
-                  {data.eyebrow}
-                </p>
-              </Reveal>
-            ) : null}
+      <div className="shell relative flex flex-col items-center text-center">
+        {data.eyebrow ? (
+          <Reveal variant="fade">
+            <p className="eyebrow justify-center">
+              <Icons.swiss size={14} />
+              {data.eyebrow}
+            </p>
+          </Reveal>
+        ) : null}
 
-            <Reveal index={1}>
-              <h1 className="display-1">{data.headline}</h1>
-            </Reveal>
+        {/* Die Marke als Mittelpunkt der Komposition. */}
+        {data.showLogo ? (
+          <div className="relative mt-2 sm:mt-3">
+            <HeroStage priority={first} />
 
-            {data.motto ? (
-              <Reveal index={2}>
-                <p className="mt-5 flex items-center gap-3 text-lg font-semibold text-[var(--color-brand-text)] sm:text-xl">
-                  <span aria-hidden="true" className="h-px w-8 bg-[var(--color-brand)]" />
-                  «{data.motto}»
-                </p>
-              </Reveal>
-            ) : null}
-
-            {data.text ? (
-              <Reveal index={3}>
-                <p className="lead mt-6">{data.text}</p>
-              </Reveal>
-            ) : null}
-
-            {data.primaryLink || data.secondaryLink ? (
-              <Reveal index={4}>
-                <div className="mt-9 flex flex-wrap gap-3">
-                  {data.primaryLink ? <SectionLinkButton link={data.primaryLink} size="lg" /> : null}
-                  {data.secondaryLink ? (
-                    <SectionLinkButton link={data.secondaryLink} fallbackStyle="secondary" size="lg" />
-                  ) : null}
-                </div>
-              </Reveal>
-            ) : null}
-
-            {/* Community-Signale: ausschliesslich veröffentlichte, gepflegte Werte. */}
-            {stats.length > 0 ? (
-              <Reveal index={5}>
-                <dl className="mt-11 grid max-w-lg grid-cols-2 gap-x-6 gap-y-5 border-t border-[var(--color-line)] pt-7 sm:grid-cols-3">
-                  {stats.map((stat) => (
-                    <div key={stat.label}>
-                      <dt className="meta">{stat.label}</dt>
-                      <dd className="mt-1 text-xl font-bold text-[var(--color-ink)] sm:text-2xl">
-                        <AnimatedNumber value={stat.value} />
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </Reveal>
-            ) : null}
+            {/* Abstrahierte Verbindungen als Symbol für die Community. */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-full top-1/2 hidden h-px w-[18vw] max-w-56 items-center bg-gradient-to-r from-[color-mix(in_srgb,var(--color-brand)_70%,transparent)] to-transparent lg:flex"
+            >
+              <span className="signal ml-2 h-1.5 w-1.5 rounded-full bg-[var(--color-brand-bright)]" style={{ '--signal-distance': '9rem' } as React.CSSProperties} />
+            </span>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute right-full top-[38%] hidden h-px w-[18vw] max-w-56 bg-gradient-to-l from-[color-mix(in_srgb,var(--color-tech)_60%,transparent)] to-transparent lg:block"
+            />
           </div>
+        ) : null}
 
-          {/* Logo-Komposition */}
-          {data.showLogo ? (
-            <Reveal variant="scale" index={2} className="order-first flex justify-center lg:order-none lg:justify-end">
-              <div className="relative">
-                <LogoStage priority={first} />
+        {/* Die Überschrift greift bewusst in die Bühne hinein – Marke und
+            Aussage lesen sich dadurch als eine Komposition. */}
+        <Reveal variant="mask" index={1} className="relative -mt-[9%] sm:-mt-[8%]">
+          <h1 className="display-hero mx-auto max-w-[15ch] text-balance">{data.headline}</h1>
+        </Reveal>
 
-                {/* Abstrahierte Verbindungen als Symbol für die Community. */}
-                <span
-                  aria-hidden="true"
-                  className="hairline-brand absolute -left-16 top-1/2 hidden h-px w-16 lg:block"
-                />
-                <span
-                  aria-hidden="true"
-                  className="hairline-brand absolute -right-16 top-1/3 hidden h-px w-16 lg:block"
-                />
-              </div>
-            </Reveal>
-          ) : null}
-        </div>
+        {data.motto ? (
+          <Reveal variant="fade" index={2}>
+            <p className="mt-6 inline-flex items-center gap-3 rounded-full border border-[color-mix(in_srgb,var(--color-brand)_45%,transparent)] bg-[color-mix(in_srgb,var(--color-brand-soft)_75%,transparent)] px-5 py-2 text-base font-semibold text-[var(--color-brand-text)] backdrop-blur-sm sm:text-lg">
+              <span className="pulse-dot h-1.5 w-1.5" />
+              «{data.motto}»
+            </p>
+          </Reveal>
+        ) : null}
+
+        {data.text ? (
+          <Reveal index={3}>
+            {/* Bewusst knapp gehalten – die Details folgen weiter unten. */}
+            <p className="lead mx-auto mt-4 max-w-xl text-center text-[0.9375rem] sm:text-base">{data.text}</p>
+          </Reveal>
+        ) : null}
+
+        {data.primaryLink || data.secondaryLink ? (
+          <Reveal index={4}>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              {data.primaryLink ? <SectionLinkButton link={data.primaryLink} size="lg" /> : null}
+              {data.secondaryLink ? (
+                <SectionLinkButton link={data.secondaryLink} fallbackStyle="secondary" size="lg" />
+              ) : null}
+            </div>
+          </Reveal>
+        ) : null}
+
+        {/* Community-Signale: ausschliesslich veröffentlichte, gepflegte Werte. */}
+        {stats.length > 0 ? (
+          <Reveal index={5}>
+            <dl className="mt-10 flex flex-wrap justify-center gap-x-10 gap-y-6 border-t border-[var(--color-line)] pt-7">
+              {stats.map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <dd className="text-2xl font-extrabold text-[var(--color-ink)] sm:text-3xl">
+                    <AnimatedNumber value={stat.value} />
+                  </dd>
+                  <dt className="meta mt-1.5">{stat.label}</dt>
+                </div>
+              ))}
+            </dl>
+          </Reveal>
+        ) : null}
       </div>
 
-      {/* Verbindungslinie in den nächsten Abschnitt. */}
-      <span aria-hidden="true" className="connector absolute bottom-0 left-1/2 h-16 -translate-x-1/2" />
+      {/* Hinweis, dass es unterhalb weitergeht – ohne eigene Bauhöhe. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-5 flex justify-center">
+        <span className="scroll-cue flex flex-col items-center gap-2 text-[var(--color-ink-subtle)]" aria-hidden="true">
+          <span className="meta text-[10px]">Weiter</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <path d="M12 5v14M6 13l6 6 6-6" />
+          </svg>
+        </span>
+      </div>
     </section>
+  );
+}
+
+/**
+ * Hintergrund des Heros: mehrere Ebenen mit unterschiedlicher Tiefe – Raster,
+ * Lichtflächen, Netzwerkverbindungen und eine diagonale Fläche. Alles rein
+ * dekorativ und ausschliesslich per CSS bewegt.
+ */
+function HeroBackdrop() {
+  return (
+    <div data-ambient aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div className="absolute inset-0 hero-veil" />
+
+      {/* Feines Schweizer Raster */}
+      <div
+        className="absolute inset-0 tech-grid opacity-80"
+        data-parallax-layer
+        style={{ '--depth': 5 } as React.CSSProperties}
+      />
+
+      {/* Diagonale Fläche, die den Bereich anschneidet */}
+      <div className="absolute inset-x-0 bottom-0 h-[38%] bg-[color-mix(in_srgb,var(--color-surface)_55%,transparent)] [clip-path:polygon(0_38%,100%_0,100%_100%,0_100%)]" />
+
+      {/* Langsam wandernde Lichtflächen */}
+      <div className="glow-orb glow-brand drift-slow -left-[10%] top-[-18%] h-[42rem] w-[42rem] opacity-45" />
+      <div className="glow-orb glow-tech drift-slower -right-[12%] top-[18%] h-[34rem] w-[34rem] opacity-25" />
+      <div className="glow-orb glow-brand drift-slower bottom-[-22%] left-[38%] h-[30rem] w-[30rem] opacity-20" />
+
+      {/* Signalstriche, die den Bereich durchlaufen */}
+      <div className="absolute inset-x-0 top-[28%] h-px overflow-hidden">
+        <div className="sweep h-px w-1/3 bg-gradient-to-r from-transparent via-[var(--color-brand-text)] to-transparent opacity-0" />
+      </div>
+      <div className="absolute inset-x-0 bottom-[26%] h-px overflow-hidden">
+        <div
+          className="sweep h-px w-1/4 bg-gradient-to-r from-transparent via-[var(--color-tech-text)] to-transparent opacity-0"
+          style={{ animationDelay: '4s' }}
+        />
+      </div>
+
+      {/* Weicher Abschluss nach unten */}
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-[var(--color-canvas)]" />
+    </div>
   );
 }
 
@@ -423,49 +478,67 @@ async function VideoSection({ data }: { data: Extract<RenderableSection, { type:
   );
 }
 
+/**
+ * Abschluss-Aufforderung als eigenständige Bühne.
+ *
+ * Angeschnittene Fläche, grosses Wort im Hintergrund und eine sehr grosse
+ * Aussage – der Abschnitt hebt sich deutlich von den Inhaltsbereichen ab.
+ */
 function CtaSection({ data }: { data: Extract<RenderableSection, { type: 'CTA' }>['data'] }) {
   const accent = data.tone === 'accent';
 
   return (
-    <section className="section">
-      <div className="shell">
-        <Reveal variant="scale">
-          <div
-            className={`relative isolate overflow-hidden rounded-[var(--radius-panel)] border p-8 text-center sm:p-14 ${
-              accent
-                ? 'border-[color-mix(in_srgb,var(--color-brand)_45%,transparent)] bg-[color-mix(in_srgb,var(--color-brand-soft)_70%,var(--color-surface))]'
-                : 'border-[var(--color-line)] bg-[var(--color-surface)]'
-            }`}
-          >
-            <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-grid-fine opacity-50" />
-            {accent ? (
-              <span
-                aria-hidden="true"
-                data-ambient
-                className="glow-orb glow-brand drift-slow pointer-events-none left-[calc(50%-14rem)] top-[-10rem] h-[28rem] w-[28rem] opacity-25"
-              />
-            ) : null}
+    <section className={`relative isolate overflow-hidden cut-top ${accent ? 'bg-[var(--color-brand-soft)]' : 'bg-[var(--color-surface)]'}`}>
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-grid opacity-60" />
+      {accent ? (
+        <span
+          aria-hidden="true"
+          data-ambient
+          className="glow-orb glow-brand drift-slow pointer-events-none left-[calc(50%-16rem)] top-[-10rem] h-[32rem] w-[32rem] opacity-30"
+        />
+      ) : null}
 
-            <div className="relative">
-              <h2 className="display-2">{data.headline}</h2>
-              {data.text ? <p className="lead mx-auto mt-4 max-w-xl">{data.text}</p> : null}
+      <span
+        aria-hidden="true"
+        data-scroll-parallax="90"
+        className="ghost-type absolute -left-6 bottom-2 -z-10 opacity-[0.1]"
+      >
+        SwissHub
+      </span>
 
-              {data.primaryLink || data.secondaryLink ? (
-                <div className="mt-8 flex flex-wrap justify-center gap-3">
-                  {data.primaryLink ? <SectionLinkButton link={data.primaryLink} size="lg" /> : null}
-                  {data.secondaryLink ? (
-                    <SectionLinkButton link={data.secondaryLink} fallbackStyle="secondary" size="lg" />
-                  ) : null}
-                </div>
+      <div className="shell relative py-20 text-center sm:py-28">
+        <Reveal variant="mask">
+          <h2 className="display-hero mx-auto max-w-[16ch]">{data.headline}</h2>
+        </Reveal>
+
+        {data.text ? (
+          <Reveal index={1}>
+            <p className="lead mx-auto mt-6 max-w-xl text-center">{data.text}</p>
+          </Reveal>
+        ) : null}
+
+        {data.primaryLink || data.secondaryLink ? (
+          <Reveal index={2}>
+            <div className="mt-9 flex flex-wrap justify-center gap-3">
+              {data.primaryLink ? <SectionLinkButton link={data.primaryLink} size="lg" /> : null}
+              {data.secondaryLink ? (
+                <SectionLinkButton link={data.secondaryLink} fallbackStyle="secondary" size="lg" />
               ) : null}
             </div>
-          </div>
-        </Reveal>
+          </Reveal>
+        ) : null}
       </div>
     </section>
   );
 }
 
+/**
+ * Vorteile und Werte – bewusst kein gewöhnliches Kartenraster.
+ *
+ * Die Module sind versetzt angeordnet und über eine senkrechte Linie mit
+ * Knotenpunkten verbunden. Beim Scrollen baut sich die Linie auf, die Module
+ * kommen abwechselnd von links und rechts.
+ */
 function CardGridSection({
   data,
   index,
@@ -475,66 +548,88 @@ function CardGridSection({
 }) {
   if (data.cards.length === 0) return null;
 
-  const columnClass =
-    data.columns === 2
-      ? 'sm:grid-cols-2'
-      : data.columns === 4
-        ? 'sm:grid-cols-2 lg:grid-cols-4'
-        : 'sm:grid-cols-2 lg:grid-cols-3';
-
   return (
-    <SectionShell>
+    <SectionShell ghost="Community">
       <SectionHeading eyebrow={data.eyebrow} headline={data.headline} intro={data.intro} index={index} />
 
-      <ul className={`grid grid-cols-1 gap-4 ${columnClass}`}>
-        {data.cards.map((card, cardIndex) => {
-          const CardIcon = Icons[card.icon as IconName] ?? Icons.community;
-          const href = card.link ? safeUrl(card.link.href) : null;
+      <div className="relative">
+        {/* Verbindungslinie, die sich beim Scrollen aufbaut. */}
+        <span
+          aria-hidden="true"
+          data-reveal="line-y"
+          className="connector absolute left-[1.35rem] top-4 hidden h-[calc(100%-2rem)] lg:block"
+        />
 
-          return (
-            <li key={cardIndex} {...revealProps('up', cardIndex)}>
-              <div className="card-tech card-interactive group relative flex h-full flex-col p-5 sm:p-6">
+        <ul className="space-y-5 lg:space-y-8">
+          {data.cards.map((card, cardIndex) => {
+            const CardIcon = Icons[card.icon as IconName] ?? Icons.community;
+            const href = card.link ? safeUrl(card.link.href) : null;
+            /* Abwechselnder Versatz: die Reihe bricht sichtbar aus dem Raster aus. */
+            const offset = cardIndex % 2 === 0 ? 'lg:ml-0 lg:mr-[18%]' : 'lg:ml-[14%] lg:mr-0';
+
+            return (
+              <li key={cardIndex} className={`relative lg:pl-16 ${offset}`} {...revealProps(cardIndex % 2 === 0 ? 'left' : 'right', cardIndex, 90)}>
+                {/* Knotenpunkt auf der Verbindungslinie */}
                 <span
                   aria-hidden="true"
-                  className="accent-line absolute inset-x-0 bottom-0 h-px bg-[var(--color-brand-bright)]"
+                  className="absolute left-[1.35rem] top-8 hidden h-3 w-3 -translate-x-1/2 rotate-45 border border-[var(--color-brand)] bg-[var(--color-canvas)] lg:block"
                 />
 
-                <span className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--color-brand)_35%,var(--color-line))] bg-[var(--color-brand-soft)] text-[var(--color-brand-text)] transition-transform duration-300 ease-[var(--ease-out-soft)] group-hover:-translate-y-0.5">
-                  <CardIcon size={20} />
-                </span>
+                <div
+                  data-spotlight
+                  className="card-interactive spotlight group relative flex gap-5 overflow-hidden p-6 sm:gap-7 sm:p-8"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="accent-line absolute inset-x-0 bottom-0 h-px bg-[var(--color-brand-bright)]"
+                  />
 
-                <h3 className="text-base font-semibold text-[var(--color-ink)]">
-                  {href ? (
-                    <Link href={href} className="after:absolute after:inset-0">
-                      {card.title}
-                    </Link>
-                  ) : (
-                    card.title
-                  )}
-                </h3>
+                  <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--color-brand)_38%,var(--color-line))] bg-[var(--color-brand-soft)] text-[var(--color-brand-text)] transition-transform duration-500 ease-[var(--ease-out-soft)] group-hover:-translate-y-1 group-hover:rotate-[-6deg] sm:h-16 sm:w-16">
+                    <CardIcon size={26} />
+                  </span>
 
-                {card.text ? (
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-muted)]">{card.text}</p>
-                ) : null}
+                  <div className="relative min-w-0 card-shift">
+                    <span className="meta">{String(cardIndex + 1).padStart(2, '0')}</span>
+                    <h3 className="heading-md mt-1.5 text-[var(--color-ink)]">
+                      {href ? (
+                        <Link href={href} className="after:absolute after:inset-0">
+                          {card.title}
+                        </Link>
+                      ) : (
+                        card.title
+                      )}
+                    </h3>
 
-                {href && card.link ? (
-                  <p className="link-arrow mt-auto pt-5">
-                    {card.link.label}
-                    <Icons.arrowRight size={15} />
-                  </p>
-                ) : null}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+                    {card.text ? (
+                      <p className="mt-2.5 text-sm leading-relaxed text-[var(--color-ink-muted)] sm:text-[0.9375rem]">
+                        {card.text}
+                      </p>
+                    ) : null}
+
+                    {href && card.link ? (
+                      <p className="link-arrow mt-4">
+                        {card.link.label}
+                        <Icons.arrowRight size={15} />
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </SectionShell>
   );
 }
 
 /**
- * Statistiken als Community-Konsole statt als Reihe gleicher Kästchen.
- * Es werden ausschliesslich gepflegte und veröffentlichte Werte angezeigt.
+ * Community-Konsole statt einer Reihe gleicher Kästchen.
+ *
+ * Die Kennzahlen sitzen in einem technischen Panel, sind untereinander mit
+ * Linien verbunden und zählen beim erstmaligen Sichtbarwerden hoch. Angezeigt
+ * werden ausschliesslich gepflegte, veröffentlichte Werte – ohne Daten
+ * entfällt der Block vollständig.
  */
 async function StatsSection({
   data,
@@ -544,9 +639,9 @@ async function StatsSection({
   index: number;
 }) {
   let items = data.items;
+  const settings = await getSettings();
 
   if (data.useCommunityStats) {
-    const settings = await getSettings();
     items = publishedStats(settings).map((stat) => ({
       value: stat.value,
       label: stat.label,
@@ -554,39 +649,66 @@ async function StatsSection({
     }));
   }
 
-  // Ohne gepflegte Zahlen wird der Block auf der Website ausgelassen –
-  // es werden bewusst keine erfundenen Werte angezeigt.
   if (items.length === 0) return null;
 
+  const discordUrl = safeUrl(settings.discordInviteUrl);
+
   return (
-    <SectionShell tone="tech">
+    <SectionShell tone="tech" cut="both" ghost="Network">
       <SectionHeading headline={data.headline} align="center" index={index} />
 
-      <Reveal>
-        <div className="panel-glass corner-ticks relative overflow-hidden p-2">
-          <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-grid-fine opacity-60" />
+      <Reveal variant="scale">
+        <div
+          data-spotlight
+          className="panel-glass spotlight corner-ticks relative overflow-hidden p-1.5 sm:p-2"
+        >
+          <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-grid-fine opacity-70" />
 
-          <dl className="relative grid grid-cols-2 divide-[var(--color-line)] sm:divide-x lg:grid-cols-4">
+          {/* Kopfzeile der Konsole */}
+          <div className="relative flex items-center justify-between gap-3 border-b border-[var(--color-line)] px-4 py-3 sm:px-6">
+            <span className="meta flex items-center gap-2">
+              <span className="pulse-dot h-1.5 w-1.5 text-[var(--color-success-text)]" />
+              SwissHub
+            </span>
+            <span className="meta hidden sm:inline">Gepflegte Community-Zahlen</span>
+          </div>
+
+          <dl className="relative grid grid-cols-2 lg:grid-cols-4">
             {items.map((item, itemIndex) => (
               <div
                 key={itemIndex}
-                className="px-5 py-7 text-center sm:px-6"
-                {...revealProps('up', itemIndex, 90)}
+                className="relative border-b border-[var(--color-line)] px-5 py-8 text-center last:border-b-0 sm:px-6 sm:py-10 lg:border-b-0 lg:border-r lg:last:border-r-0 [&:nth-child(2n)]:border-l lg:[&:nth-child(2n)]:border-l-0"
+                {...revealProps('up', itemIndex, 110)}
               >
-                <dt className="meta">{item.label}</dt>
                 <dd>
-                  <span className="mt-2 block text-3xl font-extrabold tracking-tight text-[var(--color-ink)] sm:text-4xl">
+                  <span className="block text-4xl font-extrabold tracking-tight text-[var(--color-ink)] sm:text-5xl">
                     <AnimatedNumber value={item.value} />
                   </span>
-                  {item.description ? (
-                    <span className="mt-2 block text-xs leading-relaxed text-[var(--color-ink-subtle)]">
-                      {item.description}
-                    </span>
-                  ) : null}
                 </dd>
+                <dt className="meta-brand mt-3">{item.label}</dt>
+                {item.description ? (
+                  <p className="mt-2 text-xs leading-relaxed text-[var(--color-ink-subtle)]">{item.description}</p>
+                ) : null}
               </div>
             ))}
           </dl>
+
+          {/* Fusszeile mit dem Weg in die Community */}
+          {discordUrl ? (
+            <div className="relative flex flex-wrap items-center justify-between gap-4 border-t border-[var(--color-line)] px-4 py-4 sm:px-6">
+              <p className="meta">Der Alltag läuft auf unserem Discord</p>
+              <a
+                href={discordUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-track-social="DISCORD"
+                className="btn-primary btn-sm"
+              >
+                <Icons.discord size={15} />
+                Discord beitreten
+              </a>
+            </div>
+          ) : null}
         </div>
       </Reveal>
     </SectionShell>
@@ -648,11 +770,17 @@ async function LogoBarSection({ data }: { data: Extract<RenderableSection, { typ
   const settings = await getSettings();
 
   return (
-    <section className="relative border-y border-[var(--color-line)] bg-[var(--color-void)]">
+    <section className="relative overflow-hidden border-y border-[var(--color-line)] bg-[var(--color-void)]">
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0 tech-dots opacity-40" />
+
       <div className="shell section-tight relative">
         {data.showTitle ? (
-          <Reveal>
-            <h2 className="meta mb-7 text-center">{data.headline || settings.sponsorSectionLabel}</h2>
+          <Reveal variant="fade">
+            <div className="mb-8 flex items-center justify-center gap-4">
+              <span aria-hidden="true" data-reveal="line" className="hidden h-px w-16 bg-[var(--color-line-strong)] sm:block" />
+              <h2 className="meta text-center">{data.headline || settings.sponsorSectionLabel}</h2>
+              <span aria-hidden="true" data-reveal="line" className="hidden h-px w-16 bg-[var(--color-line-strong)] sm:block" />
+            </div>
           </Reveal>
         ) : null}
 
@@ -662,7 +790,11 @@ async function LogoBarSection({ data }: { data: Extract<RenderableSection, { typ
             const content = <SponsorLogo sponsor={sponsor} />;
 
             return (
-              <li key={sponsor.id} className="logo-plate min-w-[9rem]" {...revealProps('up', sponsorIndex, 45)}>
+              <li
+                key={sponsor.id}
+                className="logo-plate min-w-[9rem] transition-transform duration-300 ease-[var(--ease-out-soft)] hover:-translate-y-1"
+                {...revealProps('scale', sponsorIndex, 55)}
+              >
                 {website ? (
                   <a href={website} target="_blank" rel="noopener noreferrer sponsored" data-track-sponsor={sponsor.slug}>
                     {content}
@@ -697,7 +829,7 @@ async function SocialHighlightsSection({
   });
 
   return (
-    <SectionShell>
+    <SectionShell tone="muted" cut="top" ghost="Stream">
       <SectionHeading
         headline={data.headline}
         intro={data.intro}
@@ -720,10 +852,16 @@ async function SocialHighlightsSection({
           action={{ href: '/social', label: 'Zu unseren Kanälen' }}
         />
       ) : (
+        /* Bewusst ungleiche Kachelgrössen: der erste Beitrag nimmt zwei
+           Spalten ein, danach wechseln sich die Grössen ab. */
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {posts.map((post, postIndex) => (
-            <li key={post.id} {...revealProps('up', postIndex)}>
-              <SocialPostCard post={post} />
+            <li
+              key={post.id}
+              className={postIndex === 0 ? 'sm:col-span-2' : ''}
+              {...revealProps(postIndex % 2 === 0 ? 'up' : 'scale', postIndex, 80)}
+            >
+              <SocialPostCard post={post} emphasis={postIndex === 0} />
             </li>
           ))}
         </ul>
@@ -754,8 +892,10 @@ async function TournamentListSection({
             ? (await getVisiblePublicTournaments()).slice(0, data.limit)
             : await getUpcomingTournaments(data.limit);
 
+  const [featuredTournament, ...restTournaments] = tournaments;
+
   return (
-    <SectionShell>
+    <SectionShell ghost="Turniere">
       <SectionHeading
         headline={data.headline}
         intro={data.intro}
@@ -782,13 +922,24 @@ async function TournamentListSection({
           action={{ href: '/turniere', label: 'Zur Turnierübersicht' }}
         />
       ) : (
-        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {tournaments.map((tournament, tournamentIndex) => (
-            <li key={tournament.id} {...revealProps('up', tournamentIndex)}>
-              <TournamentCard tournament={tournament} />
-            </li>
-          ))}
-        </ul>
+        <div className="space-y-5">
+          {/* Das erste Turnier bekommt deutlich mehr Gewicht. */}
+          {featuredTournament ? (
+            <div {...revealProps('scale', 0)}>
+              <TournamentCard tournament={featuredTournament} featured />
+            </div>
+          ) : null}
+
+          {restTournaments.length > 0 ? (
+            <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {restTournaments.map((tournament, tournamentIndex) => (
+                <li key={tournament.id} {...revealProps('up', tournamentIndex + 1)}>
+                  <TournamentCard tournament={tournament} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       )}
     </SectionShell>
   );

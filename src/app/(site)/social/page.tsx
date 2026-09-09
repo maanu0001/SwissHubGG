@@ -8,6 +8,7 @@ import { JsonLd } from '@/components/site/JsonLd';
 import { Icons } from '@/components/ui/Icon';
 import { PageHero } from '@/components/site/PageHero';
 import { Reveal, revealProps } from '@/components/visual/Reveal';
+import { SectionHeading } from '@/components/visual/Section';
 import { getSocialAccounts, getSocialPosts } from '@/lib/content/queries';
 import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 import { getSettings } from '@/lib/settings';
@@ -63,6 +64,7 @@ export default async function SocialPage({ searchParams }: PageProps) {
       <PageHero
         eyebrow="Social Media"
         icon="chat"
+        ghost="Social"
         title="Folge SwissHub"
         lead="Der Discord ist unser zentraler Treffpunkt – dort läuft der Alltag der Community. Auf den übrigen Kanälen teilen wir Highlights, Clips und Ankündigungen."
         signals={
@@ -74,11 +76,7 @@ export default async function SocialPage({ searchParams }: PageProps) {
 
       <div className="shell section space-y-16 sm:space-y-20">
         <section aria-labelledby="kanaele">
-          <Reveal>
-            <h2 id="kanaele" className="heading-lg mb-8">
-              Unsere Kanäle
-            </h2>
-          </Reveal>
+          <SectionHeading id="kanaele" index={1} eyebrow="Kanäle" headline="Wo du uns findest" />
 
           {accounts.length === 0 ? (
             <EmptyState
@@ -153,12 +151,15 @@ export default async function SocialPage({ searchParams }: PageProps) {
 
         <section aria-labelledby="beitraege">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
-            <Reveal>
-              <h2 id="beitraege" className="heading-lg">
-                Ausgewählte Beiträge
-              </h2>
-              <p className="meta mt-2">Von uns kuratiert – ohne automatisch geladene Plattform-Feeds.</p>
-            </Reveal>
+            <div>
+              <SectionHeading
+                id="beitraege"
+                index={2}
+                eyebrow="Kuratiert"
+                headline="Ausgewählte Beiträge"
+                intro="Von uns ausgewählt – ohne automatisch geladene Plattform-Feeds."
+              />
+            </div>
 
             {availablePlatforms.length > 1 ? (
               <nav aria-label="Nach Plattform filtern">
@@ -194,8 +195,12 @@ export default async function SocialPage({ searchParams }: PageProps) {
           ) : (
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {posts.map((post, index) => (
-                <li key={post.id} {...revealProps('up', index)}>
-                  <SocialPostCard post={post} />
+                <li
+                  key={post.id}
+                  className={index === 0 ? 'sm:col-span-2' : ''}
+                  {...revealProps(index % 2 === 0 ? 'up' : 'scale', index, 80)}
+                >
+                  <SocialPostCard post={post} emphasis={index === 0} />
                 </li>
               ))}
             </ul>
@@ -213,7 +218,7 @@ export default async function SocialPage({ searchParams }: PageProps) {
               />
 
               <div className="relative">
-                <h2 className="display-2">{settings.motto ? `«${settings.motto}»` : 'Komm in die Community'}</h2>
+                <h2 className="display-hero">{settings.motto ? `«${settings.motto}»` : 'Komm in die Community'}</h2>
                 <p className="lead mx-auto mt-4 max-w-xl">
                   Der schnellste Weg in die Community führt über unseren Discord – dort findest du Mitspielende, Events
                   und den Support.

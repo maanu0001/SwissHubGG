@@ -36,6 +36,13 @@ export function AnimatedNumber({ value, className = '' }: { value: string; class
   return (
     <span
       className={`numeric ${className}`}
+      /*
+        Die Bewegungs-Laufzeit verändert den Text dieses Elements, wenn es
+        erstmals sichtbar wird. Das kann mit der Hydration zusammenfallen –
+        deshalb wird der Textabgleich hier bewusst ausgesetzt. Der Endzustand
+        ist immer exakt der gepflegte Wert.
+      */
+      suppressHydrationWarning
       data-countup={parsed.number}
       data-countup-prefix={parsed.prefix}
       data-countup-suffix={parsed.suffix}

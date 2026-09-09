@@ -232,9 +232,11 @@ const homeSections: SeedSection[] = [
     type: 'HERO',
     data: {
       eyebrow: 'Schweizer Gaming-Community',
-      headline: 'Willkommen in der Schweizer Gaming-Community',
+      // Kurz und selbstbewusst: der erste Bildschirm trägt eine Aussage,
+      // nicht einen Absatz. Die Erklärung folgt im nächsten Abschnitt.
+      headline: 'Hier spielt die Schweiz.',
       motto: 'Zäme hock, zäme zocke',
-      text: 'SwissHub ist der digitale Treffpunkt für alle, die in der Schweiz gerne gemeinsam spielen. Bei uns findest du Mitspielende, Turniere, Events und eine Community, in der Respekt und Offenheit selbstverständlich sind.',
+      text: 'Der digitale Treffpunkt für alle, die in der Schweiz gerne gemeinsam spielen.',
       primaryLink: { label: 'Discord beitreten', href: '{discord}', style: 'primary', external: true },
       secondaryLink: { label: 'Turniere ansehen', href: '/turniere', style: 'secondary', external: false },
       backgroundMediaId: null,

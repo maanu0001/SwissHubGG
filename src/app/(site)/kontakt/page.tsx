@@ -52,6 +52,7 @@ export default async function ContactPage({ searchParams }: PageProps) {
       <PageHero
         eyebrow="Kontakt"
         icon="mail"
+        ghost="Kontakt"
         title="Schreib uns"
         lead="Ob Partnerschaft, Sponsoring, Medienanfrage oder ein technisches Problem auf der Website – hier bist du richtig. Wir melden uns so schnell wie möglich zurück."
       />
