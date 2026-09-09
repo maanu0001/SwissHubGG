@@ -91,7 +91,9 @@ Das Skript übernimmt sieben Aufgaben:
 5. Lichtfläche, die der Maus folgt (`[data-spotlight]`).
 6. Maus-Parallaxe der Hero-Bühne (`[data-parallax-scene]`, Ebenen mit
    `[data-parallax-layer]` und eigener `--depth`).
-7. Scroll-Zustand des Kopfbereichs (`data-scrolled` am `<html>`).
+7. Scroll-Zustand des Kopfbereichs (`data-scrolled` am `<html>`). Solange die
+   mobile Navigation offen ist (`data-nav-open` am `<html>`), bleibt dieser
+   Zustand unverändert – die Seite ist dann fixiert und meldet die Position 0.
 
 Die Punkte 5 und 6 werden nur auf echten Zeigegeräten gebunden
 (`hover: hover` und `pointer: fine`); auf Touch-Geräten entstehen dadurch
@@ -158,6 +160,27 @@ nach oben.
   sofort.
 - Bei „Zurück“ und „Vorwärts“ bleibt die wiederhergestellte Position bestehen.
 - Ein Ankerlink auf die Startseite springt weiterhin zum Abschnitt.
+
+### Mobile Navigation
+
+Das Panel richtet sich nach `100dvh`, also nach dem tatsächlich sichtbaren
+Bereich. Mit `inset-0` würde es der Layout-Ansicht folgen – die ist auf
+Mobilgeräten höher als der sichtbare Bereich, sobald die Browserleiste
+eingeblendet ist, und der untere Teil des Menüs läge dahinter.
+
+- Kopf- und Fusszeile bleiben stehen (`shrink-0`) und halten über
+  `env(safe-area-inset-top/bottom)` Abstand zu den Systemleisten; gescrollt
+  wird bei zu geringer Höhe nur die Liste dazwischen.
+- Der Hintergrund wird über einen fixierten Body festgehalten – `overflow:
+  hidden` allein genügt nicht, weil das Wurzelelement scrollt. Die Position
+  stammt aus dem Moment des Antippens, weil die Fixierung die Dokumenthöhe im
+  selben Bild kappt.
+- Weil der Browser bei fixiertem Body die Position 0 meldet, setzt das Panel
+  `data-nav-open` am `<html>`; ohne dieses Merkmal würde der Kopfbereich hinter
+  dem Menü wieder wachsen und die Seite beim Schliessen verschieben.
+- Ab 768 px übernimmt die Navigation im Kopfbereich. Wird diese Breite beim
+  Drehen erreicht, schliesst das Panel selbst, damit weder eine unsichtbare
+  Ebene noch die Scrollsperre zurückbleibt.
 
 ### Interaktion
 

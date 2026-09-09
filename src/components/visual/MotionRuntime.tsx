@@ -20,7 +20,8 @@ import { headers } from 'next/headers';
  * 4. Ebenen, die sich beim Scrollen langsamer bewegen (`[data-scroll-parallax]`).
  * 5. Lichtfläche, die der Maus folgt (`[data-spotlight]`) – nur Zeigegeräte.
  * 6. Maus-Parallaxe der Hero-Bühne (`[data-parallax-scene]`) – nur Zeigegeräte.
- * 7. Scroll-Zustand für den Kopfbereich (`data-scrolled` am <html>).
+ * 7. Scroll-Zustand für den Kopfbereich (`data-scrolled` am <html>); pausiert,
+ *    solange die mobile Navigation offen ist (`data-nav-open`).
  *
  * Scroll- und Zeigerereignisse laufen passiv und über genau einen
  * `requestAnimationFrame`-Durchlauf, damit nichts die Bedienung verzögert.
@@ -169,7 +170,10 @@ function schedule(){
   if(ticking)return;
   ticking=true;
   requestAnimationFrame(function(){
-    r.setAttribute('data-scrolled',(w.scrollY||0)>16?'true':'false');
+    /* Bei offener mobiler Navigation ist die Seite fixiert und meldet 0.
+       Der Kopfbereich darf sich davon nicht beeinflussen lassen, sonst
+       verschiebt sich die Seite beim Schliessen. */
+    if(r.getAttribute('data-nav-open')!=='true')r.setAttribute('data-scrolled',(w.scrollY||0)>16?'true':'false');
     positionLayers();
     ticking=false;
   });
