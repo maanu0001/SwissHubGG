@@ -90,13 +90,15 @@ export default async function AdminSettingsPage() {
                     <li key={stat.id} className="rounded-lg border border-[var(--color-line)] p-4">
                       <input type="hidden" name="statId" value={stat.id} />
                       <div className="grid gap-3 sm:grid-cols-3">
-                        <Field label="Wert" name={`value-${stat.id}`} errorKey="value">
+                        {/* Der Fehlerschlüssel ist der Feldname – so trifft eine
+                            Meldung genau die betroffene Zeile. */}
+                        <Field label="Wert" name={`value-${stat.id}`}>
                           <input id={`value-${stat.id}`} name={`value-${stat.id}`} type="text" maxLength={30} defaultValue={stat.value} className="input" />
                         </Field>
-                        <Field label="Bezeichnung" name={`label-${stat.id}`} errorKey="label">
+                        <Field label="Bezeichnung" name={`label-${stat.id}`}>
                           <input id={`label-${stat.id}`} name={`label-${stat.id}`} type="text" maxLength={60} defaultValue={stat.label} className="input" />
                         </Field>
-                        <Field label="Zusatz" name={`description-${stat.id}`} errorKey="description">
+                        <Field label="Zusatz" name={`description-${stat.id}`}>
                           <input id={`description-${stat.id}`} name={`description-${stat.id}`} type="text" maxLength={160} defaultValue={stat.description ?? ''} className="input" />
                         </Field>
                       </div>

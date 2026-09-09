@@ -96,6 +96,50 @@ sudo certbot certonly --webroot -w /var/www/certbot -d swisshub.gg -d www.swissh
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
+#### Alternative: Apache als Reverse Proxy
+
+Wichtig ist nur eines: Der Proxy muss den **öffentlichen Host durchreichen**.
+Bei Apache ist `ProxyPreserveHost` standardmässig **aus** – die Anwendung sieht
+dann ihre interne Adresse (`127.0.0.1:3001`), der Browser sendet aber die
+öffentliche. Next.js nimmt eine Server Action nur an, wenn `Origin` und Host
+zusammenpassen; ohne diese Zeile scheitert deshalb jedes Speichern im
+Dashboard, ohne dass im Formular ein Fehler sichtbar würde.
+
+```apache
+<VirtualHost *:443>
+    ServerName new.swisshub.gg
+
+    SSLEngine on
+    SSLCertificateFile      /etc/letsencrypt/live/new.swisshub.gg/fullchain.pem
+    SSLCertificateKeyFile   /etc/letsencrypt/live/new.swisshub.gg/privkey.pem
+
+    # Ohne diese Zeile schlagen Server Actions fehl.
+    ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port  "443"
+
+    ProxyPass        / http://127.0.0.1:3001/
+    ProxyPassReverse / http://127.0.0.1:3001/
+</VirtualHost>
+```
+
+Dazu passend in der `.env`:
+
+```env
+APP_URL=https://new.swisshub.gg
+TRUST_PROXY=true
+```
+
+`APP_URL` ist die öffentliche Adresse – nie `127.0.0.1:3001` und nie
+`0.0.0.0:3000`. Aus ihr leitet die Anwendung auch die erlaubte Herkunft für
+Server Actions ab (`allowedOrigins` in `next.config.ts`). Wird die Website unter
+mehreren Domains betrieben, kommen die weiteren über `ADDITIONAL_ORIGINS`
+(kommagetrennt) dazu.
+
+Kontrolle nach dem Einrichten: **Dashboard → System → Reverse Proxy**. Dort
+stehen der tatsächlich ankommende Host und die erwartete Adresse nebeneinander;
+bei einer Abweichung nennt der Hinweis die nötige Einstellung.
+
 ### 6. Betrieb prüfen
 
 ```bash

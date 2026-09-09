@@ -8,6 +8,7 @@ import { prisma } from '@/lib/db';
 import { env } from '@/lib/env';
 import { queueHealth } from '@/lib/mail/queue';
 import { cacheStats } from '@/lib/cache';
+import { checkProxyHeaders } from '@/lib/proxyCheck';
 import { formatDateTime } from '@/lib/format';
 
 export const metadata = { title: 'System' };
@@ -16,7 +17,7 @@ export const metadata = { title: 'System' };
 export default async function AdminSystemPage() {
   await requirePermission(PERMISSIONS.BACKUPS_MANAGE);
 
-  const [health, failedJobs, redirects, counts] = await Promise.all([
+  const [health, failedJobs, redirects, counts, proxy] = await Promise.all([
     queueHealth(),
     prisma.emailJob.findMany({
       where: { status: EmailJobStatus.FAILED },
@@ -33,6 +34,7 @@ export default async function AdminSystemPage() {
       prisma.contactRequest.count(),
       prisma.auditLog.count(),
     ]),
+    checkProxyHeaders(),
   ]);
 
   const [pageCount, tournamentCount, sponsorCount, mediaCount, requestCount, auditCount] = counts;
@@ -173,6 +175,36 @@ export default async function AdminSystemPage() {
                 { label: 'Maximale Uploadgrösse', value: `${config.MAX_UPLOAD_MB} MB` },
                 { label: 'Speicherverzeichnis', value: config.STORAGE_DIR },
                 { label: 'Zwischenspeicher', value: `${cache.entries} Einträge` },
+              ].map((entry) => (
+                <div key={entry.label} className="flex items-baseline justify-between gap-4 border-b border-[var(--color-line)] pb-2 last:border-0">
+                  <dt className="text-[var(--color-ink-subtle)]">{entry.label}</dt>
+                  <dd className="text-right font-mono text-xs text-[var(--color-ink)]">{entry.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </Panel>
+
+          <Panel
+            title="Reverse Proxy"
+            description="Server Actions werden nur angenommen, wenn Herkunft und Host übereinstimmen."
+          >
+            {proxy.matches ? (
+              <InfoBox tone="success" title="Der Host wird korrekt durchgereicht">
+                Speichern im Dashboard funktioniert aus Sicht der Herkunftsprüfung.
+              </InfoBox>
+            ) : (
+              <InfoBox tone="warning" title="Der öffentliche Host kommt nicht an">
+                {proxy.hint}
+              </InfoBox>
+            )}
+
+            <dl className="mt-4 space-y-2 text-sm">
+              {[
+                { label: 'Host', value: proxy.host ?? '–' },
+                { label: 'X-Forwarded-Host', value: proxy.forwardedHost ?? 'nicht gesetzt' },
+                { label: 'X-Forwarded-Proto', value: proxy.forwardedProto ?? 'nicht gesetzt' },
+                { label: 'X-Forwarded-For', value: proxy.forwardedFor ? 'vorhanden' : 'nicht gesetzt' },
+                { label: 'Erwartet (APP_URL)', value: proxy.expectedHost },
               ].map((entry) => (
                 <div key={entry.label} className="flex items-baseline justify-between gap-4 border-b border-[var(--color-line)] pb-2 last:border-0">
                   <dt className="text-[var(--color-ink-subtle)]">{entry.label}</dt>

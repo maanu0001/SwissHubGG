@@ -22,6 +22,33 @@ const securityHeaders = [
   { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
 ];
 
+/**
+ * Öffentliche Hostnamen, unter denen die Anwendung erreichbar ist.
+ *
+ * Quelle ist `APP_URL`; zusätzliche Domains lassen sich über
+ * `ADDITIONAL_ORIGINS` (kommagetrennt) ergänzen. Interne Adressen wie
+ * `127.0.0.1:3001` gehören ausdrücklich **nicht** hierher – sie sind der
+ * Weg des Proxys zur Anwendung, nicht die Herkunft der Besucher.
+ */
+function publicHosts(): string[] {
+  const sources = [process.env.APP_URL, ...(process.env.ADDITIONAL_ORIGINS ?? '').split(',')];
+  const hosts = new Set<string>();
+
+  for (const source of sources) {
+    const value = source?.trim();
+    if (!value) continue;
+    try {
+      hosts.add(new URL(value.includes('://') ? value : `https://${value}`).host);
+    } catch {
+      // Eine unbrauchbare Angabe darf den Build nicht verhindern; die
+      // Herkunftsprüfung bleibt dann einfach auf dem Standardverhalten.
+      console.warn(`[next.config] Ungültige Origin-Angabe wird übersprungen: ${value}`);
+    }
+  }
+
+  return [...hosts];
+}
+
 const nextConfig: NextConfig = {
   // Erzeugt einen schlanken, eigenständigen Server für das Produktions-Image.
   output: 'standalone',
@@ -46,9 +73,21 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
-    // Server Actions nehmen nur Anfragen der eigenen Domain entgegen.
     serverActions: {
       bodySizeLimit: '12mb',
+      /*
+        Server Actions nehmen nur Anfragen der eigenen Domain entgegen: Next.js
+        vergleicht den `Origin`-Kopf mit dem Host der Anfrage. Hinter einem
+        Reverse Proxy ist das nur dann derselbe Wert, wenn der Proxy den
+        ursprünglichen Host durchreicht (Apache: `ProxyPreserveHost On`,
+        Nginx: `proxy_set_header Host $host`).
+
+        Damit eine fehlende Weitergabe nicht zu einem stillen Speicherfehler
+        führt, wird die öffentliche Domain zusätzlich ausdrücklich erlaubt. Das
+        schwächt die Prüfung nicht ab – sie bleibt aktiv, es kommt genau eine
+        bekannte, selbst konfigurierte Herkunft hinzu.
+      */
+      allowedOrigins: publicHosts(),
     },
   },
 

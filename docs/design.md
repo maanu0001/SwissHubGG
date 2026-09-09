@@ -29,6 +29,45 @@ Alle Kombinationen aus Text und Hintergrund erfüllen mindestens WCAG 2.2 AA.
 Geprüft wird das mit einem automatisierten Kontrastlauf über alle öffentlichen
 Seiten und die wichtigsten Dashboard-Seiten.
 
+## Dunkel und Hell
+
+Es gibt zwei Darstellungen. **Dunkel ist der Standard** und bleibt es: Beim
+ersten Besuch ist sie aktiv, unabhängig davon, wie das Betriebssystem
+eingestellt ist – `prefers-color-scheme` wird für die Wahl bewusst nicht
+ausgewertet. Erst eine bewusste Umschaltung aktiviert die helle Darstellung.
+
+Die Wahl gehört der besuchenden Person, nicht der Website: Sie liegt in einem
+eigenen Cookie (`swisshub_theme`, ein Jahr, `SameSite=Lax`) und ist keine
+Einstellung im Dashboard. Niemand ändert damit die Darstellung für andere.
+
+Umgesetzt ist sie ausschliesslich über die Merkmale oben. Die helle Fassung
+definiert dieselben Namen neu (`html[data-theme='light']`) – es gibt kein
+zweites Stylesheet, das auseinanderlaufen könnte. Nur wo eine Angabe an die
+Dunkelheit gebunden ist, steht eine eigene Fassung: Schatten, Leuchtflächen,
+Raster und der Kopfverlauf.
+
+Sie ist keine Umkehrung des Dunkeldesigns, sondern eine eigene Abstimmung:
+leicht kühl-neutrale Papierflächen statt Grau in Grau, `#83060A` unverändert
+als Markenfarbe, ein etwas kräftigeres Raster (auf Weiss trägt es sonst nicht)
+und deutlich zurückgenommene Leuchtflächen. Logos und Bilder werden nie
+eingefärbt oder invertiert; Statusfarben behalten ihre Bedeutung und werden nur
+für helle Untergründe nachgedunkelt.
+
+Der Zustand steht bereits im ausgelieferten HTML: Das Wurzel-Layout liest das
+Cookie und setzt `data-theme` sowie `color-scheme` am `<html>`. Dadurch gibt es
+weder ein Aufblitzen der falschen Darstellung noch eine Abweichung zwischen
+Server- und Client-Ausgabe – und es braucht kein Skript vor dem Zeichnen.
+`generateViewport` meldet dazu die passende Farbe der Browserleiste.
+
+Die Umschaltfläche (`ThemeToggle`) steht im Kopfbereich, im mobilen Menü und in
+der Navigation des Dashboards. Sie ist eine gewöhnliche Schaltfläche –
+vollständig per Tastatur bedienbar, mit `aria-pressed`, mit einer Beschriftung,
+die immer das Ziel nennt („Helles Design aktivieren“), und mit Sonne und Mond
+aus dem vorhandenen Symbolsatz. Massgeblich ist immer das Merkmal am `<html>`
+(gelesen über `useSyncExternalStore`), deshalb zeigen alle Schaltflächen
+denselben Zustand. Umgeschaltet wird ohne Neuaufbau der Seite; die Abmessungen
+bleiben gleich, es entsteht kein Sprung im Layout.
+
 ## Typografie
 
 Eine einzige, lokal gehostete Schrift (Inter, variabel) plus die Systemschrift

@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next';
+import { cookies } from 'next/headers';
 import './globals.css';
 import { RouteTransition } from '@/components/site/RouteTransition';
 import { env } from '@/lib/env';
 import { getSettings } from '@/lib/settings';
+import { THEME_COOKIE, colorSchemeOf, resolveTheme, themeColorOf } from '@/lib/theme';
 
 /**
  * Wurzel-Layout. Enthält nur das Grundgerüst; Kopf- und Fussbereich der
@@ -41,16 +43,38 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = {
-  themeColor: '#0b0c10',
-  colorScheme: 'dark',
-  width: 'device-width',
-  initialScale: 1,
-};
+/** Liest die gespeicherte Darstellung; ohne Wahl gilt die dunkle. */
+async function currentTheme() {
+  return resolveTheme((await cookies()).get(THEME_COOKIE)?.value);
+}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export async function generateViewport(): Promise<Viewport> {
+  const theme = await currentTheme();
+
+  return {
+    themeColor: themeColorOf(theme),
+    colorScheme: colorSchemeOf(theme),
+    width: 'device-width',
+    initialScale: 1,
+  };
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  /*
+    Die Darstellung wird serverseitig aufgelöst und steht damit bereits im
+    ausgelieferten HTML. Dadurch gibt es weder ein Aufblitzen der falschen
+    Darstellung noch eine Abweichung zwischen Server- und Client-Ausgabe –
+    und es braucht kein zusätzliches Skript vor dem Zeichnen.
+  */
+  const theme = await currentTheme();
+
   return (
-    <html lang="de-CH" suppressHydrationWarning>
+    <html
+      lang="de-CH"
+      data-theme={theme}
+      style={{ colorScheme: colorSchemeOf(theme) }}
+      suppressHydrationWarning
+    >
       <body className="flex min-h-dvh flex-col bg-[var(--color-canvas)] text-[var(--color-ink)] antialiased">
         {/* Zentral für alle Bereiche: ein Seitenwechsel beginnt oben und
             entscheidet, ob die Einfluganimation gespielt wird. */}

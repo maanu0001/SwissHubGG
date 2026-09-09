@@ -60,6 +60,10 @@ export function CookieNotice({ policyVersion }: { policyVersion: string }) {
     <div
       role="region"
       aria-label="Datenschutzhinweis"
+      /* Bei offener mobiler Navigation ausgeblendet: Das Menü ist ein modaler
+         Dialog – nichts darf darüber liegen oder daneben bedienbar bleiben.
+         Nach dem Schliessen erscheint der Hinweis unverändert wieder. */
+      data-hide-when-nav-open
       className="panel-glass fixed inset-x-3 bottom-3 z-50 mx-auto max-w-3xl p-4 sm:inset-x-6 sm:p-5"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

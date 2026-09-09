@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LogoLockup } from '@/components/brand/Logo';
 import { Icons } from '@/components/ui/Icon';
+import { ThemeToggle } from '@/components/site/ThemeToggle';
+import type { Theme } from '@/lib/theme';
 
 /**
  * Navigation des Admin-Dashboards.
@@ -22,9 +24,10 @@ type AdminNavProps = {
   groups: AdminNavGroup[];
   user: { displayName: string; roles: string[]; isSuperAdmin: boolean };
   logout: React.ReactNode;
+  theme: Theme;
 };
 
-export function AdminNav({ groups, user, logout }: AdminNavProps) {
+export function AdminNav({ groups, user, logout, theme }: AdminNavProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -81,7 +84,14 @@ export function AdminNav({ groups, user, logout }: AdminNavProps) {
           {user.isSuperAdmin ? 'Superadmin' : user.roles.length > 0 ? user.roles.join(', ') : 'Keine Rolle'}
         </p>
       </div>
-      <div className="mt-2 flex flex-col gap-1">
+      {/* Darstellung umschalten – an derselben, immer erreichbaren Stelle wie
+          Abmelden, in der Seitenleiste wie in der mobilen Navigation. */}
+      <div className="mt-2 flex items-center justify-between gap-2 rounded-lg px-3 py-1.5">
+        <span className="text-sm text-[var(--color-ink-muted)]">Darstellung</span>
+        <ThemeToggle initial={theme} />
+      </div>
+
+      <div className="mt-1 flex flex-col gap-1">
         <Link
           href="/"
           className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--color-ink-muted)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-ink)]"

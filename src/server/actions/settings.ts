@@ -7,7 +7,7 @@ import { CacheTag, invalidateAll, invalidateTags } from '@/lib/cache';
 import { requirePermissionForAction } from '@/lib/auth/guards';
 import { PERMISSIONS } from '@/lib/permissions';
 import { AUDIT_ACTIONS, recordAudit } from '@/lib/audit';
-import { settingsSchema, updateSettings, type SiteSettings } from '@/lib/settings';
+import { communityStatSchema, parseSettingsPatch, updateSettings, type SiteSettings } from '@/lib/settings';
 import { safeUrl } from '@/lib/sanitize';
 import { runSchedulerTick } from '@/lib/scheduler';
 import {
@@ -30,9 +30,14 @@ export async function updateSettingsGroupAction(_state: ActionState, formData: F
 
     const patch: Partial<SiteSettings> = {};
 
+    /*
+      Nur Felder übernehmen, die tatsächlich im Formular standen. Fehlt ein
+      Schlüssel, bleibt der gespeicherte Wert unangetastet – eine Gruppe
+      schreibt nie über eine andere hinweg.
+    */
     const assignText = (key: keyof SiteSettings) => {
-      const value = formData.get(key);
-      if (typeof value === 'string') Object.assign(patch, { [key]: value.trim() });
+      if (!formData.has(key)) return;
+      Object.assign(patch, { [key]: text(formData, key) });
     };
     const assignBool = (key: keyof SiteSettings) => {
       Object.assign(patch, { [key]: checkbox(formData, key) });
@@ -106,23 +111,21 @@ export async function updateSettingsGroupAction(_state: ActionState, formData: F
         return failure('Unbekannter Einstellungsbereich.');
     }
 
-    const validation = settingsSchema.partial().safeParse(patch);
+    const validation = parseSettingsPatch(patch);
     if (!validation.success) {
-      const fieldErrors: Record<string, string> = {};
-      for (const issue of validation.error.issues) {
-        const key = issue.path.join('.');
-        if (key && !(key in fieldErrors)) fieldErrors[key] = issue.message;
-      }
-      return failure('Bitte prüfe die markierten Felder.', fieldErrors);
+      return failure('Bitte prüfe die markierten Felder.', validation.fieldErrors);
     }
 
-    await updateSettings(validation.data);
+    // Erst schreiben, dann melden: Die Erfolgsmeldung erscheint ausschliesslich
+    // nach einer bestätigten Transaktion.
+    const written = await updateSettings(validation.data);
 
     await recordAudit({
       action: AUDIT_ACTIONS.SETTINGS_CHANGE,
       entityType: 'GlobalSetting',
       summary: `Einstellungen im Bereich „${group}“ geändert.`,
-      metadata: { keys: Object.keys(validation.data) },
+      // Nur die Namen der geänderten Felder – niemals deren Inhalte.
+      metadata: { group, keys: written },
       actor: user,
     });
 
@@ -149,6 +152,15 @@ export async function updateCommunityStatsAction(_state: ActionState, formData: 
 
     const newLabel = text(formData, 'newLabel');
     const newValue = text(formData, 'newValue');
+
+    // Eine halb ausgefüllte neue Zeile darf nicht kommentarlos verschwinden.
+    if (newLabel.length > 0 !== newValue.length > 0) {
+      return failure('Bitte prüfe die markierten Felder.', {
+        [newValue.length === 0 ? 'newValue' : 'newLabel']:
+          'Wert und Bezeichnung gehören zusammen – bitte beides ausfüllen.',
+      });
+    }
+
     if (newLabel.length > 0 && newValue.length > 0) {
       stats.push({
         id: randomUUID(),
@@ -163,7 +175,21 @@ export async function updateCommunityStatsAction(_state: ActionState, formData: 
       return failure('Es können höchstens sechs Community-Zahlen gepflegt werden.');
     }
 
-    await updateSettings({ communityStats: stats });
+    // Auch diese Gruppe wird serverseitig geprüft – die Längenangaben im
+    // Formular sind nur eine Bequemlichkeit, keine Absicherung.
+    const validation = communityStatSchema.array().safeParse(stats);
+    if (!validation.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of validation.error.issues) {
+        const [index, field] = issue.path;
+        const stat = typeof index === 'number' ? stats[index] : undefined;
+        const key = stat && typeof field === 'string' ? `${field}-${stat.id}` : 'form';
+        if (!(key in fieldErrors)) fieldErrors[key] = issue.message;
+      }
+      return failure('Bitte prüfe die markierten Felder.', fieldErrors);
+    }
+
+    await updateSettings({ communityStats: validation.data });
 
     await recordAudit({
       action: AUDIT_ACTIONS.SETTINGS_CHANGE,

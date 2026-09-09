@@ -1,5 +1,7 @@
 import { ContactStatus } from '@prisma/client';
+import { cookies } from 'next/headers';
 import { AdminNav, type AdminNavGroup } from '@/components/admin/AdminNav';
+import { THEME_COOKIE, resolveTheme } from '@/lib/theme';
 import { logoutAction } from '@/server/actions/auth';
 import { requireUser, touchSessionIfNeeded } from '@/lib/auth/adminSession';
 import { userHasAnyPermission, userHasPermission } from '@/lib/auth/session';
@@ -67,6 +69,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="flex min-h-dvh flex-col bg-[var(--color-canvas)] lg:flex-row">
       <AdminNav
         groups={groups}
+        theme={resolveTheme((await cookies()).get(THEME_COOKIE)?.value)}
         user={{
           displayName: user.displayName,
           roles: user.roles.map((role) => role.name),

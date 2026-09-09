@@ -35,8 +35,23 @@ export function fromZodError(error: ZodError): ActionState {
 }
 
 /**
+ * Erkennt einen Prisma-Fehler, ohne Prisma zu importieren.
+ *
+ * Dieses Modul wird auch von Client Components verwendet (`ActionForm`); ein
+ * Import von `@prisma/client` würde den Datenbanktreiber ins Browser-Bundle
+ * ziehen. Alle Prisma-Fehlerklassen tragen `clientVersion`; das genügt als
+ * Merkmal.
+ */
+function isDatabaseError(error: unknown): boolean {
+  return error instanceof Error && 'clientVersion' in error;
+}
+
+/**
  * Fängt erwartbare Fehler ab und übersetzt sie in eine verständliche Meldung.
- * Unerwartete Fehler landen im Serverlog, nicht in der Antwort.
+ *
+ * Grundsatz: keine stille Fehlfunktion. Jeder Zweig liefert eine Meldung mit
+ * einer Handlungsempfehlung; technische Einzelheiten bleiben im Serverlog und
+ * erreichen die Oberfläche nie.
  */
 export async function runAction(handler: () => Promise<ActionState>): Promise<ActionState> {
   try {
@@ -53,15 +68,31 @@ export async function runAction(handler: () => Promise<ActionState>): Promise<Ac
       throw error;
     }
 
+    if (isDatabaseError(error)) {
+      // Der Datenbankfehler selbst kann Werte enthalten – er bleibt im Log.
+      console.error('Server Action: Datenbankfehler', error);
+      return failure(
+        'Die Änderung konnte nicht in der Datenbank gespeichert werden. Es wurde nichts übernommen. Bitte versuche es erneut – bleibt der Fehler bestehen, prüfe die Verbindung zur Datenbank.',
+      );
+    }
+
     console.error('Server Action fehlgeschlagen:', error);
-    return failure('Die Aktion konnte nicht ausgeführt werden. Bitte versuche es erneut.');
+    return failure(
+      'Die Aktion konnte nicht ausgeführt werden und es wurde nichts gespeichert. Bitte versuche es erneut; die Einzelheiten stehen im Serverprotokoll.',
+    );
   }
 }
 
-/** Kleine Helfer zum Auslesen von FormData. */
+/**
+ * Kleine Helfer zum Auslesen von FormData.
+ *
+ * Mehrzeilige Felder liefern laut HTML-Spezifikation `\r\n` als Zeilenumbruch.
+ * Gespeichert wird einheitlich `\n` – sonst hinge die Darstellung davon ab, ob
+ * ein Text über ein Formular oder über die Grunddaten in die Datenbank kam.
+ */
 export function text(formData: FormData, key: string): string {
   const value = formData.get(key);
-  return typeof value === 'string' ? value.trim() : '';
+  return typeof value === 'string' ? value.replace(/\r\n?/g, '\n').trim() : '';
 }
 
 export function optionalText(formData: FormData, key: string): string | null {

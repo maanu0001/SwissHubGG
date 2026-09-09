@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LogoLockup } from '@/components/brand/Logo';
 import { Icons } from '@/components/ui/Icon';
+import { ThemeToggle } from '@/components/site/ThemeToggle';
 import type { NavItem } from '@/lib/content/queries';
+import type { Theme } from '@/lib/theme';
 
 /**
  * Mobile Navigation als vollflächiges Panel.
@@ -29,9 +31,10 @@ type MobileNavProps = {
   discordUrl: string | null;
   siteName: string;
   motto: string;
+  theme: Theme;
 };
 
-export function MobileNav({ items, discordUrl, siteName, motto }: MobileNavProps) {
+export function MobileNav({ items, discordUrl, siteName, motto, theme }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const panelId = useId();
@@ -227,10 +230,15 @@ export function MobileNav({ items, discordUrl, siteName, motto }: MobileNavProps
             >
               <LogoLockup size={32} />
             </Link>
-            <button type="button" className="btn-ghost min-h-11 min-w-11 p-2" onClick={close}>
-              <Icons.close size={22} />
-              <span className="sr-only">Menü schliessen</span>
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Gleiche Umschaltung wie im Kopfbereich – im Menü mit
+                  Beschriftung, weil hier Platz dafür ist. */}
+              <ThemeToggle initial={theme} withLabel />
+              <button type="button" className="btn-ghost min-h-11 min-w-11 p-2" onClick={close}>
+                <Icons.close size={22} />
+                <span className="sr-only">Menü schliessen</span>
+              </button>
+            </div>
           </div>
 
           {/* Reicht die Höhe nicht, wird ausschliesslich dieser Bereich gescrollt. */}
