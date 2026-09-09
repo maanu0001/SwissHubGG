@@ -2,6 +2,10 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Icons } from '@/components/ui/Icon';
 
+// `Field` ist eine Client-Komponente (Feldfehler über Kontext) und wird hier
+// nur weitergereicht, damit die Importpfade einheitlich bleiben.
+export { Field, FieldError } from '@/components/admin/FormField';
+
 /** Wiederkehrende Bausteine des Admin-Dashboards. */
 
 export function PageHeader({
@@ -148,42 +152,6 @@ export function DataTable({ headers, children }: { headers: string[]; children: 
         </thead>
         <tbody>{children}</tbody>
       </table>
-    </div>
-  );
-}
-
-export function Field({
-  label,
-  name,
-  hint,
-  error,
-  required,
-  children,
-}: {
-  label: string;
-  name: string;
-  hint?: string;
-  error?: string;
-  required?: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <div>
-      <label htmlFor={name} className="field-label">
-        {label}
-        {required ? <span className="text-[var(--color-brand-text)]"> *</span> : null}
-      </label>
-      {children}
-      {error ? (
-        <p id={`${name}-error`} className="field-error">
-          <Icons.alert size={13} className="mt-0.5 shrink-0" />
-          {error}
-        </p>
-      ) : hint ? (
-        <p id={`${name}-hint`} className="field-hint">
-          {hint}
-        </p>
-      ) : null}
     </div>
   );
 }

@@ -183,137 +183,132 @@ export default async function PageBuilderPage({ params }: PageProps) {
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <Panel title="Seiteneinstellungen" description="Titel, URL, Terminierung und SEO-Angaben.">
           <ActionForm action={updatePageMetaAction} className="space-y-4">
-            {(state) => (
-              <>
-                <input type="hidden" name="pageId" value={page.id} />
+            <>
+              <input type="hidden" name="pageId" value={page.id} />
 
-                <Field label="Titel" name="title" required error={state.fieldErrors?.title}>
-                  <input
-                    id="title"
-                    name="title"
-                    type="text"
-                    required
-                    maxLength={120}
-                    defaultValue={page.title}
-                    disabled={!canEdit}
-                    className="input"
-                  />
-                </Field>
+              <Field label="Titel" name="title" required>
+                <input
+                  id="title"
+                  name="title"
+                  type="text"
+                  required
+                  maxLength={120}
+                  defaultValue={page.title}
+                  disabled={!canEdit}
+                  className="input"
+                />
+              </Field>
 
-                <Field
-                  label="URL"
+              <Field
+                label="URL"
+                name="slug"
+                hint={
+                  page.isSystem
+                    ? 'Die URL dieser Systemseite ist fest mit der Anwendung verknüpft und kann nicht geändert werden.'
+                    : 'Beim Ändern wird automatisch eine Weiterleitung von der alten Adresse angelegt.'
+                }
+              >
+                <input
+                  id="slug"
                   name="slug"
-                  error={state.fieldErrors?.slug}
-                  hint={
-                    page.isSystem
-                      ? 'Die URL dieser Systemseite ist fest mit der Anwendung verknüpft und kann nicht geändert werden.'
-                      : 'Beim Ändern wird automatisch eine Weiterleitung von der alten Adresse angelegt.'
-                  }
+                  type="text"
+                  maxLength={80}
+                  defaultValue={page.slug}
+                  disabled={!canEdit || page.isSystem}
+                  className="input font-mono text-sm"
+                />
+              </Field>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  label="Veröffentlichen am"
+                  name="scheduledPublishAt"
+                  hint="Optional. Zeitzone Europe/Zurich."
                 >
                   <input
-                    id="slug"
-                    name="slug"
-                    type="text"
-                    maxLength={80}
-                    defaultValue={page.slug}
-                    disabled={!canEdit || page.isSystem}
-                    className="input font-mono text-sm"
-                  />
-                </Field>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field
-                    label="Veröffentlichen am"
+                    id="scheduledPublishAt"
                     name="scheduledPublishAt"
-                    hint="Optional. Zeitzone Europe/Zurich."
-                    error={state.fieldErrors?.scheduledPublishAt}
-                  >
-                    <input
-                      id="scheduledPublishAt"
-                      name="scheduledPublishAt"
-                      type="datetime-local"
-                      defaultValue={toLocalInputValue(page.scheduledPublishAt)}
-                      disabled={!canEdit}
-                      className="input"
-                    />
-                  </Field>
+                    type="datetime-local"
+                    defaultValue={toLocalInputValue(page.scheduledPublishAt)}
+                    disabled={!canEdit}
+                    className="input"
+                  />
+                </Field>
 
-                  <Field
-                    label="Deaktivieren am"
+                <Field
+                  label="Deaktivieren am"
+                  name="scheduledUnpublishAt"
+                  hint="Optional."
+                >
+                  <input
+                    id="scheduledUnpublishAt"
                     name="scheduledUnpublishAt"
-                    hint="Optional."
-                    error={state.fieldErrors?.scheduledUnpublishAt}
-                  >
-                    <input
-                      id="scheduledUnpublishAt"
-                      name="scheduledUnpublishAt"
-                      type="datetime-local"
-                      defaultValue={toLocalInputValue(page.scheduledUnpublishAt)}
-                      disabled={!canEdit}
-                      className="input"
-                    />
-                  </Field>
-                </div>
+                    type="datetime-local"
+                    defaultValue={toLocalInputValue(page.scheduledUnpublishAt)}
+                    disabled={!canEdit}
+                    className="input"
+                  />
+                </Field>
+              </div>
 
-                <Field
-                  label="SEO-Titel"
+              <Field
+                label="SEO-Titel"
+                name="seoTitle"
+                hint="Empfohlen: 50–60 Zeichen. Leer lassen, um den Seitentitel zu verwenden."
+              >
+                <input
+                  id="seoTitle"
                   name="seoTitle"
-                  hint="Empfohlen: 50–60 Zeichen. Leer lassen, um den Seitentitel zu verwenden."
-                >
-                  <input
-                    id="seoTitle"
-                    name="seoTitle"
-                    type="text"
-                    maxLength={70}
-                    defaultValue={page.seoTitle ?? ''}
-                    disabled={!canEdit}
-                    className="input"
-                  />
-                </Field>
+                  type="text"
+                  maxLength={70}
+                  defaultValue={page.seoTitle ?? ''}
+                  disabled={!canEdit}
+                  className="input"
+                />
+              </Field>
 
-                <Field
-                  label="SEO-Beschreibung"
+              <Field
+                label="SEO-Beschreibung"
+                name="seoDescription"
+                hint="Empfohlen: 120–160 Zeichen."
+              >
+                <textarea
+                  id="seoDescription"
                   name="seoDescription"
-                  hint="Empfohlen: 120–160 Zeichen."
-                >
-                  <textarea
-                    id="seoDescription"
-                    name="seoDescription"
-                    rows={3}
-                    maxLength={200}
-                    defaultValue={page.seoDescription ?? ''}
-                    disabled={!canEdit}
-                    className="input resize-y"
-                  />
-                </Field>
+                  rows={3}
+                  maxLength={200}
+                  defaultValue={page.seoDescription ?? ''}
+                  disabled={!canEdit}
+                  className="input resize-y"
+                />
+              </Field>
 
-                <Field label="Canonical-URL" name="canonicalUrl" hint="Nur setzen, wenn eine andere Adresse massgeblich ist.">
-                  <input
-                    id="canonicalUrl"
-                    name="canonicalUrl"
-                    type="url"
-                    defaultValue={page.canonicalUrl ?? ''}
-                    disabled={!canEdit}
-                    className="input"
-                  />
-                </Field>
+              <Field label="Canonical-URL" name="canonicalUrl" hint="Nur setzen, wenn eine andere Adresse massgeblich ist.">
+                <input
+                  id="canonicalUrl"
+                  name="canonicalUrl"
+                  type="url"
+                  defaultValue={page.canonicalUrl ?? ''}
+                  disabled={!canEdit}
+                  className="input"
+                />
+              </Field>
 
-                <label className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    name="seoNoIndex"
-                    defaultChecked={page.seoNoIndex}
-                    disabled={!canEdit}
-                    className="mt-1 h-4 w-4 accent-[var(--color-brand)]"
-                  />
-                  <span className="text-sm text-[var(--color-ink-muted)]">
-                    Von Suchmaschinen ausschliessen (noindex)
-                  </span>
-                </label>
+              <label className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  name="seoNoIndex"
+                  defaultChecked={page.seoNoIndex}
+                  disabled={!canEdit}
+                  className="mt-1 h-4 w-4 accent-[var(--color-brand)]"
+                />
+                <span className="text-sm text-[var(--color-ink-muted)]">
+                  Von Suchmaschinen ausschliessen (noindex)
+                </span>
+              </label>
 
-                {canEdit ? <SubmitButton>Einstellungen speichern</SubmitButton> : null}
-              </>
-            )}
+              {canEdit ? <SubmitButton>Einstellungen speichern</SubmitButton> : null}
+            </>
           </ActionForm>
         </Panel>
 

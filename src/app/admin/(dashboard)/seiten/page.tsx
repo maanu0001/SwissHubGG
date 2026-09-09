@@ -112,31 +112,28 @@ export default async function AdminPagesPage() {
             description="Die Seite wird als Entwurf erstellt. Inhalte fügst du anschliessend im Builder hinzu."
           >
             <ActionForm action={createPageAction} className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-              {(state) => (
-                <>
-                  <Field label="Titel" name="title" required error={state.fieldErrors?.title}>
-                    <input id="title" name="title" type="text" required maxLength={120} className="input" />
-                  </Field>
+              <>
+                <Field label="Titel" name="title" required>
+                  <input id="title" name="title" type="text" required maxLength={120} className="input" />
+                </Field>
 
-                  <Field
-                    label="URL"
+                <Field
+                  label="URL"
+                  name="slug"
+                  hint="Leer lassen, um sie aus dem Titel abzuleiten."
+                >
+                  <input
+                    id="slug"
                     name="slug"
-                    hint="Leer lassen, um sie aus dem Titel abzuleiten."
-                    error={state.fieldErrors?.slug}
-                  >
-                    <input
-                      id="slug"
-                      name="slug"
-                      type="text"
-                      maxLength={80}
-                      placeholder="ueber-uns"
-                      className="input font-mono text-sm"
-                    />
-                  </Field>
+                    type="text"
+                    maxLength={80}
+                    placeholder="ueber-uns"
+                    className="input font-mono text-sm"
+                  />
+                </Field>
 
-                  <SubmitButton pendingLabel="Wird angelegt …">Seite anlegen</SubmitButton>
-                </>
-              )}
+                <SubmitButton pendingLabel="Wird angelegt …">Seite anlegen</SubmitButton>
+              </>
             </ActionForm>
           </Panel>
         ) : null}

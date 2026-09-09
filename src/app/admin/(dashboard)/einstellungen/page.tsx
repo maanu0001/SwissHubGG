@@ -39,40 +39,37 @@ export default async function AdminSettingsPage() {
       <div className="space-y-6">
         <Panel title="Allgemein">
           <ActionForm action={updateSettingsGroupAction} className="space-y-4">
-            {(state) => (
-              <>
-                <input type="hidden" name="group" value="allgemein" />
+            <>
+              <input type="hidden" name="group" value="allgemein" />
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Website-Name" name="siteName" required>
-                    <input id="siteName" name="siteName" type="text" required maxLength={60} defaultValue={settings.siteName} className="input" />
-                  </Field>
-                  <Field label="Motto" name="motto">
-                    <input id="motto" name="motto" type="text" maxLength={120} defaultValue={settings.motto} className="input" />
-                  </Field>
-                </div>
-
-                <Field label="Kurzbeschreibung" name="tagline" hint="Wird als Ergänzung in Vorschauen verwendet.">
-                  <input id="tagline" name="tagline" type="text" maxLength={200} defaultValue={settings.tagline} className="input" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Website-Name" name="siteName" required>
+                  <input id="siteName" name="siteName" type="text" required maxLength={60} defaultValue={settings.siteName} className="input" />
                 </Field>
+                <Field label="Motto" name="motto">
+                  <input id="motto" name="motto" type="text" maxLength={120} defaultValue={settings.motto} className="input" />
+                </Field>
+              </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field
-                    label="Discord-Einladungslink"
-                    name="discordInviteUrl"
-                    error={state.fieldErrors?.discordInviteUrl}
-                    hint="Ohne diesen Link werden alle Discord-Schaltflächen ausgeblendet."
-                  >
-                    <input id="discordInviteUrl" name="discordInviteUrl" type="url" defaultValue={settings.discordInviteUrl} className="input" placeholder="https://discord.gg/…" />
-                  </Field>
-                  <Field label="Kontaktadresse" name="contactEmail">
-                    <input id="contactEmail" name="contactEmail" type="email" maxLength={160} defaultValue={settings.contactEmail} className="input" />
-                  </Field>
-                </div>
+              <Field label="Kurzbeschreibung" name="tagline" hint="Wird als Ergänzung in Vorschauen verwendet.">
+                <input id="tagline" name="tagline" type="text" maxLength={200} defaultValue={settings.tagline} className="input" />
+              </Field>
 
-                <SubmitButton>Speichern</SubmitButton>
-              </>
-            )}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  label="Discord-Einladungslink"
+                  name="discordInviteUrl"
+                  hint="Ohne diesen Link werden alle Discord-Schaltflächen ausgeblendet."
+                >
+                  <input id="discordInviteUrl" name="discordInviteUrl" type="url" defaultValue={settings.discordInviteUrl} className="input" placeholder="https://discord.gg/…" />
+                </Field>
+                <Field label="Kontaktadresse" name="contactEmail">
+                  <input id="contactEmail" name="contactEmail" type="email" maxLength={160} defaultValue={settings.contactEmail} className="input" />
+                </Field>
+              </div>
+
+              <SubmitButton>Speichern</SubmitButton>
+            </>
           </ActionForm>
         </Panel>
 
@@ -93,13 +90,13 @@ export default async function AdminSettingsPage() {
                     <li key={stat.id} className="rounded-lg border border-[var(--color-line)] p-4">
                       <input type="hidden" name="statId" value={stat.id} />
                       <div className="grid gap-3 sm:grid-cols-3">
-                        <Field label="Wert" name={`value-${stat.id}`}>
+                        <Field label="Wert" name={`value-${stat.id}`} errorKey="value">
                           <input id={`value-${stat.id}`} name={`value-${stat.id}`} type="text" maxLength={30} defaultValue={stat.value} className="input" />
                         </Field>
-                        <Field label="Bezeichnung" name={`label-${stat.id}`}>
+                        <Field label="Bezeichnung" name={`label-${stat.id}`} errorKey="label">
                           <input id={`label-${stat.id}`} name={`label-${stat.id}`} type="text" maxLength={60} defaultValue={stat.label} className="input" />
                         </Field>
-                        <Field label="Zusatz" name={`description-${stat.id}`}>
+                        <Field label="Zusatz" name={`description-${stat.id}`} errorKey="description">
                           <input id={`description-${stat.id}`} name={`description-${stat.id}`} type="text" maxLength={160} defaultValue={stat.description ?? ''} className="input" />
                         </Field>
                       </div>

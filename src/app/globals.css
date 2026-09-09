@@ -240,6 +240,13 @@
     @apply mt-1.5 flex items-start gap-1.5 text-xs font-medium text-[var(--color-danger-text)];
   }
 
+  /* Ein Feld mit Fehler markiert seinen Bereich; das Eingabefeld selbst bleibt
+     dadurch eine Server-Komponente. */
+  [data-invalid='true'] .input,
+  [data-invalid='true'] .select {
+    @apply border-[var(--color-danger)] focus:border-[var(--color-danger-text)] focus:ring-[var(--color-danger-text)];
+  }
+
   .input-invalid {
     @apply border-[var(--color-danger)] focus:border-[var(--color-danger-text)] focus:ring-[var(--color-danger-text)];
   }

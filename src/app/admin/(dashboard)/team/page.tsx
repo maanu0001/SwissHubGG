@@ -49,42 +49,40 @@ export default async function AdminTeamPage() {
                     </summary>
 
                     <ActionForm action={saveTeamMemberAction} className="mt-4 space-y-3">
-                      {(state) => (
-                        <>
-                          <input type="hidden" name="id" value={member.id} />
+                      <>
+                        <input type="hidden" name="id" value={member.id} />
 
-                          <div className="grid gap-3 sm:grid-cols-3">
-                            <Field label="Name" name={`name-${member.id}`} required error={state.fieldErrors?.name}>
-                              <input id={`name-${member.id}`} name="name" type="text" required maxLength={80} defaultValue={member.name} className="input" />
-                            </Field>
-                            <Field label="Funktion" name={`role-${member.id}`} required error={state.fieldErrors?.role}>
-                              <input id={`role-${member.id}`} name="role" type="text" required maxLength={80} defaultValue={member.role} className="input" />
-                            </Field>
-                            <Field label="Reihenfolge" name={`sortOrder-${member.id}`}>
-                              <input id={`sortOrder-${member.id}`} name="sortOrder" type="number" defaultValue={member.sortOrder} className="input" />
-                            </Field>
-                          </div>
-
-                          <Field label="Beschreibung" name={`description-${member.id}`}>
-                            <textarea id={`description-${member.id}`} name="description" rows={2} maxLength={300} defaultValue={member.description ?? ''} className="input resize-y" />
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <Field label="Name" name={`name-${member.id}`} errorKey="name" required>
+                            <input id={`name-${member.id}`} name="name" type="text" required maxLength={80} defaultValue={member.name} className="input" />
                           </Field>
+                          <Field label="Funktion" name={`role-${member.id}`} errorKey="role" required>
+                            <input id={`role-${member.id}`} name="role" type="text" required maxLength={80} defaultValue={member.role} className="input" />
+                          </Field>
+                          <Field label="Reihenfolge" name={`sortOrder-${member.id}`} errorKey="sortOrder">
+                            <input id={`sortOrder-${member.id}`} name="sortOrder" type="number" defaultValue={member.sortOrder} className="input" />
+                          </Field>
+                        </div>
 
-                          <MediaSelectField label="Bild" name="avatarId" media={media} defaultValue={member.avatarId} />
+                        <Field label="Beschreibung" name={`description-${member.id}`} errorKey="description">
+                          <textarea id={`description-${member.id}`} name="description" rows={2} maxLength={300} defaultValue={member.description ?? ''} className="input resize-y" />
+                        </Field>
 
-                          <div className="flex flex-wrap gap-4">
-                            <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                              <input type="checkbox" name="active" defaultChecked={member.active} className="h-4 w-4 accent-[var(--color-brand)]" />
-                              Aktiv
-                            </label>
-                            <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                              <input type="checkbox" name="published" defaultChecked={member.publishedAt !== null} className="h-4 w-4 accent-[var(--color-brand)]" />
-                              Auf der Website anzeigen
-                            </label>
-                          </div>
+                        <MediaSelectField label="Bild" name="avatarId" media={media} defaultValue={member.avatarId} />
 
-                          <SubmitButton variant="secondary">Speichern</SubmitButton>
-                        </>
-                      )}
+                        <div className="flex flex-wrap gap-4">
+                          <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                            <input type="checkbox" name="active" defaultChecked={member.active} className="h-4 w-4 accent-[var(--color-brand)]" />
+                            Aktiv
+                          </label>
+                          <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                            <input type="checkbox" name="published" defaultChecked={member.publishedAt !== null} className="h-4 w-4 accent-[var(--color-brand)]" />
+                            Auf der Website anzeigen
+                          </label>
+                        </div>
+
+                        <SubmitButton variant="secondary">Speichern</SubmitButton>
+                      </>
                     </ActionForm>
 
                     <ActionForm action={deleteTeamMemberAction} className="mt-3">
@@ -102,40 +100,38 @@ export default async function AdminTeamPage() {
 
         <Panel title="Eintrag hinzufügen">
           <ActionForm action={saveTeamMemberAction} resetOnSuccess className="space-y-4">
-            {(state) => (
-              <>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <Field label="Name" name="name" required error={state.fieldErrors?.name}>
-                    <input id="name" name="name" type="text" required maxLength={80} className="input" />
-                  </Field>
-                  <Field label="Funktion" name="role" required error={state.fieldErrors?.role}>
-                    <input id="role" name="role" type="text" required maxLength={80} className="input" placeholder="Vorstand, Turnierleitung …" />
-                  </Field>
-                  <Field label="Reihenfolge" name="sortOrder">
-                    <input id="sortOrder" name="sortOrder" type="number" defaultValue={members.length} className="input" />
-                  </Field>
-                </div>
-
-                <Field label="Beschreibung" name="description">
-                  <textarea id="description" name="description" rows={2} maxLength={300} className="input resize-y" />
+            <>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Field label="Name" name="name" required>
+                  <input id="name" name="name" type="text" required maxLength={80} className="input" />
                 </Field>
+                <Field label="Funktion" name="role" required>
+                  <input id="role" name="role" type="text" required maxLength={80} className="input" placeholder="Vorstand, Turnierleitung …" />
+                </Field>
+                <Field label="Reihenfolge" name="sortOrder">
+                  <input id="sortOrder" name="sortOrder" type="number" defaultValue={members.length} className="input" />
+                </Field>
+              </div>
 
-                <MediaSelectField label="Bild" name="avatarId" media={media} />
+              <Field label="Beschreibung" name="description">
+                <textarea id="description" name="description" rows={2} maxLength={300} className="input resize-y" />
+              </Field>
 
-                <div className="flex flex-wrap gap-4">
-                  <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                    <input type="checkbox" name="active" defaultChecked className="h-4 w-4 accent-[var(--color-brand)]" />
-                    Aktiv
-                  </label>
-                  <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                    <input type="checkbox" name="published" className="h-4 w-4 accent-[var(--color-brand)]" />
-                    Auf der Website anzeigen
-                  </label>
-                </div>
+              <MediaSelectField label="Bild" name="avatarId" media={media} />
 
-                <SubmitButton>Eintrag hinzufügen</SubmitButton>
-              </>
-            )}
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                  <input type="checkbox" name="active" defaultChecked className="h-4 w-4 accent-[var(--color-brand)]" />
+                  Aktiv
+                </label>
+                <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                  <input type="checkbox" name="published" className="h-4 w-4 accent-[var(--color-brand)]" />
+                  Auf der Website anzeigen
+                </label>
+              </div>
+
+              <SubmitButton>Eintrag hinzufügen</SubmitButton>
+            </>
           </ActionForm>
         </Panel>
       </div>

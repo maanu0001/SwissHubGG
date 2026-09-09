@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import { PageHeader, Panel, Field, InfoBox } from '@/components/admin/ui';
 import { ActionForm, SubmitButton } from '@/components/admin/ActionForm';
-import { deleteMediaAction, mediaUsage, replaceMediaAction, updateMediaAction, uploadMediaAction } from '@/server/actions/media';
+import { deleteMediaAction, replaceMediaAction, updateMediaAction, uploadMediaAction } from '@/server/actions/media';
+import { mediaUsage } from '@/lib/mediaUsage';
 import { requirePermission } from '@/lib/auth/guards';
 import { userHasPermission } from '@/lib/auth/session';
 import { PERMISSIONS } from '@/lib/permissions';
@@ -163,10 +164,10 @@ export default async function AdminMediaPage({ searchParams }: PageProps) {
 
                         <ActionForm action={updateMediaAction} className="mt-3 space-y-3">
                           <input type="hidden" name="id" value={asset.id} />
-                          <Field label="Alt-Text" name={`alt-${asset.id}`} hint="Beschreibt den Bildinhalt für Screenreader.">
+                          <Field label="Alt-Text" name={`alt-${asset.id}`} errorKey="alt" hint="Beschreibt den Bildinhalt für Screenreader.">
                             <input id={`alt-${asset.id}`} name="alt" type="text" maxLength={200} defaultValue={asset.alt ?? ''} className="input" />
                           </Field>
-                          <Field label="Titel" name={`title-${asset.id}`}>
+                          <Field label="Titel" name={`title-${asset.id}`} errorKey="title">
                             <input id={`title-${asset.id}`} name="title" type="text" maxLength={150} defaultValue={asset.title ?? ''} className="input" />
                           </Field>
                           <SubmitButton variant="secondary">Speichern</SubmitButton>
@@ -176,7 +177,7 @@ export default async function AdminMediaPage({ searchParams }: PageProps) {
                           <input type="hidden" name="id" value={asset.id} />
                           <Field
                             label="Datei ersetzen"
-                            name={`file-${asset.id}`}
+                            name={`file-${asset.id}`} errorKey="file"
                             hint="Alle Verwendungen zeigen anschliessend die neue Datei."
                           >
                             <input id={`file-${asset.id}`} name="file" type="file" required className="input" />

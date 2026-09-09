@@ -59,41 +59,39 @@ export default async function AdminNavigationPage() {
                       </summary>
 
                       <ActionForm action={saveNavigationItemAction} className="mt-4 space-y-3">
-                        {(state) => (
-                          <>
-                            <input type="hidden" name="id" value={item.id} />
-                            <input type="hidden" name="navigationKey" value={menu.key} />
+                        <>
+                          <input type="hidden" name="id" value={item.id} />
+                          <input type="hidden" name="navigationKey" value={menu.key} />
 
-                            <div className="grid gap-3 sm:grid-cols-3">
-                              <Field label="Beschriftung" name={`label-${item.id}`} required error={state.fieldErrors?.label}>
-                                <input id={`label-${item.id}`} name="label" type="text" required maxLength={60} defaultValue={item.label} className="input" />
-                              </Field>
-                              <Field label="Ziel" name={`href-${item.id}`} required error={state.fieldErrors?.href}>
-                                <input id={`href-${item.id}`} name="href" type="text" required maxLength={300} defaultValue={item.href} className="input font-mono text-sm" />
-                              </Field>
-                              <Field label="Position" name={`position-${item.id}`}>
-                                <input id={`position-${item.id}`} name="position" type="number" defaultValue={item.position} className="input" />
-                              </Field>
-                            </div>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <Field label="Beschriftung" name={`label-${item.id}`} errorKey="label" required>
+                              <input id={`label-${item.id}`} name="label" type="text" required maxLength={60} defaultValue={item.label} className="input" />
+                            </Field>
+                            <Field label="Ziel" name={`href-${item.id}`} errorKey="href" required>
+                              <input id={`href-${item.id}`} name="href" type="text" required maxLength={300} defaultValue={item.href} className="input font-mono text-sm" />
+                            </Field>
+                            <Field label="Position" name={`position-${item.id}`} errorKey="position">
+                              <input id={`position-${item.id}`} name="position" type="number" defaultValue={item.position} className="input" />
+                            </Field>
+                          </div>
 
-                            <div className="flex flex-wrap gap-4">
-                              <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                                <input type="checkbox" name="visible" defaultChecked={item.visible} className="h-4 w-4 accent-[var(--color-brand)]" />
-                                Sichtbar
-                              </label>
-                              <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                                <input type="checkbox" name="openInNewTab" defaultChecked={item.openInNewTab} className="h-4 w-4 accent-[var(--color-brand)]" />
-                                In neuem Tab öffnen
-                              </label>
-                              <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                                <input type="checkbox" name="highlight" defaultChecked={item.highlight} className="h-4 w-4 accent-[var(--color-brand)]" />
-                                Hervorheben
-                              </label>
-                            </div>
+                          <div className="flex flex-wrap gap-4">
+                            <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                              <input type="checkbox" name="visible" defaultChecked={item.visible} className="h-4 w-4 accent-[var(--color-brand)]" />
+                              Sichtbar
+                            </label>
+                            <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                              <input type="checkbox" name="openInNewTab" defaultChecked={item.openInNewTab} className="h-4 w-4 accent-[var(--color-brand)]" />
+                              In neuem Tab öffnen
+                            </label>
+                            <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                              <input type="checkbox" name="highlight" defaultChecked={item.highlight} className="h-4 w-4 accent-[var(--color-brand)]" />
+                              Hervorheben
+                            </label>
+                          </div>
 
-                            <SubmitButton variant="secondary">Speichern</SubmitButton>
-                          </>
-                        )}
+                          <SubmitButton variant="secondary">Speichern</SubmitButton>
+                        </>
                       </ActionForm>
 
                       <ActionForm action={deleteNavigationItemAction} className="mt-3">
@@ -109,31 +107,29 @@ export default async function AdminNavigationPage() {
             </ul>
 
             <ActionForm action={saveNavigationItemAction} resetOnSuccess className="space-y-3 border-t border-[var(--color-line)] pt-6">
-              {(state) => (
-                <>
-                  <h3 className="text-sm font-semibold text-[var(--color-ink)]">Menüpunkt hinzufügen</h3>
-                  <input type="hidden" name="navigationKey" value={menu.key} />
+              <>
+                <h3 className="text-sm font-semibold text-[var(--color-ink)]">Menüpunkt hinzufügen</h3>
+                <input type="hidden" name="navigationKey" value={menu.key} />
 
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <Field label="Beschriftung" name={`new-label-${menu.key}`} required error={state.fieldErrors?.label}>
-                      <input id={`new-label-${menu.key}`} name="label" type="text" required maxLength={60} className="input" />
-                    </Field>
-                    <Field label="Ziel" name={`new-href-${menu.key}`} required error={state.fieldErrors?.href}>
-                      <input id={`new-href-${menu.key}`} name="href" type="text" required maxLength={300} className="input font-mono text-sm" placeholder="/turniere" />
-                    </Field>
-                    <Field label="Position" name={`new-position-${menu.key}`}>
-                      <input id={`new-position-${menu.key}`} name="position" type="number" defaultValue={menu.items.length} className="input" />
-                    </Field>
-                  </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Field label="Beschriftung" name={`new-label-${menu.key}`} required>
+                    <input id={`new-label-${menu.key}`} name="label" type="text" required maxLength={60} className="input" />
+                  </Field>
+                  <Field label="Ziel" name={`new-href-${menu.key}`} required>
+                    <input id={`new-href-${menu.key}`} name="href" type="text" required maxLength={300} className="input font-mono text-sm" placeholder="/turniere" />
+                  </Field>
+                  <Field label="Position" name={`new-position-${menu.key}`}>
+                    <input id={`new-position-${menu.key}`} name="position" type="number" defaultValue={menu.items.length} className="input" />
+                  </Field>
+                </div>
 
-                  <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                    <input type="checkbox" name="visible" defaultChecked className="h-4 w-4 accent-[var(--color-brand)]" />
-                    Sichtbar
-                  </label>
+                <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                  <input type="checkbox" name="visible" defaultChecked className="h-4 w-4 accent-[var(--color-brand)]" />
+                  Sichtbar
+                </label>
 
-                  <SubmitButton>Hinzufügen</SubmitButton>
-                </>
-              )}
+                <SubmitButton>Hinzufügen</SubmitButton>
+              </>
             </ActionForm>
           </Panel>
         ))}

@@ -95,14 +95,12 @@ export default async function AdminSponsorsPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Panel title="Neuen Partner anlegen">
               <ActionForm action={createSponsorAction} className="space-y-4">
-                {(state) => (
-                  <>
-                    <Field label="Name" name="name" required error={state.fieldErrors?.name}>
-                      <input id="name" name="name" type="text" required maxLength={120} className="input" />
-                    </Field>
-                    <SubmitButton pendingLabel="Wird angelegt …">Partner anlegen</SubmitButton>
-                  </>
-                )}
+                <>
+                  <Field label="Name" name="name" required>
+                    <input id="name" name="name" type="text" required maxLength={120} className="input" />
+                  </Field>
+                  <SubmitButton pendingLabel="Wird angelegt …">Partner anlegen</SubmitButton>
+                </>
               </ActionForm>
             </Panel>
 
@@ -123,19 +121,17 @@ export default async function AdminSponsorsPage() {
               </ul>
 
               <ActionForm action={saveSponsorTierAction} resetOnSuccess className="space-y-4 border-t border-[var(--color-line)] pt-5">
-                {(state) => (
-                  <>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Field label="Name" name="name" required error={state.fieldErrors?.name}>
-                        <input id="name" name="name" type="text" required maxLength={60} className="input" />
-                      </Field>
-                      <Field label="Reihenfolge" name="sortOrder">
-                        <input id="sortOrder" name="sortOrder" type="number" defaultValue={0} className="input" />
-                      </Field>
-                    </div>
-                    <SubmitButton variant="secondary">Stufe hinzufügen</SubmitButton>
-                  </>
-                )}
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Name" name="tier-name" errorKey="name" required>
+                      <input id="tier-name" name="name" type="text" required maxLength={60} className="input" />
+                    </Field>
+                    <Field label="Reihenfolge" name="tier-sortOrder" errorKey="sortOrder">
+                      <input id="tier-sortOrder" name="sortOrder" type="number" defaultValue={0} className="input" />
+                    </Field>
+                  </div>
+                  <SubmitButton variant="secondary">Stufe hinzufügen</SubmitButton>
+                </>
               </ActionForm>
             </Panel>
           </div>

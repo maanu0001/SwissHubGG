@@ -8,6 +8,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { AUDIT_ACTIONS, recordAudit } from '@/lib/audit';
 import { consumeRateLimit, RATE_LIMITS } from '@/lib/ratelimit';
 import { MediaValidationError, deleteStoredFile, storeUpload } from '@/lib/media';
+import { mediaUsage } from '@/lib/mediaUsage';
 import { failure, optionalText, runAction, success, text, type ActionState } from '@/server/actions/types';
 
 /** Medienbibliothek: Upload, Pflege der Metadaten, Ersetzen und Löschen. */
@@ -127,30 +128,6 @@ export async function updateMediaAction(_state: ActionState, formData: FormData)
     revalidatePath('/admin/medien');
     return success('Die Angaben wurden gespeichert.');
   });
-}
-
-/** Zählt, wo ein Medium verwendet wird – Grundlage für die Warnung beim Löschen. */
-export async function mediaUsage(id: string): Promise<{ label: string; count: number }[]> {
-  const [pagesSeo, tournamentBanner, tournamentSeo, tournamentGallery, sponsorLogos, socialThumbs, teamAvatars] =
-    await Promise.all([
-      prisma.page.count({ where: { seoImageId: id } }),
-      prisma.tournament.count({ where: { bannerId: id } }),
-      prisma.tournament.count({ where: { seoImageId: id } }),
-      prisma.tournamentMedia.count({ where: { mediaId: id } }),
-      prisma.sponsor.count({ where: { logoId: id } }),
-      prisma.socialPost.count({ where: { thumbnailId: id } }),
-      prisma.teamMember.count({ where: { avatarId: id } }),
-    ]);
-
-  return [
-    { label: 'Seiten (Social-Bild)', count: pagesSeo },
-    { label: 'Turnierbanner', count: tournamentBanner },
-    { label: 'Turniere (Social-Bild)', count: tournamentSeo },
-    { label: 'Turniergalerien', count: tournamentGallery },
-    { label: 'Sponsorenlogos', count: sponsorLogos },
-    { label: 'Social-Beiträge', count: socialThumbs },
-    { label: 'Teammitglieder', count: teamAvatars },
-  ].filter((entry) => entry.count > 0);
 }
 
 export async function deleteMediaAction(_state: ActionState, formData: FormData): Promise<ActionState> {

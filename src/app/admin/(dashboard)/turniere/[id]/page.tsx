@@ -135,148 +135,146 @@ export default async function AdminTournamentDetailPage({ params }: PageProps) {
       <div className="space-y-6">
         <Panel title="Turnierdaten">
           <ActionForm action={updateTournamentAction} className="space-y-5">
-            {(state) => (
-              <>
-                <input type="hidden" name="id" value={tournament.id} />
+            <>
+              <input type="hidden" name="id" value={tournament.id} />
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Titel" name="title" required error={state.fieldErrors?.title}>
-                    <input id="title" name="title" type="text" required maxLength={150} defaultValue={tournament.title} disabled={!canManage} className="input" />
-                  </Field>
-
-                  <Field label="URL" name="slug" required error={state.fieldErrors?.slug} hint="Beim Ändern wird eine Weiterleitung angelegt.">
-                    <input id="slug" name="slug" type="text" required maxLength={80} defaultValue={tournament.slug} disabled={!canManage} className="input font-mono text-sm" />
-                  </Field>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <Field label="Status" name="status" required error={state.fieldErrors?.status}>
-                    <select id="status" name="status" defaultValue={tournament.status} disabled={!canManage} className="select">
-                      {Object.values(TournamentStatus).map((value) => (
-                        <option key={value} value={value}>
-                          {TOURNAMENT_STATUS_META[value].label}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-
-                  <Field label="Spiel" name="gameId">
-                    <select id="gameId" name="gameId" defaultValue={tournament.gameId ?? ''} disabled={!canManage} className="select">
-                      <option value="">Nicht festgelegt</option>
-                      {games.map((game) => (
-                        <option key={game.id} value={game.id}>
-                          {game.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-
-                  <Field label="Teilnahmeform" name="participantUnit">
-                    <select id="participantUnit" name="participantUnit" defaultValue={tournament.participantUnit} disabled={!canManage} className="select">
-                      <option value="TEAM">Teams</option>
-                      <option value="PLAYER">Einzelspielende</option>
-                    </select>
-                  </Field>
-                </div>
-
-                <Field label="Kurzbeschreibung" name="summary" hint="Erscheint in Übersichten und Vorschauen.">
-                  <textarea id="summary" name="summary" rows={2} maxLength={400} defaultValue={tournament.summary ?? ''} disabled={!canManage} className="input resize-y" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Titel" name="title" required>
+                  <input id="title" name="title" type="text" required maxLength={150} defaultValue={tournament.title} disabled={!canManage} className="input" />
                 </Field>
 
-                <Field label="Beschreibung" name="description" hint="Markdown erlaubt: **fett**, ## Titel, - Liste, [Link](https://…).">
-                  <textarea id="description" name="description" rows={8} defaultValue={tournament.description ?? ''} disabled={!canManage} className="input resize-y font-mono text-[13px]" />
+                <Field label="URL" name="slug" required hint="Beim Ändern wird eine Weiterleitung angelegt.">
+                  <input id="slug" name="slug" type="text" required maxLength={80} defaultValue={tournament.slug} disabled={!canManage} className="input font-mono text-sm" />
+                </Field>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="Status" name="status" required>
+                  <select id="status" name="status" defaultValue={tournament.status} disabled={!canManage} className="select">
+                    {Object.values(TournamentStatus).map((value) => (
+                      <option key={value} value={value}>
+                        {TOURNAMENT_STATUS_META[value].label}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
 
-                <Field label="Regeln" name="rules" hint="Markdown erlaubt.">
-                  <textarea id="rules" name="rules" rows={6} defaultValue={tournament.rules ?? ''} disabled={!canManage} className="input resize-y font-mono text-[13px]" />
+                <Field label="Spiel" name="gameId">
+                  <select id="gameId" name="gameId" defaultValue={tournament.gameId ?? ''} disabled={!canManage} className="select">
+                    <option value="">Nicht festgelegt</option>
+                    {games.map((game) => (
+                      <option key={game.id} value={game.id}>
+                        {game.name}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Start" name="startsAt" hint="Zeitzone Europe/Zurich.">
-                    <input id="startsAt" name="startsAt" type="datetime-local" defaultValue={toLocalInputValue(tournament.startsAt)} disabled={!canManage} className="input" />
-                  </Field>
-                  <Field label="Ende" name="endsAt" error={state.fieldErrors?.endsAt}>
-                    <input id="endsAt" name="endsAt" type="datetime-local" defaultValue={toLocalInputValue(tournament.endsAt)} disabled={!canManage} className="input" />
-                  </Field>
-                  <Field label="Anmeldung ab" name="registrationOpensAt">
-                    <input id="registrationOpensAt" name="registrationOpensAt" type="datetime-local" defaultValue={toLocalInputValue(tournament.registrationOpensAt)} disabled={!canManage} className="input" />
-                  </Field>
-                  <Field label="Anmeldung bis" name="registrationClosesAt" error={state.fieldErrors?.registrationClosesAt}>
-                    <input id="registrationClosesAt" name="registrationClosesAt" type="datetime-local" defaultValue={toLocalInputValue(tournament.registrationClosesAt)} disabled={!canManage} className="input" />
-                  </Field>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <Field label="Format" name="format" hint="z. B. Single Elimination, Bo3">
-                    <input id="format" name="format" type="text" maxLength={120} defaultValue={tournament.format ?? ''} disabled={!canManage} className="input" />
-                  </Field>
-                  <Field label="Maximale Teilnehmerzahl" name="maxParticipants">
-                    <input id="maxParticipants" name="maxParticipants" type="number" min={2} max={1024} defaultValue={tournament.maxParticipants ?? ''} disabled={!canManage} className="input" />
-                  </Field>
-                  <Field label="Reihenfolge" name="sortOrder" hint="Kleinere Werte erscheinen zuerst.">
-                    <input id="sortOrder" name="sortOrder" type="number" defaultValue={tournament.sortOrder} disabled={!canManage} className="input" />
-                  </Field>
-                </div>
-
-                <Field label="Preise / Preisgeld" name="prizeInfo" hint="Beträge in CHF angeben.">
-                  <input id="prizeInfo" name="prizeInfo" type="text" maxLength={200} defaultValue={tournament.prizeInfo ?? ''} disabled={!canManage} className="input" />
+                <Field label="Teilnahmeform" name="participantUnit">
+                  <select id="participantUnit" name="participantUnit" defaultValue={tournament.participantUnit} disabled={!canManage} className="select">
+                    <option value="TEAM">Teams</option>
+                    <option value="PLAYER">Einzelspielende</option>
+                  </select>
                 </Field>
+              </div>
 
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <Field label="Anmeldeseite" name="registrationUrl" hint="z. B. Battlefy.">
-                    <input id="registrationUrl" name="registrationUrl" type="url" defaultValue={tournament.registrationUrl ?? ''} disabled={!canManage} className="input" />
-                  </Field>
-                  <Field label="Livestream" name="streamUrl" hint="Twitch oder YouTube.">
-                    <input id="streamUrl" name="streamUrl" type="url" defaultValue={tournament.streamUrl ?? ''} disabled={!canManage} className="input" />
-                  </Field>
-                  <Field label="Discord-Link" name="discordUrl" hint="Leer lassen für den allgemeinen Einladungslink.">
-                    <input id="discordUrl" name="discordUrl" type="url" defaultValue={tournament.discordUrl ?? ''} disabled={!canManage} className="input" />
-                  </Field>
-                </div>
+              <Field label="Kurzbeschreibung" name="summary" hint="Erscheint in Übersichten und Vorschauen.">
+                <textarea id="summary" name="summary" rows={2} maxLength={400} defaultValue={tournament.summary ?? ''} disabled={!canManage} className="input resize-y" />
+              </Field>
 
-                <MediaSelectField
-                  label="Banner"
-                  name="bannerId"
-                  media={media}
-                  defaultValue={tournament.bannerId}
-                  disabled={!canManage}
-                  hint="Wird auf der Turnierkarte und der Detailseite angezeigt."
-                />
+              <Field label="Beschreibung" name="description" hint="Markdown erlaubt: **fett**, ## Titel, - Liste, [Link](https://…).">
+                <textarea id="description" name="description" rows={8} defaultValue={tournament.description ?? ''} disabled={!canManage} className="input resize-y font-mono text-[13px]" />
+              </Field>
 
-                <Field label="Ergebniszusammenfassung" name="resultSummary" hint="Markdown erlaubt.">
-                  <textarea id="resultSummary" name="resultSummary" rows={4} defaultValue={tournament.resultSummary ?? ''} disabled={!canManage} className="input resize-y font-mono text-[13px]" />
+              <Field label="Regeln" name="rules" hint="Markdown erlaubt.">
+                <textarea id="rules" name="rules" rows={6} defaultValue={tournament.rules ?? ''} disabled={!canManage} className="input resize-y font-mono text-[13px]" />
+              </Field>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Start" name="startsAt" hint="Zeitzone Europe/Zurich.">
+                  <input id="startsAt" name="startsAt" type="datetime-local" defaultValue={toLocalInputValue(tournament.startsAt)} disabled={!canManage} className="input" />
                 </Field>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Gewinner" name="winnerName" hint="Wird beim Eintragen von Platz 1 automatisch gesetzt.">
-                    <input id="winnerName" name="winnerName" type="text" maxLength={120} defaultValue={tournament.winnerName ?? ''} disabled={!canManage} className="input" />
-                  </Field>
-                  <Field label="Video-Rückblick" name="recapUrl">
-                    <input id="recapUrl" name="recapUrl" type="url" defaultValue={tournament.recapUrl ?? ''} disabled={!canManage} className="input" />
-                  </Field>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="SEO-Titel" name="seoTitle">
-                    <input id="seoTitle" name="seoTitle" type="text" maxLength={70} defaultValue={tournament.seoTitle ?? ''} disabled={!canManage} className="input" />
-                  </Field>
-                  <Field label="Geplante Veröffentlichung" name="scheduledPublishAt">
-                    <input id="scheduledPublishAt" name="scheduledPublishAt" type="datetime-local" defaultValue={toLocalInputValue(tournament.scheduledPublishAt)} disabled={!canManage} className="input" />
-                  </Field>
-                </div>
-
-                <Field label="SEO-Beschreibung" name="seoDescription">
-                  <textarea id="seoDescription" name="seoDescription" rows={2} maxLength={200} defaultValue={tournament.seoDescription ?? ''} disabled={!canManage} className="input resize-y" />
+                <Field label="Ende" name="endsAt">
+                  <input id="endsAt" name="endsAt" type="datetime-local" defaultValue={toLocalInputValue(tournament.endsAt)} disabled={!canManage} className="input" />
                 </Field>
+                <Field label="Anmeldung ab" name="registrationOpensAt">
+                  <input id="registrationOpensAt" name="registrationOpensAt" type="datetime-local" defaultValue={toLocalInputValue(tournament.registrationOpensAt)} disabled={!canManage} className="input" />
+                </Field>
+                <Field label="Anmeldung bis" name="registrationClosesAt">
+                  <input id="registrationClosesAt" name="registrationClosesAt" type="datetime-local" defaultValue={toLocalInputValue(tournament.registrationClosesAt)} disabled={!canManage} className="input" />
+                </Field>
+              </div>
 
-                <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                  <input type="checkbox" name="featured" defaultChecked={tournament.featured} disabled={!canManage} className="h-4 w-4 accent-[var(--color-brand)]" />
-                  Als Highlight hervorheben
-                </label>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="Format" name="format" hint="z. B. Single Elimination, Bo3">
+                  <input id="format" name="format" type="text" maxLength={120} defaultValue={tournament.format ?? ''} disabled={!canManage} className="input" />
+                </Field>
+                <Field label="Maximale Teilnehmerzahl" name="maxParticipants">
+                  <input id="maxParticipants" name="maxParticipants" type="number" min={2} max={1024} defaultValue={tournament.maxParticipants ?? ''} disabled={!canManage} className="input" />
+                </Field>
+                <Field label="Reihenfolge" name="sortOrder" hint="Kleinere Werte erscheinen zuerst.">
+                  <input id="sortOrder" name="sortOrder" type="number" defaultValue={tournament.sortOrder} disabled={!canManage} className="input" />
+                </Field>
+              </div>
 
-                {canManage ? <SubmitButton>Turnier speichern</SubmitButton> : null}
-              </>
-            )}
+              <Field label="Preise / Preisgeld" name="prizeInfo" hint="Beträge in CHF angeben.">
+                <input id="prizeInfo" name="prizeInfo" type="text" maxLength={200} defaultValue={tournament.prizeInfo ?? ''} disabled={!canManage} className="input" />
+              </Field>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="Anmeldeseite" name="registrationUrl" hint="z. B. Battlefy.">
+                  <input id="registrationUrl" name="registrationUrl" type="url" defaultValue={tournament.registrationUrl ?? ''} disabled={!canManage} className="input" />
+                </Field>
+                <Field label="Livestream" name="streamUrl" hint="Twitch oder YouTube.">
+                  <input id="streamUrl" name="streamUrl" type="url" defaultValue={tournament.streamUrl ?? ''} disabled={!canManage} className="input" />
+                </Field>
+                <Field label="Discord-Link" name="discordUrl" hint="Leer lassen für den allgemeinen Einladungslink.">
+                  <input id="discordUrl" name="discordUrl" type="url" defaultValue={tournament.discordUrl ?? ''} disabled={!canManage} className="input" />
+                </Field>
+              </div>
+
+              <MediaSelectField
+                label="Banner"
+                name="bannerId"
+                media={media}
+                defaultValue={tournament.bannerId}
+                disabled={!canManage}
+                hint="Wird auf der Turnierkarte und der Detailseite angezeigt."
+              />
+
+              <Field label="Ergebniszusammenfassung" name="resultSummary" hint="Markdown erlaubt.">
+                <textarea id="resultSummary" name="resultSummary" rows={4} defaultValue={tournament.resultSummary ?? ''} disabled={!canManage} className="input resize-y font-mono text-[13px]" />
+              </Field>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Gewinner" name="winnerName" hint="Wird beim Eintragen von Platz 1 automatisch gesetzt.">
+                  <input id="winnerName" name="winnerName" type="text" maxLength={120} defaultValue={tournament.winnerName ?? ''} disabled={!canManage} className="input" />
+                </Field>
+                <Field label="Video-Rückblick" name="recapUrl">
+                  <input id="recapUrl" name="recapUrl" type="url" defaultValue={tournament.recapUrl ?? ''} disabled={!canManage} className="input" />
+                </Field>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="SEO-Titel" name="seoTitle">
+                  <input id="seoTitle" name="seoTitle" type="text" maxLength={70} defaultValue={tournament.seoTitle ?? ''} disabled={!canManage} className="input" />
+                </Field>
+                <Field label="Geplante Veröffentlichung" name="scheduledPublishAt">
+                  <input id="scheduledPublishAt" name="scheduledPublishAt" type="datetime-local" defaultValue={toLocalInputValue(tournament.scheduledPublishAt)} disabled={!canManage} className="input" />
+                </Field>
+              </div>
+
+              <Field label="SEO-Beschreibung" name="seoDescription">
+                <textarea id="seoDescription" name="seoDescription" rows={2} maxLength={200} defaultValue={tournament.seoDescription ?? ''} disabled={!canManage} className="input resize-y" />
+              </Field>
+
+              <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                <input type="checkbox" name="featured" defaultChecked={tournament.featured} disabled={!canManage} className="h-4 w-4 accent-[var(--color-brand)]" />
+                Als Highlight hervorheben
+              </label>
+
+              {canManage ? <SubmitButton>Turnier speichern</SubmitButton> : null}
+            </>
           </ActionForm>
         </Panel>
 
@@ -308,23 +306,21 @@ export default async function AdminTournamentDetailPage({ params }: PageProps) {
 
             {canManage ? (
               <ActionForm action={saveTeamAction} resetOnSuccess className="space-y-4 border-t border-[var(--color-line)] pt-5">
-                {(state) => (
-                  <>
-                    <input type="hidden" name="tournamentId" value={tournament.id} />
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <Field label="Name" name="name" required error={state.fieldErrors?.name}>
-                        <input id="name" name="name" type="text" required maxLength={100} className="input" />
-                      </Field>
-                      <Field label="Tag" name="tag">
-                        <input id="tag" name="tag" type="text" maxLength={12} className="input" />
-                      </Field>
-                      <Field label="Seed" name="seed">
-                        <input id="seed" name="seed" type="number" min={1} className="input" />
-                      </Field>
-                    </div>
-                    <SubmitButton variant="secondary">Hinzufügen</SubmitButton>
-                  </>
-                )}
+                <>
+                  <input type="hidden" name="tournamentId" value={tournament.id} />
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Field label="Name" name="name" required>
+                      <input id="name" name="name" type="text" required maxLength={100} className="input" />
+                    </Field>
+                    <Field label="Tag" name="tag">
+                      <input id="tag" name="tag" type="text" maxLength={12} className="input" />
+                    </Field>
+                    <Field label="Seed" name="seed">
+                      <input id="seed" name="seed" type="number" min={1} className="input" />
+                    </Field>
+                  </div>
+                  <SubmitButton variant="secondary">Hinzufügen</SubmitButton>
+                </>
               </ActionForm>
             ) : null}
           </Panel>
@@ -362,33 +358,31 @@ export default async function AdminTournamentDetailPage({ params }: PageProps) {
 
             {canManage ? (
               <ActionForm action={saveResultAction} resetOnSuccess className="mt-5 space-y-4 border-t border-[var(--color-line)] pt-5">
-                {(state) => (
-                  <>
-                    <input type="hidden" name="tournamentId" value={tournament.id} />
-                    <div className="grid gap-3 sm:grid-cols-4">
-                      <Field label="Platz" name="placement" required error={state.fieldErrors?.placement}>
-                        <input id="placement" name="placement" type="number" min={1} required className="input" />
-                      </Field>
-                      <Field label="Name" name="displayName" required error={state.fieldErrors?.displayName}>
-                        <input id="displayName" name="displayName" type="text" required maxLength={120} className="input" />
-                      </Field>
-                      <Field label="Preis" name="prize">
-                        <input id="prize" name="prize" type="text" maxLength={120} className="input" />
-                      </Field>
-                      <Field label="Team" name="teamId">
-                        <select id="teamId" name="teamId" className="select">
-                          <option value="">Keine Verknüpfung</option>
-                          {tournament.teams.map((team) => (
-                            <option key={team.id} value={team.id}>
-                              {team.name}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                    </div>
-                    <SubmitButton variant="secondary">Ergebnis speichern</SubmitButton>
-                  </>
-                )}
+                <>
+                  <input type="hidden" name="tournamentId" value={tournament.id} />
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    <Field label="Platz" name="placement" required>
+                      <input id="placement" name="placement" type="number" min={1} required className="input" />
+                    </Field>
+                    <Field label="Name" name="displayName" required>
+                      <input id="displayName" name="displayName" type="text" required maxLength={120} className="input" />
+                    </Field>
+                    <Field label="Preis" name="prize">
+                      <input id="prize" name="prize" type="text" maxLength={120} className="input" />
+                    </Field>
+                    <Field label="Team" name="teamId">
+                      <select id="teamId" name="teamId" className="select">
+                        <option value="">Keine Verknüpfung</option>
+                        {tournament.teams.map((team) => (
+                          <option key={team.id} value={team.id}>
+                            {team.name}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
+                  <SubmitButton variant="secondary">Ergebnis speichern</SubmitButton>
+                </>
               </ActionForm>
             ) : null}
           </Panel>

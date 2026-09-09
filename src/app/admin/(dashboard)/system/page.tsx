@@ -133,30 +133,28 @@ export default async function AdminSystemPage() {
           </DataTable>
 
           <ActionForm action={saveRedirectAction} resetOnSuccess className="mt-6 space-y-4 border-t border-[var(--color-line)] pt-6">
-            {(state) => (
-              <>
-                <h3 className="text-sm font-semibold text-[var(--color-ink)]">Weiterleitung hinzufügen</h3>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <Field label="Von (interner Pfad)" name="source" required error={state.fieldErrors?.source}>
-                    <input id="source" name="source" type="text" required className="input font-mono text-sm" placeholder="/alte-seite" />
-                  </Field>
-                  <Field label="Nach" name="destination" required error={state.fieldErrors?.destination}>
-                    <input id="destination" name="destination" type="text" required className="input font-mono text-sm" placeholder="/neue-seite" />
-                  </Field>
-                  <Field label="Statuscode" name="statusCode">
-                    <select id="statusCode" name="statusCode" className="select">
-                      <option value="308">308 – dauerhaft</option>
-                      <option value="307">307 – vorübergehend</option>
-                    </select>
-                  </Field>
-                </div>
-                <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                  <input type="checkbox" name="active" defaultChecked className="h-4 w-4 accent-[var(--color-brand)]" />
-                  Aktiv
-                </label>
-                <SubmitButton>Weiterleitung speichern</SubmitButton>
-              </>
-            )}
+            <>
+              <h3 className="text-sm font-semibold text-[var(--color-ink)]">Weiterleitung hinzufügen</h3>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Field label="Von (interner Pfad)" name="source" required>
+                  <input id="source" name="source" type="text" required className="input font-mono text-sm" placeholder="/alte-seite" />
+                </Field>
+                <Field label="Nach" name="destination" required>
+                  <input id="destination" name="destination" type="text" required className="input font-mono text-sm" placeholder="/neue-seite" />
+                </Field>
+                <Field label="Statuscode" name="statusCode">
+                  <select id="statusCode" name="statusCode" className="select">
+                    <option value="308">308 – dauerhaft</option>
+                    <option value="307">307 – vorübergehend</option>
+                  </select>
+                </Field>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                <input type="checkbox" name="active" defaultChecked className="h-4 w-4 accent-[var(--color-brand)]" />
+                Aktiv
+              </label>
+              <SubmitButton>Weiterleitung speichern</SubmitButton>
+            </>
           </ActionForm>
         </Panel>
 

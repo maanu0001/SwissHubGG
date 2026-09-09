@@ -88,51 +88,49 @@ export default async function AdminSocialPage() {
                     </summary>
 
                     <ActionForm action={saveAccountAction} className="mt-4 space-y-4">
-                      {(state) => (
-                        <>
-                          <input type="hidden" name="id" value={account.id} />
+                      <>
+                        <input type="hidden" name="id" value={account.id} />
 
-                          <div className="grid gap-3 sm:grid-cols-3">
-                            <Field label="Plattform" name={`platform-${account.id}`} error={state.fieldErrors?.platform}>
-                              <select id={`platform-${account.id}`} name="platform" defaultValue={account.platform} className="select">
-                                {Object.values(SocialPlatform).map((platform) => (
-                                  <option key={platform} value={platform}>
-                                    {SOCIAL_PLATFORM_META[platform].label}
-                                  </option>
-                                ))}
-                              </select>
-                            </Field>
-                            <Field label="Benutzername" name={`handle-${account.id}`} required error={state.fieldErrors?.handle}>
-                              <input id={`handle-${account.id}`} name="handle" type="text" required defaultValue={account.handle} className="input" />
-                            </Field>
-                            <Field label="Reihenfolge" name={`sortOrder-${account.id}`}>
-                              <input id={`sortOrder-${account.id}`} name="sortOrder" type="number" defaultValue={account.sortOrder} className="input" />
-                            </Field>
-                          </div>
-
-                          <Field label="Profiladresse" name={`profileUrl-${account.id}`} required error={state.fieldErrors?.profileUrl}>
-                            <input id={`profileUrl-${account.id}`} name="profileUrl" type="url" required defaultValue={account.profileUrl} className="input" />
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <Field label="Plattform" name={`platform-${account.id}`} errorKey="platform">
+                            <select id={`platform-${account.id}`} name="platform" defaultValue={account.platform} className="select">
+                              {Object.values(SocialPlatform).map((platform) => (
+                                <option key={platform} value={platform}>
+                                  {SOCIAL_PLATFORM_META[platform].label}
+                                </option>
+                              ))}
+                            </select>
                           </Field>
-
-                          <Field label="Beschreibung" name={`description-${account.id}`}>
-                            <textarea id={`description-${account.id}`} name="description" rows={2} maxLength={300} defaultValue={account.description ?? ''} className="input resize-y" />
+                          <Field label="Benutzername" name={`handle-${account.id}`} errorKey="handle" required>
+                            <input id={`handle-${account.id}`} name="handle" type="text" required defaultValue={account.handle} className="input" />
                           </Field>
+                          <Field label="Reihenfolge" name={`sortOrder-${account.id}`} errorKey="sortOrder">
+                            <input id={`sortOrder-${account.id}`} name="sortOrder" type="number" defaultValue={account.sortOrder} className="input" />
+                          </Field>
+                        </div>
 
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <Field label="Followerzahl" name={`followerCount-${account.id}`} hint="Optional und manuell gepflegt. Leer lassen, um nichts anzuzeigen.">
-                              <input id={`followerCount-${account.id}`} name="followerCount" type="number" min={0} defaultValue={account.followerCount ?? ''} className="input" />
-                            </Field>
-                            <label className="flex items-end gap-2 pb-2.5 text-sm text-[var(--color-ink-muted)]">
-                              <input type="checkbox" name="active" defaultChecked={account.active} className="h-4 w-4 accent-[var(--color-brand)]" />
-                              Auf der Website anzeigen
-                            </label>
-                          </div>
+                        <Field label="Profiladresse" name={`profileUrl-${account.id}`} errorKey="profileUrl" required>
+                          <input id={`profileUrl-${account.id}`} name="profileUrl" type="url" required defaultValue={account.profileUrl} className="input" />
+                        </Field>
 
-                          <div className="flex flex-wrap gap-2">
-                            <SubmitButton variant="secondary">Speichern</SubmitButton>
-                          </div>
-                        </>
-                      )}
+                        <Field label="Beschreibung" name={`description-${account.id}`} errorKey="description">
+                          <textarea id={`description-${account.id}`} name="description" rows={2} maxLength={300} defaultValue={account.description ?? ''} className="input resize-y" />
+                        </Field>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <Field label="Followerzahl" name={`followerCount-${account.id}`} errorKey="followerCount" hint="Optional und manuell gepflegt. Leer lassen, um nichts anzuzeigen.">
+                            <input id={`followerCount-${account.id}`} name="followerCount" type="number" min={0} defaultValue={account.followerCount ?? ''} className="input" />
+                          </Field>
+                          <label className="flex items-end gap-2 pb-2.5 text-sm text-[var(--color-ink-muted)]">
+                            <input type="checkbox" name="active" defaultChecked={account.active} className="h-4 w-4 accent-[var(--color-brand)]" />
+                            Auf der Website anzeigen
+                          </label>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          <SubmitButton variant="secondary">Speichern</SubmitButton>
+                        </div>
+                      </>
                     </ActionForm>
 
                     <ActionForm action={deleteAccountAction} className="mt-3">
@@ -148,40 +146,38 @@ export default async function AdminSocialPage() {
           </ul>
 
           <ActionForm action={saveAccountAction} resetOnSuccess className="space-y-4 border-t border-[var(--color-line)] pt-6">
-            {(state) => (
-              <>
-                <h3 className="text-sm font-semibold text-[var(--color-ink)]">Neuen Account hinzufügen</h3>
+            <>
+              <h3 className="text-sm font-semibold text-[var(--color-ink)]">Neuen Account hinzufügen</h3>
 
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <Field label="Plattform" name="platform" required error={state.fieldErrors?.platform}>
-                    <select id="platform" name="platform" className="select">
-                      {Object.values(SocialPlatform).map((platform) => (
-                        <option key={platform} value={platform}>
-                          {SOCIAL_PLATFORM_META[platform].label}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Benutzername" name="handle" required error={state.fieldErrors?.handle}>
-                    <input id="handle" name="handle" type="text" required className="input" placeholder="@swisshub" />
-                  </Field>
-                  <Field label="Reihenfolge" name="sortOrder">
-                    <input id="sortOrder" name="sortOrder" type="number" defaultValue={0} className="input" />
-                  </Field>
-                </div>
-
-                <Field label="Profiladresse" name="profileUrl" required error={state.fieldErrors?.profileUrl}>
-                  <input id="profileUrl" name="profileUrl" type="url" required className="input" placeholder="https://…" />
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Field label="Plattform" name="platform" required>
+                  <select id="platform" name="platform" className="select">
+                    {Object.values(SocialPlatform).map((platform) => (
+                      <option key={platform} value={platform}>
+                        {SOCIAL_PLATFORM_META[platform].label}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
+                <Field label="Benutzername" name="handle" required>
+                  <input id="handle" name="handle" type="text" required className="input" placeholder="@swisshub" />
+                </Field>
+                <Field label="Reihenfolge" name="sortOrder">
+                  <input id="sortOrder" name="sortOrder" type="number" defaultValue={0} className="input" />
+                </Field>
+              </div>
 
-                <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                  <input type="checkbox" name="active" defaultChecked className="h-4 w-4 accent-[var(--color-brand)]" />
-                  Auf der Website anzeigen
-                </label>
+              <Field label="Profiladresse" name="profileUrl" required>
+                <input id="profileUrl" name="profileUrl" type="url" required className="input" placeholder="https://…" />
+              </Field>
 
-                <SubmitButton>Account hinzufügen</SubmitButton>
-              </>
-            )}
+              <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                <input type="checkbox" name="active" defaultChecked className="h-4 w-4 accent-[var(--color-brand)]" />
+                Auf der Website anzeigen
+              </label>
+
+              <SubmitButton>Account hinzufügen</SubmitButton>
+            </>
           </ActionForm>
         </Panel>
 
@@ -241,78 +237,76 @@ export default async function AdminSocialPage() {
 
             <Panel title="Beitrag erfassen" description="Beiträge werden manuell kuratiert und mit lokalem Vorschaubild dargestellt.">
               <ActionForm action={savePostAction} resetOnSuccess className="space-y-4">
-                {(state) => (
-                  <>
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <Field label="Plattform" name="platform" required error={state.fieldErrors?.platform}>
-                        <select id="platform" name="platform" className="select">
-                          {Object.values(SocialPlatform).map((platform) => (
-                            <option key={platform} value={platform}>
-                              {SOCIAL_PLATFORM_META[platform].label}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                      <Field label="Art" name="type" required error={state.fieldErrors?.type}>
-                        <select id="type" name="type" className="select">
-                          {Object.values(SocialPostType).map((type) => (
-                            <option key={type} value={type}>
-                              {SOCIAL_POST_TYPE_LABEL[type]}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                      <Field label="Account" name="accountId">
-                        <select id="accountId" name="accountId" className="select">
-                          <option value="">Keine Zuordnung</option>
-                          {accounts.map((account) => (
-                            <option key={account.id} value={account.id}>
-                              {SOCIAL_PLATFORM_META[account.platform].label} · {account.handle}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                    </div>
-
-                    <Field label="Titel" name="title" required error={state.fieldErrors?.title}>
-                      <input id="title" name="title" type="text" required maxLength={150} className="input" />
+                <>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Field label="Plattform" name="post-platform" errorKey="platform" required>
+                      <select id="post-platform" name="platform" className="select">
+                        {Object.values(SocialPlatform).map((platform) => (
+                          <option key={platform} value={platform}>
+                            {SOCIAL_PLATFORM_META[platform].label}
+                          </option>
+                        ))}
+                      </select>
                     </Field>
-
-                    <Field label="Adresse des Beitrags" name="url" required error={state.fieldErrors?.url}>
-                      <input id="url" name="url" type="url" required className="input" placeholder="https://…" />
+                    <Field label="Art" name="type" required>
+                      <select id="type" name="type" className="select">
+                        {Object.values(SocialPostType).map((type) => (
+                          <option key={type} value={type}>
+                            {SOCIAL_POST_TYPE_LABEL[type]}
+                          </option>
+                        ))}
+                      </select>
                     </Field>
-
-                    <Field label="Kurztext" name="excerpt">
-                      <textarea id="excerpt" name="excerpt" rows={2} maxLength={300} className="input resize-y" />
+                    <Field label="Account" name="accountId">
+                      <select id="accountId" name="accountId" className="select">
+                        <option value="">Keine Zuordnung</option>
+                        {accounts.map((account) => (
+                          <option key={account.id} value={account.id}>
+                            {SOCIAL_PLATFORM_META[account.platform].label} · {account.handle}
+                          </option>
+                        ))}
+                      </select>
                     </Field>
+                  </div>
 
-                    <MediaSelectField
-                      label="Vorschaubild"
-                      name="thumbnailId"
-                      media={media}
-                      hint="Wird lokal ausgeliefert – es werden keine Daten an die Plattform übertragen."
-                    />
+                  <Field label="Titel" name="title" required>
+                    <input id="title" name="title" type="text" required maxLength={150} className="input" />
+                  </Field>
 
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <Field label="Veröffentlicht am (Plattform)" name="postedAt">
-                        <input id="postedAt" name="postedAt" type="datetime-local" className="input" />
-                      </Field>
-                      <Field label="Auf Website anzeigen ab" name="scheduledPublishAt">
-                        <input id="scheduledPublishAt" name="scheduledPublishAt" type="datetime-local" defaultValue={toLocalInputValue(null)} className="input" />
-                      </Field>
-                      <Field label="Reihenfolge" name="sortOrder">
-                        <input id="sortOrder" name="sortOrder" type="number" defaultValue={0} className="input" />
-                      </Field>
-                    </div>
+                  <Field label="Adresse des Beitrags" name="url" required>
+                    <input id="url" name="url" type="url" required className="input" placeholder="https://…" />
+                  </Field>
 
-                    <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
-                      <input type="checkbox" name="featured" className="h-4 w-4 accent-[var(--color-brand)]" />
-                      Als Highlight hervorheben
-                    </label>
+                  <Field label="Kurztext" name="excerpt">
+                    <textarea id="excerpt" name="excerpt" rows={2} maxLength={300} className="input resize-y" />
+                  </Field>
 
-                    <SubmitButton>Beitrag speichern</SubmitButton>
-                  </>
-                )}
+                  <MediaSelectField
+                    label="Vorschaubild"
+                    name="thumbnailId"
+                    media={media}
+                    hint="Wird lokal ausgeliefert – es werden keine Daten an die Plattform übertragen."
+                  />
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Field label="Veröffentlicht am (Plattform)" name="postedAt">
+                      <input id="postedAt" name="postedAt" type="datetime-local" className="input" />
+                    </Field>
+                    <Field label="Auf Website anzeigen ab" name="scheduledPublishAt">
+                      <input id="scheduledPublishAt" name="scheduledPublishAt" type="datetime-local" defaultValue={toLocalInputValue(null)} className="input" />
+                    </Field>
+                    <Field label="Reihenfolge" name="post-sortOrder" errorKey="sortOrder">
+                      <input id="post-sortOrder" name="sortOrder" type="number" defaultValue={0} className="input" />
+                    </Field>
+                  </div>
+
+                  <label className="flex items-center gap-2 text-sm text-[var(--color-ink-muted)]">
+                    <input type="checkbox" name="featured" className="h-4 w-4 accent-[var(--color-brand)]" />
+                    Als Highlight hervorheben
+                  </label>
+
+                  <SubmitButton>Beitrag speichern</SubmitButton>
+                </>
               </ActionForm>
             </Panel>
           </>

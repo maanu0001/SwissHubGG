@@ -202,36 +202,34 @@ export default async function AdminContactDetailPage({ params }: PageProps) {
 
             {canRespond && !request.anonymizedAt ? (
               <ActionForm action={replyAction} resetOnSuccess className="mt-6 space-y-4 border-t border-[var(--color-line)] pt-6">
-                {(state) => (
-                  <>
-                    <h3 className="text-sm font-semibold text-[var(--color-ink)]">Antworten</h3>
-                    <input type="hidden" name="requestId" value={request.id} />
+                <>
+                  <h3 className="text-sm font-semibold text-[var(--color-ink)]">Antworten</h3>
+                  <input type="hidden" name="requestId" value={request.id} />
 
-                    {!env().mailConfigured ? (
-                      <InfoBox tone="warning">
-                        Es ist kein SMTP-Server konfiguriert. Die Antwort wird gespeichert, aber erst versendet, sobald
-                        der Versand eingerichtet ist.
-                      </InfoBox>
-                    ) : null}
+                  {!env().mailConfigured ? (
+                    <InfoBox tone="warning">
+                      Es ist kein SMTP-Server konfiguriert. Die Antwort wird gespeichert, aber erst versendet, sobald
+                      der Versand eingerichtet ist.
+                    </InfoBox>
+                  ) : null}
 
-                    <Field label="Betreff" name="subject">
-                      <input
-                        id="subject"
-                        name="subject"
-                        type="text"
-                        maxLength={150}
-                        defaultValue={`Re: ${request.subject}`}
-                        className="input"
-                      />
-                    </Field>
+                  <Field label="Betreff" name="reply-subject" errorKey="subject">
+                    <input
+                      id="reply-subject"
+                      name="subject"
+                      type="text"
+                      maxLength={150}
+                      defaultValue={`Re: ${request.subject}`}
+                      className="input"
+                    />
+                  </Field>
 
-                    <Field label="Nachricht" name="body" required error={state.fieldErrors?.body}>
-                      <textarea id="body" name="body" rows={7} required className="input resize-y" />
-                    </Field>
+                  <Field label="Nachricht" name="reply-body" errorKey="body" required>
+                    <textarea id="reply-body" name="body" rows={7} required className="input resize-y" />
+                  </Field>
 
-                    <SubmitButton pendingLabel="Wird eingeplant …">Antwort senden</SubmitButton>
-                  </>
-                )}
+                  <SubmitButton pendingLabel="Wird eingeplant …">Antwort senden</SubmitButton>
+                </>
               </ActionForm>
             ) : null}
           </Panel>
@@ -240,44 +238,42 @@ export default async function AdminContactDetailPage({ params }: PageProps) {
         <aside className="space-y-6">
           <Panel title="Bearbeitung">
             <ActionForm action={updateRequestAction} className="space-y-4">
-              {(state) => (
-                <>
-                  <input type="hidden" name="id" value={request.id} />
+              <>
+                <input type="hidden" name="id" value={request.id} />
 
-                  <Field label="Status" name="status" error={state.fieldErrors?.status}>
-                    <select id="status" name="status" defaultValue={request.status} disabled={!canRespond} className="select">
-                      {Object.values(ContactStatus).map((value) => (
-                        <option key={value} value={value}>
-                          {CONTACT_STATUS_META[value].label}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
+                <Field label="Status" name="status">
+                  <select id="status" name="status" defaultValue={request.status} disabled={!canRespond} className="select">
+                    {Object.values(ContactStatus).map((value) => (
+                      <option key={value} value={value}>
+                        {CONTACT_STATUS_META[value].label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
 
-                  <Field label="Priorität" name="priority" error={state.fieldErrors?.priority}>
-                    <select id="priority" name="priority" defaultValue={request.priority} disabled={!canRespond} className="select">
-                      {Object.values(ContactPriority).map((value) => (
-                        <option key={value} value={value}>
-                          {CONTACT_PRIORITY_LABEL[value]}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
+                <Field label="Priorität" name="priority">
+                  <select id="priority" name="priority" defaultValue={request.priority} disabled={!canRespond} className="select">
+                    {Object.values(ContactPriority).map((value) => (
+                      <option key={value} value={value}>
+                        {CONTACT_PRIORITY_LABEL[value]}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
 
-                  <Field label="Zuständig" name="assignedToId">
-                    <select id="assignedToId" name="assignedToId" defaultValue={request.assignedToId ?? ''} disabled={!canRespond} className="select">
-                      <option value="">Niemand</option>
-                      {team.map((member) => (
-                        <option key={member.id} value={member.id}>
-                          {member.displayName}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
+                <Field label="Zuständig" name="assignedToId">
+                  <select id="assignedToId" name="assignedToId" defaultValue={request.assignedToId ?? ''} disabled={!canRespond} className="select">
+                    <option value="">Niemand</option>
+                    {team.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.displayName}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
 
-                  {canRespond ? <SubmitButton>Speichern</SubmitButton> : null}
-                </>
-              )}
+                {canRespond ? <SubmitButton>Speichern</SubmitButton> : null}
+              </>
             </ActionForm>
           </Panel>
 
@@ -358,15 +354,13 @@ export default async function AdminContactDetailPage({ params }: PageProps) {
 
             {canRespond ? (
               <ActionForm action={addNoteAction} resetOnSuccess className="space-y-3">
-                {(state) => (
-                  <>
-                    <input type="hidden" name="requestId" value={request.id} />
-                    <Field label="Neue Notiz" name="body" error={state.fieldErrors?.body}>
-                      <textarea id="body" name="body" rows={3} className="input resize-y" />
-                    </Field>
-                    <SubmitButton variant="secondary">Notiz speichern</SubmitButton>
-                  </>
-                )}
+                <>
+                  <input type="hidden" name="requestId" value={request.id} />
+                  <Field label="Neue Notiz" name="note-body" errorKey="body">
+                    <textarea id="note-body" name="body" rows={3} className="input resize-y" />
+                  </Field>
+                  <SubmitButton variant="secondary">Notiz speichern</SubmitButton>
+                </>
               </ActionForm>
             ) : null}
           </Panel>

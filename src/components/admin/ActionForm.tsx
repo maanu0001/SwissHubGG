@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, type ReactNode } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Icons } from '@/components/ui/Icon';
+import { ActionStateProvider } from '@/components/admin/FormField';
 import { idleState, type ActionState } from '@/server/actions/types';
 
 /**
@@ -14,7 +15,7 @@ import { idleState, type ActionState } from '@/server/actions/types';
 
 type ActionFormProps = {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
-  children: ReactNode | ((state: ActionState) => ReactNode);
+  children: ReactNode;
   className?: string;
   /** Formular nach erfolgreicher Ausführung zurücksetzen. */
   resetOnSuccess?: boolean;
@@ -37,7 +38,9 @@ export function ActionForm({ action, children, className = '', resetOnSuccess = 
   return (
     <form ref={formRef} action={formAction} className={className}>
       <FormFeedback state={state} />
-      {typeof children === 'function' ? children(state) : children}
+      {/* Feldfehler erreichen die Eingabefelder über den Kontext, damit diese
+          Server Components bleiben können. */}
+      <ActionStateProvider state={state}>{children}</ActionStateProvider>
     </form>
   );
 }

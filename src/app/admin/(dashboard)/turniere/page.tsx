@@ -99,30 +99,28 @@ export default async function AdminTournamentsPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Panel title="Neues Turnier" description="Wird als Entwurf angelegt und ist zunächst nicht öffentlich.">
               <ActionForm action={createTournamentAction} className="space-y-4">
-                {(state) => (
-                  <>
-                    <Field label="Titel" name="title" required error={state.fieldErrors?.title}>
-                      <input id="title" name="title" type="text" required maxLength={150} className="input" />
-                    </Field>
+                <>
+                  <Field label="Titel" name="title" required>
+                    <input id="title" name="title" type="text" required maxLength={150} className="input" />
+                  </Field>
 
-                    <Field label="URL" name="slug" hint="Leer lassen, um sie aus dem Titel abzuleiten." error={state.fieldErrors?.slug}>
-                      <input id="slug" name="slug" type="text" maxLength={80} className="input font-mono text-sm" />
-                    </Field>
+                  <Field label="URL" name="slug" hint="Leer lassen, um sie aus dem Titel abzuleiten.">
+                    <input id="slug" name="slug" type="text" maxLength={80} className="input font-mono text-sm" />
+                  </Field>
 
-                    <Field label="Spiel" name="gameId">
-                      <select id="gameId" name="gameId" className="select">
-                        <option value="">Noch nicht festgelegt</option>
-                        {games.map((game) => (
-                          <option key={game.id} value={game.id}>
-                            {game.name}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
+                  <Field label="Spiel" name="gameId">
+                    <select id="gameId" name="gameId" className="select">
+                      <option value="">Noch nicht festgelegt</option>
+                      {games.map((game) => (
+                        <option key={game.id} value={game.id}>
+                          {game.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
 
-                    <SubmitButton pendingLabel="Wird angelegt …">Turnier anlegen</SubmitButton>
-                  </>
-                )}
+                  <SubmitButton pendingLabel="Wird angelegt …">Turnier anlegen</SubmitButton>
+                </>
               </ActionForm>
             </Panel>
 
@@ -151,30 +149,28 @@ export default async function AdminTournamentsPage() {
               </ul>
 
               <ActionForm action={saveGameAction} resetOnSuccess className="space-y-4 border-t border-[var(--color-line)] pt-5">
-                {(state) => (
-                  <>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <Field label="Name" name="name" required error={state.fieldErrors?.name}>
-                        <input id="name" name="name" type="text" required maxLength={80} className="input" placeholder="Counter-Strike 2" />
-                      </Field>
-                      <Field label="Kurzform" name="shortName">
-                        <input id="shortName" name="shortName" type="text" maxLength={20} className="input" placeholder="CS2" />
-                      </Field>
-                    </div>
+                <>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Name" name="name" required>
+                      <input id="name" name="name" type="text" required maxLength={80} className="input" placeholder="Counter-Strike 2" />
+                    </Field>
+                    <Field label="Kurzform" name="shortName">
+                      <input id="shortName" name="shortName" type="text" maxLength={20} className="input" placeholder="CS2" />
+                    </Field>
+                  </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <Field label="Reihenfolge" name="sortOrder">
-                        <input id="sortOrder" name="sortOrder" type="number" defaultValue={0} className="input" />
-                      </Field>
-                      <label className="flex items-end gap-2 pb-2.5 text-sm text-[var(--color-ink-muted)]">
-                        <input type="checkbox" name="active" defaultChecked className="h-4 w-4 accent-[var(--color-brand)]" />
-                        Aktiv
-                      </label>
-                    </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Reihenfolge" name="sortOrder">
+                      <input id="sortOrder" name="sortOrder" type="number" defaultValue={0} className="input" />
+                    </Field>
+                    <label className="flex items-end gap-2 pb-2.5 text-sm text-[var(--color-ink-muted)]">
+                      <input type="checkbox" name="active" defaultChecked className="h-4 w-4 accent-[var(--color-brand)]" />
+                      Aktiv
+                    </label>
+                  </div>
 
-                    <SubmitButton variant="secondary">Spiel hinzufügen</SubmitButton>
-                  </>
-                )}
+                  <SubmitButton variant="secondary">Spiel hinzufügen</SubmitButton>
+                </>
               </ActionForm>
             </Panel>
           </div>
