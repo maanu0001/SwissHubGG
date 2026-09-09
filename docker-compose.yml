@@ -1,0 +1,103 @@
+##############################################################################
+# SwissHub – Produktionsbetrieb
+#
+# Start:    docker compose up -d --build
+# Migration: docker compose run --rm migrate
+# Logs:     docker compose logs -f app
+#
+# Nginx läuft bewusst ausserhalb dieser Compose-Datei auf dem Host und
+# terminiert TLS. Die Anwendung lauscht nur lokal auf 127.0.0.1.
+##############################################################################
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-swisshub}
+      POSTGRES_USER: ${POSTGRES_USER:-swisshub}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD muss gesetzt sein}
+      TZ: Europe/Zurich
+      # Schweizer Sortier- und Formatregeln.
+      LANG: de_CH.UTF-8
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-swisshub} -d ${POSTGRES_DB:-swisshub}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    # Die Datenbank ist ausschliesslich im internen Netz erreichbar.
+    networks:
+      - swisshub
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      TZ: Europe/Zurich
+      STORAGE_DIR: /data/storage
+      DATABASE_URL: postgresql://${POSTGRES_USER:-swisshub}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-swisshub}?schema=public&connection_limit=10
+    volumes:
+      - media-data:/data/storage
+    ports:
+      # Nur lokal erreichbar – der Zugriff von aussen erfolgt über Nginx.
+      - '127.0.0.1:3000:3000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - swisshub
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '5'
+
+  # Einmalig ausführbarer Dienst für Migrationen und den Seed.
+  # Aufruf: docker compose run --rm migrate
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Die Build-Stufe enthält Prisma-CLI, tsx und alle Abhängigkeiten.
+      target: builder
+    profiles: ['tools']
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      TZ: Europe/Zurich
+      DATABASE_URL: postgresql://${POSTGRES_USER:-swisshub}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-swisshub}?schema=public
+    command: sh -c "npx prisma migrate deploy && npx tsx prisma/seed.ts"
+    networks:
+      - swisshub
+
+volumes:
+  db-data:
+  media-data:
+
+networks:
+  swisshub:
+    driver: bridge

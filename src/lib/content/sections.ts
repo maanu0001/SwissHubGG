@@ -11,8 +11,8 @@ import type { SectionType } from '@prisma/client';
  */
 
 const linkSchema = z.object({
-  label: z.string().min(1).max(60),
-  href: z.string().min(1).max(300),
+  label: z.string().min(1, 'Bitte gib eine Beschriftung an.').max(60),
+  href: z.string().min(1, 'Bitte gib ein Ziel an.').max(300),
   style: z.enum(['primary', 'secondary', 'ghost']).default('primary'),
   external: z.boolean().default(false),
 });
@@ -29,7 +29,7 @@ const toneSchema = z.enum(['default', 'muted', 'accent']).default('default');
 
 export const heroSchema = z.object({
   eyebrow: z.string().max(60).default(''),
-  headline: z.string().min(1).max(120),
+  headline: z.string().min(1, 'Bitte gib eine Hauptaussage an.').max(120),
   motto: z.string().max(80).default(''),
   text: z.string().max(600).default(''),
   primaryLink: linkSchema.nullable().default(null),
@@ -53,7 +53,7 @@ export const richTextSchema = z.object({
 });
 
 export const imageSchema = z.object({
-  mediaId: z.string().min(1),
+  mediaId: z.string().min(1, 'Bitte wähle ein Bild aus der Medienbibliothek.'),
   caption: z.string().max(200).default(''),
   width: z.enum(['content', 'wide']).default('content'),
   rounded: z.boolean().default(true),
@@ -67,14 +67,14 @@ export const gallerySchema = z.object({
 
 export const videoSchema = z.object({
   headline: z.string().max(120).default(''),
-  url: z.string().min(1).max(400),
+  url: z.string().min(1, 'Bitte gib die Adresse des Videos an.').max(400),
   provider: z.enum(['youtube', 'twitch', 'link']).default('youtube'),
   posterMediaId: z.string().nullable().default(null),
   description: z.string().max(400).default(''),
 });
 
 export const ctaSchema = z.object({
-  headline: z.string().min(1).max(120),
+  headline: z.string().min(1, 'Bitte gib eine Überschrift an.').max(120),
   text: z.string().max(400).default(''),
   primaryLink: linkSchema.nullable().default(null),
   secondaryLink: linkSchema.nullable().default(null),
@@ -89,7 +89,7 @@ export const cardGridSchema = z.object({
   cards: z
     .array(
       z.object({
-        title: z.string().min(1).max(80),
+        title: z.string().min(1, 'Bitte gib einen Titel an.').max(80),
         text: z.string().max(400).default(''),
         icon: z
           .enum(['community', 'tournament', 'discord', 'calendar', 'shield', 'star', 'chat', 'swiss'])
@@ -108,8 +108,8 @@ export const statsSchema = z.object({
   items: z
     .array(
       z.object({
-        value: z.string().min(1).max(30),
-        label: z.string().min(1).max(60),
+        value: z.string().min(1, 'Bitte gib einen Wert an.').max(30),
+        label: z.string().min(1, 'Bitte gib eine Bezeichnung an.').max(60),
         description: z.string().max(160).default(''),
       }),
     )
@@ -123,8 +123,8 @@ export const faqSchema = z.object({
   items: z
     .array(
       z.object({
-        question: z.string().min(1).max(200),
-        answer: z.string().min(1).max(2000),
+        question: z.string().min(1, 'Bitte gib eine Frage an.').max(200),
+        answer: z.string().min(1, 'Bitte gib eine Antwort an.').max(2000),
       }),
     )
     .max(20)
@@ -256,7 +256,15 @@ export function defaultSectionData(type: SectionType): AnySectionData {
       // Ein Bildblock braucht zwingend ein Medium; der Builder fragt es direkt ab.
       return { mediaId: '', caption: '', width: 'content', rounded: true };
     case 'VIDEO':
-      return videoSchema.parse({ url: '' });
+      // Die Adresse ist Pflicht, wird aber erst beim Speichern eingefordert –
+      // der Block muss zuerst angelegt werden können.
+      return {
+        headline: '',
+        url: '',
+        provider: 'youtube',
+        posterMediaId: null,
+        description: '',
+      };
     case 'CTA':
       return ctaSchema.parse({ headline: 'Werde Teil von SwissHub' });
     case 'TWO_COLUMN':

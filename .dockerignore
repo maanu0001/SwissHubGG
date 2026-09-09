@@ -1,0 +1,30 @@
+node_modules
+.next
+out
+dist
+coverage
+
+.git
+.github
+.gitignore
+
+# Secrets dürfen nie ins Image gelangen
+.env
+.env.*
+!.env.example
+
+# Laufzeitdaten und Sicherungen
+storage
+backups
+*.dump
+*.sql.gz
+
+# Entwicklungsdateien
+tests
+*.log
+.vscode
+.idea
+.DS_Store
+README.md
+docs
+deploy
