@@ -12,6 +12,7 @@ import {
 } from '@/lib/auth/discord';
 import { OAUTH_STATE_COOKIE, cookieOptions, createSession } from '@/lib/auth/session';
 import { consumeRateLimit, RATE_LIMITS } from '@/lib/ratelimit';
+import { internalUrl, safeInternalPath } from '@/lib/publicUrl';
 import { AUDIT_ACTIONS, recordSystemAudit } from '@/lib/audit';
 
 /**
@@ -27,7 +28,9 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function fail(request: NextRequest, reason: string): NextResponse {
-  const url = new URL('/admin/login', request.url);
+  // Bewusst nicht aus `request.url`: Das wäre hinter dem Reverse Proxy die
+  // interne Adresse der Anwendung (z. B. 0.0.0.0:3000).
+  const url = internalUrl('/admin/login', request.headers);
   url.searchParams.set('fehler', reason);
   const response = NextResponse.redirect(url);
   response.cookies.set(OAUTH_STATE_COOKIE, '', { ...cookieOptions(0), maxAge: 0 });
@@ -152,8 +155,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       user.id,
     );
 
-    const target = stored.redirectPath ?? '/admin';
-    const response = NextResponse.redirect(new URL(target, request.url));
+    // Das Ziel stammt aus dem eigenen Anmeldeaufruf und wird erneut auf eine
+    // interne Form geprüft – eine Weiterleitung auf eine fremde Domain ist
+    // damit ausgeschlossen.
+    const target = safeInternalPath(stored.redirectPath, '/admin');
+    const response = NextResponse.redirect(internalUrl(target, request.headers));
     response.cookies.set(OAUTH_STATE_COOKIE, '', { ...cookieOptions(0), maxAge: 0 });
     return response;
   } catch (error) {

@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import './globals.css';
 import { RouteTransition } from '@/components/site/RouteTransition';
 import { env } from '@/lib/env';
 import { getSettings } from '@/lib/settings';
 import { THEME_COOKIE, colorSchemeOf, resolveTheme, themeColorOf } from '@/lib/theme';
+import { brandColorStyles } from '@/lib/brandColor';
 
 /**
  * Wurzel-Layout. Enthält nur das Grundgerüst; Kopf- und Fussbereich der
@@ -66,7 +67,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     Darstellung noch eine Abweichung zwischen Server- und Client-Ausgabe –
     und es braucht kein zusätzliches Skript vor dem Zeichnen.
   */
-  const theme = await currentTheme();
+  const [theme, settings, headerList] = await Promise.all([currentTheme(), getSettings(), headers()]);
+
+  /*
+    Die Akzentfarbe aus dem Dashboard überschreibt ausschliesslich die
+    Markenmerkmale des Designsystems – für beide Darstellungen in einer Regel,
+    damit ein Wechsel zwischen hell und dunkel ohne Neuaufbau stimmt. Ist die
+    Standardfarbe eingestellt, entsteht dieselbe Palette wie im Stylesheet.
+  */
+  const brandStyles = brandColorStyles(settings.brandColor);
 
   return (
     <html
@@ -75,6 +84,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       style={{ colorScheme: colorSchemeOf(theme) }}
       suppressHydrationWarning
     >
+      <head>
+        <style nonce={headerList.get('x-nonce') ?? undefined} dangerouslySetInnerHTML={{ __html: brandStyles }} />
+      </head>
       <body className="flex min-h-dvh flex-col bg-[var(--color-canvas)] text-[var(--color-ink)] antialiased">
         {/* Zentral für alle Bereiche: ein Seitenwechsel beginnt oben und
             entscheidet, ob die Einfluganimation gespielt wird. */}

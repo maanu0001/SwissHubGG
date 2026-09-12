@@ -541,7 +541,7 @@ function CardGridSection({
                     <span className="meta">{String(cardIndex + 1).padStart(2, '0')}</span>
                     <h3 className="heading-md mt-1.5 text-[var(--color-ink)]">
                       {href ? (
-                        <Link href={href} className="after:absolute after:inset-0">
+                        <Link href={href} className="card-link">
                           {card.title}
                         </Link>
                       ) : (
@@ -556,7 +556,7 @@ function CardGridSection({
                     ) : null}
 
                     {href && card.link ? (
-                      <p className="link-arrow mt-4">
+                      <p aria-hidden="true" className="link-arrow pointer-events-none mt-4">
                         {card.link.label}
                         <Icons.arrowRight size={15} />
                       </p>

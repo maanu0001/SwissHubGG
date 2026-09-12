@@ -131,8 +131,17 @@ TRUST_PROXY=true
 ```
 
 `APP_URL` ist die öffentliche Adresse – nie `127.0.0.1:3001` und nie
-`0.0.0.0:3000`. Aus ihr leitet die Anwendung auch die erlaubte Herkunft für
-Server Actions ab (`allowedOrigins` in `next.config.ts`). Wird die Website unter
+`0.0.0.0:3000`. Sie ist die **einzige** Quelle für Weiterleitungen, den
+OAuth-Rückruf und Canonical-Adressen: Nach der Anmeldung über Discord wird das
+Ziel daraus gebaut, nicht aus der Adresse, unter der die Anwendung die Anfrage
+entgegengenommen hat. Hinter dem Proxy wäre das sonst die interne Adresse – bei
+einer Bindung auf `0.0.0.0:3000` landete die Weiterleitung auf
+`https://0.0.0.0:3000/admin`. Eine Bind-Adresse in `APP_URL` wird deshalb beim
+Start abgelehnt. Ein späterer Wechsel auf `swisshub.gg` ist eine reine Änderung
+dieser Variablen (plus der Rückrufadresse in der Discord-Anwendung).
+
+Aus `APP_URL` leitet die Anwendung ausserdem die erlaubte Herkunft für Server
+Actions ab (`allowedOrigins` in `next.config.ts`). Wird die Website unter
 mehreren Domains betrieben, kommen die weiteren über `ADDITIONAL_ORIGINS`
 (kommagetrennt) dazu.
 

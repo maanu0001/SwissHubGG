@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { LogoLockup } from '@/components/brand/Logo';
 import { Icons } from '@/components/ui/Icon';
-import { getNavigation, getSocialAccounts, getSponsors } from '@/lib/content/queries';
+import { getNavigation, getSocialAccounts, getSponsors, getSponsorsByIds } from '@/lib/content/queries';
+import { SponsorLogo } from '@/components/site/SponsorCard';
 import { getSettings } from '@/lib/settings';
 import { safeUrl } from '@/lib/sanitize';
 import { SOCIAL_PLATFORM_META } from '@/components/site/socialMeta';
@@ -17,12 +18,22 @@ import { SOCIAL_PLATFORM_META } from '@/components/site/socialMeta';
 const LEGAL_HREFS = ['/impressum', '/datenschutz', '/nutzungsbedingungen', '/cookies'];
 
 export async function SiteFooter() {
-  const [settings, footerItems, accounts, sponsors] = await Promise.all([
-    getSettings(),
+  const settings = await getSettings();
+
+  const [footerItems, accounts, sponsors, footerSponsors] = await Promise.all([
     getNavigation('footer'),
     getSocialAccounts(),
     getSponsors('ACTIVE', 12),
+    /*
+      Der im Dashboard gewählte Partner. Die Abfrage lässt ausschliesslich
+      veröffentlichte, nicht archivierte Partner durch – ein zurückgezogener
+      Partner verschwindet dadurch von selbst aus dem Fussbereich, ohne dass
+      die Einstellung angefasst werden muss.
+    */
+    settings.footerSponsorId ? getSponsorsByIds([settings.footerSponsorId]) : Promise.resolve([]),
   ]);
+
+  const footerSponsor = footerSponsors[0] ?? null;
 
   const discordUrl = safeUrl(settings.discordInviteUrl);
   const year = new Date().getFullYear();
@@ -170,6 +181,34 @@ export async function SiteFooter() {
             ) : null}
           </div>
         </div>
+
+        {/* Ohne Auswahl entfällt der Bereich vollständig – kein leerer Platz. */}
+        {footerSponsor ? (
+          <div className="mt-12">
+            <span aria-hidden="true" className="hairline block" />
+            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <p className="meta">{settings.sponsorSectionLabel}</p>
+
+              <Link
+                href={`/partner/${footerSponsor.slug}`}
+                className="group inline-flex items-center gap-4 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3 transition-colors duration-200 hover:border-[color-mix(in_srgb,var(--color-brand)_45%,var(--color-line))] hover:bg-[var(--color-surface-hover)]"
+              >
+                <span className="flex h-10 items-center">
+                  <SponsorLogo sponsor={footerSponsor} className="max-h-10" />
+                </span>
+                {/* Ohne hinterlegtes Logo zeigt die Logofläche bereits den Namen –
+                    dann entfällt die zweite Nennung. */}
+                {footerSponsor.logo ? (
+                  <span className="text-sm font-semibold text-[var(--color-ink)]">{footerSponsor.name}</span>
+                ) : null}
+                <Icons.arrowRight
+                  size={14}
+                  className="text-[var(--color-brand-text)] transition-transform duration-200 group-hover:translate-x-0.5"
+                />
+              </Link>
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-12">
           <span aria-hidden="true" className="hairline block" />

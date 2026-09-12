@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { TournamentStatus } from '@prisma/client';
 import { FilterLink } from '@/components/site/FilterLink';
+import { sortTournaments } from '@/lib/content/ordering';
 import { TournamentCard } from '@/components/site/TournamentCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { JsonLd } from '@/components/site/JsonLd';
@@ -68,17 +69,12 @@ export default async function TournamentsPage({ searchParams }: PageProps) {
       (gameFilter === 'alle' || tournament.game?.slug === gameFilter),
   );
 
-  // Anstehende zuerst aufsteigend, Archiv absteigend – so steht immer das
-  // Relevanteste oben.
-  const sorted = [...filtered].sort((a, b) => {
-    const aUpcoming = UPCOMING_STATUSES.includes(a.status) || a.status === TournamentStatus.RUNNING;
-    const bUpcoming = UPCOMING_STATUSES.includes(b.status) || b.status === TournamentStatus.RUNNING;
-    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
-
-    const aTime = a.startsAt?.getTime() ?? 0;
-    const bTime = b.startsAt?.getTime() ?? 0;
-    return aUpcoming ? aTime - bTime : bTime - aTime;
-  });
+  /*
+    Dieselbe Reihenfolge wie überall sonst: offene Anmeldungen zuerst, danach
+    alle übrigen – jeweils die aktuellsten zuoberst. Die Regel steht in
+    `sortTournaments` und wirkt dadurch auch bei jedem Filter gleich.
+  */
+  const sorted = sortTournaments(filtered);
 
   const running = all.filter((tournament) => tournament.status === TournamentStatus.RUNNING).length;
 

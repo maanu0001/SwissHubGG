@@ -67,6 +67,13 @@ export default async function AdminTournamentDetailPage({ params }: PageProps) {
     }),
   ]);
 
+  /*
+    Zur Auswahl stehen aktive Spiele – plus das bereits zugeordnete, auch wenn
+    es inzwischen deaktiviert wurde. So geht beim Speichern keine bestehende
+    Zuordnung verloren.
+  */
+  const selectableGames = games.filter((game) => game.active || game.id === tournament.gameId);
+
   const selectedSponsors = new Set(tournament.sponsors.map((entry) => entry.sponsorId));
   const selectedMedia = new Set(tournament.media.map((entry) => entry.mediaId));
   const status = TOURNAMENT_STATUS_META[tournament.status];
@@ -159,12 +166,17 @@ export default async function AdminTournamentDetailPage({ params }: PageProps) {
                   </select>
                 </Field>
 
-                <Field label="Spiel" name="gameId">
+                <Field
+                  label="Spiel"
+                  name="gameId"
+                  hint="Wird unter „Spiele“ gepflegt und bestimmt den Filter auf der Turnierseite."
+                >
                   <select id="gameId" name="gameId" defaultValue={tournament.gameId ?? ''} disabled={!canManage} className="select">
                     <option value="">Nicht festgelegt</option>
-                    {games.map((game) => (
+                    {selectableGames.map((game) => (
                       <option key={game.id} value={game.id}>
                         {game.name}
+                        {!game.active ? ' (deaktiviert)' : ''}
                       </option>
                     ))}
                   </select>

@@ -312,7 +312,7 @@ export default async function TournamentDetailPage({ params }: PageProps) {
                               <span
                                 className={`numeric inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${
                                   result.placement === 1
-                                    ? 'bg-[var(--color-brand)] text-white'
+                                    ? 'bg-[var(--color-brand)] text-[var(--color-brand-contrast)]'
                                     : podium
                                       ? 'border border-[color-mix(in_srgb,var(--color-brand)_50%,transparent)] text-[var(--color-brand-text)]'
                                       : 'border border-[var(--color-line)] text-[var(--color-ink-muted)]'

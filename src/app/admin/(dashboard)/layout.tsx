@@ -39,8 +39,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (contentItems.length > 0) groups.push({ label: 'Inhalte', items: contentItems });
 
   const communityItems: AdminNavGroup['items'] = [];
-  if (userHasPermission(user, PERMISSIONS.TOURNAMENTS_VIEW))
+  if (userHasPermission(user, PERMISSIONS.TOURNAMENTS_VIEW)) {
     communityItems.push({ href: '/admin/turniere', label: 'Turniere' });
+    communityItems.push({ href: '/admin/turniere/spiele', label: 'Spiele' });
+  }
   if (userHasPermission(user, PERMISSIONS.SPONSORS_VIEW))
     communityItems.push({ href: '/admin/sponsoren', label: 'Sponsoren' });
   if (userHasAnyPermission(user, [PERMISSIONS.SOCIAL_ACCOUNTS_MANAGE, PERMISSIONS.SOCIAL_POSTS_MANAGE]))

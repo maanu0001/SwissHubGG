@@ -2,6 +2,7 @@ import 'server-only';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { CacheTag, cached, invalidateTags } from '@/lib/cache';
+import { DEFAULT_BRAND_COLOR } from '@/lib/brandColor';
 
 /**
  * Globale Einstellungen der Website.
@@ -90,6 +91,23 @@ export const settingsSchema = z.object({
 
   sponsorSectionLabel: z.string().max(60, tooLong(60)).default('Partner & Sponsoren'),
   showSponsorTiers: z.boolean().default(true),
+
+  /**
+   * Ein hervorgehobener Partner im Fussbereich. Leer bedeutet: kein Bereich.
+   * Ob der gewählte Partner öffentlich sichtbar ist, entscheidet beim Anzeigen
+   * erneut die Abfrage – ein zurückgezogener Partner verschwindet dadurch von
+   * selbst, ohne dass die Einstellung angefasst werden muss.
+   */
+  footerSponsorId: z.string().nullable().default(null),
+
+  /**
+   * Akzentfarbe der Website. Wirkt ausschliesslich auf Farben; alle übrigen
+   * Merkmale des Designsystems bleiben unberührt.
+   */
+  brandColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, 'Bitte gib eine Farbe als Hexwert an, z. B. #83060A.')
+    .default(DEFAULT_BRAND_COLOR),
 });
 
 export type SettingsKey = keyof SiteSettings;
@@ -170,6 +188,8 @@ export const SETTINGS_GROUPS: Record<keyof SiteSettings, string> = {
   mailReplyTo: 'email',
   sponsorSectionLabel: 'sponsoring',
   showSponsorTiers: 'sponsoring',
+  footerSponsorId: 'footer',
+  brandColor: 'darstellung',
 };
 
 export const DEFAULT_SETTINGS: SiteSettings = settingsSchema.parse({});

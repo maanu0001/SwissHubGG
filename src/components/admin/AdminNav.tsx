@@ -62,7 +62,7 @@ export function AdminNav({ groups, user, logout, theme }: AdminNavProps) {
                     ) : null}
                     <span>{item.label}</span>
                     {typeof item.badge === 'number' && item.badge > 0 ? (
-                      <span className="rounded-full bg-[var(--color-brand)] px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                      <span className="rounded-full bg-[var(--color-brand)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--color-brand-contrast)]">
                         {item.badge > 99 ? '99+' : item.badge}
                       </span>
                     ) : null}

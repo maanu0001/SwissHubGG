@@ -2,6 +2,7 @@ import 'server-only';
 import { PageStatus, SponsorStatus, TournamentStatus, type SocialPlatform } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { CacheTag, cached } from '@/lib/cache';
+import { sortPosts, sortTournaments } from '@/lib/content/ordering';
 import { FEATURE_FLAGS, isFeatureEnabled } from '@/lib/featureFlags';
 import { parseSections, type RenderableSection } from '@/lib/content/sections';
 
@@ -109,6 +110,7 @@ const TOURNAMENT_LIST_SELECT = {
   prizeInfo: true,
   featured: true,
   winnerName: true,
+  publishedAt: true,
   registrationUrl: true,
   streamUrl: true,
   banner: { select: { storageKey: true, alt: true, width: true, height: true } },
@@ -125,14 +127,21 @@ export const UPCOMING_STATUSES: TournamentStatus[] = [
 
 export const PAST_STATUSES: TournamentStatus[] = [TournamentStatus.COMPLETED, TournamentStatus.CANCELLED];
 
+/**
+ * Turniere lesen und in die öffentliche Reihenfolge bringen.
+ *
+ * Wichtig ist die Reihenfolge der Schritte: Erst alle infrage kommenden
+ * Turniere lesen, dann sortieren, dann kürzen. Andernfalls würde die Datenbank
+ * nach einem anderen Massstab kürzen als die Anzeige sortiert – eine Liste mit
+ * drei Einträgen zeigte dann nicht die drei obersten.
+ */
 async function fetchTournaments(options: {
   statuses?: TournamentStatus[];
   gameSlug?: string;
   featuredOnly?: boolean;
   limit?: number;
-  order?: 'asc' | 'desc';
 }) {
-  return prisma.tournament.findMany({
+  const rows = await prisma.tournament.findMany({
     where: {
       publishedAt: { not: null, lte: new Date() },
       archivedAt: null,
@@ -141,37 +150,42 @@ async function fetchTournaments(options: {
       ...(options.featuredOnly ? { featured: true } : {}),
     },
     select: TOURNAMENT_LIST_SELECT,
-    orderBy: [{ startsAt: options.order ?? 'asc' }, { sortOrder: 'asc' }, { title: 'asc' }],
-    take: options.limit ?? 60,
+    // Vorsortierung in der Datenbank; die massgebliche Reihenfolge setzt
+    // `sortTournaments`. Die Obergrenze schützt nur vor unbegrenzten Abfragen.
+    orderBy: [{ startsAt: 'desc' }, { sortOrder: 'asc' }, { title: 'asc' }],
+    take: 500,
   });
+
+  const sorted = sortTournaments(rows);
+  return typeof options.limit === 'number' ? sorted.slice(0, options.limit) : sorted;
 }
 
 export async function getUpcomingTournaments(limit = 6) {
   return cached(`tournaments:upcoming:${limit}`, [CacheTag.tournaments], () =>
-    fetchTournaments({ statuses: UPCOMING_STATUSES, limit, order: 'asc' }),
+    fetchTournaments({ statuses: UPCOMING_STATUSES, limit }),
   );
 }
 
 export async function getRunningTournaments(limit = 6) {
   return cached(`tournaments:running:${limit}`, [CacheTag.tournaments], () =>
-    fetchTournaments({ statuses: [TournamentStatus.RUNNING], limit, order: 'asc' }),
+    fetchTournaments({ statuses: [TournamentStatus.RUNNING], limit }),
   );
 }
 
 export async function getPastTournaments(limit = 24) {
   return cached(`tournaments:past:${limit}`, [CacheTag.tournaments], () =>
-    fetchTournaments({ statuses: PAST_STATUSES, limit, order: 'desc' }),
+    fetchTournaments({ statuses: PAST_STATUSES, limit }),
   );
 }
 
 export async function getFeaturedTournaments(limit = 3) {
   return cached(`tournaments:featured:${limit}`, [CacheTag.tournaments], () =>
-    fetchTournaments({ featuredOnly: true, limit, order: 'asc' }),
+    fetchTournaments({ featuredOnly: true, limit }),
   );
 }
 
 export async function getAllPublicTournaments() {
-  return cached('tournaments:all', [CacheTag.tournaments], () => fetchTournaments({ limit: 200, order: 'desc' }));
+  return cached('tournaments:all', [CacheTag.tournaments], () => fetchTournaments({ limit: 200 }));
 }
 
 /**
@@ -278,6 +292,33 @@ export async function getSponsors(status: SponsorStatus | 'ALL' = SponsorStatus.
   );
 }
 
+/**
+ * Ein einzelner Partner für seine Detailseite.
+ *
+ * Es gelten dieselben Bedingungen wie in der Übersicht: Nur veröffentlichte und
+ * nicht archivierte Partner sind öffentlich sichtbar. Ein Entwurf ist damit
+ * auch dann nicht erreichbar, wenn die Adresse bekannt ist.
+ */
+export async function getSponsorBySlug(slug: string) {
+  return cached(`sponsor:${slug}`, [CacheTag.sponsors], () =>
+    prisma.sponsor.findFirst({
+      where: { slug, publishedAt: { not: null, lte: new Date() }, archivedAt: null },
+      select: SPONSOR_SELECT,
+    }),
+  );
+}
+
+/** Adressen aller öffentlich sichtbaren Partner – für die Sitemap. */
+export async function listPublicSponsorSlugs(): Promise<{ slug: string; updatedAt: Date }[]> {
+  return cached('sponsors:slugs', [CacheTag.sponsors], () =>
+    prisma.sponsor.findMany({
+      where: { publishedAt: { not: null, lte: new Date() }, archivedAt: null },
+      select: { slug: true, updatedAt: true },
+      orderBy: { slug: 'asc' },
+    }),
+  );
+}
+
 export async function getSponsorsByIds(ids: string[]) {
   if (ids.length === 0) return [];
   const key = `sponsors:ids:${[...ids].sort().join(',')}`;
@@ -328,8 +369,9 @@ export async function getSocialPosts(options: {
         ...(options.platforms && options.platforms.length > 0 ? { platform: { in: options.platforms } } : {}),
         ...(options.onlyFeatured ? { featured: true } : {}),
       },
-      orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { postedAt: 'desc' }],
-      take: options.limit ?? 12,
+      // Vorsortierung; massgeblich ist `sortPosts` weiter unten.
+      orderBy: [{ postedAt: 'desc' }, { publishedAt: 'desc' }],
+      take: 500,
       select: {
         id: true,
         platform: true,
@@ -339,10 +381,11 @@ export async function getSocialPosts(options: {
         url: true,
         postedAt: true,
         featured: true,
+        publishedAt: true,
         thumbnail: { select: { storageKey: true, alt: true, width: true, height: true } },
         account: { select: { handle: true, profileUrl: true } },
       },
-    }),
+    }).then((rows) => sortPosts(rows).slice(0, options.limit ?? 12)),
   );
 }
 

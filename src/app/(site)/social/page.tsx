@@ -112,7 +112,7 @@ export default async function SocialPage({ searchParams }: PageProps) {
                             target="_blank"
                             rel="noopener noreferrer"
                             data-track-social={account.platform}
-                            className="after:absolute after:inset-0"
+                            className="card-link"
                           >
                             {meta.label}
                           </a>
@@ -131,7 +131,7 @@ export default async function SocialPage({ searchParams }: PageProps) {
                           <span className="meta numeric">{formatNumber(account.followerCount)} Follower</span>
                         ) : null}
                         {url ? (
-                          <span className="link-arrow ml-auto text-xs">
+                          <span aria-hidden="true" className="link-arrow pointer-events-none ml-auto text-xs">
                             Profil öffnen <Icons.external size={12} />
                           </span>
                         ) : null}

@@ -35,6 +35,10 @@
   --color-brand-bright: #c81219;
   --color-brand-soft: #250406;
   --color-brand-text: #ff6b70;
+  /* Dunkler Rand des Verlaufs auf Schaltflächen. */
+  --color-brand-deep: #6b0508;
+  /* Schrift auf einer Markenfläche – wird mit der Akzentfarbe mitberechnet. */
+  --color-brand-contrast: #ffffff;
 
   /* --- Semantische Status --- */
   --color-success: #2f9e5f;
@@ -123,11 +127,15 @@ html[data-theme='light'] {
   --color-ink-muted: #4b5160;
   --color-ink-subtle: #616878;
 
-  /* Die Marke selbst bleibt unverändert; nur Textrot und Markenfläche
-     werden für helle Untergründe abgestimmt. */
-  --color-brand: #83060a;
-  --color-brand-strong: #a20a10;
-  --color-brand-bright: #c81219;
+  /*
+    Die Marke selbst bleibt unverändert und wird hier bewusst **nicht** erneut
+    gesetzt: `--color-brand`, `-strong`, `-bright`, `-deep` und `-contrast`
+    gelten aus `@theme` für beide Darstellungen. Würden sie hier wiederholt,
+    schlüge diese Regel wegen ihrer höheren Spezifität die im Dashboard
+    gewählte Akzentfarbe – die helle Darstellung bliebe beim ursprünglichen Rot.
+
+    Eigene Werte brauchen nur die beiden Merkmale, die vom Untergrund abhängen.
+  */
   --color-brand-soft: #fceceb;
   --color-brand-text: #8e070c;
 
@@ -195,7 +203,7 @@ html[data-theme='light'] {
 
   ::selection {
     background-color: var(--color-brand);
-    color: #ffffff;
+    color: var(--color-brand-contrast);
   }
 
   /* Bewegung reduzieren, wenn das Betriebssystem es verlangt. */
@@ -225,6 +233,20 @@ html[data-theme='light'] {
 
 @utility btn {
   @apply relative inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-[color,background-color,border-color,box-shadow,transform] duration-200 disabled:cursor-not-allowed disabled:opacity-55;
+}
+
+/*
+  Ausgedehntes Klickziel einer Karte: Der Link im Titel wird zur Fläche der
+  ganzen Karte.
+
+  Das `z-10` ist wesentlich. Die Fläche ist absolut positioniert und liegt
+  damit in derselben Ebene wie jedes nachfolgende Geschwisterelement mit
+  `position: relative` – `.link-arrow` ist genau so eines. Ohne eigenen
+  Stapelwert gewänne das spätere Element nach Dokumentreihenfolge und
+  verschluckte die Klicks im unteren Teil der Karte.
+*/
+@utility card-link {
+  @apply after:absolute after:inset-0 after:z-10;
 }
 
 @utility badge {
@@ -432,12 +454,13 @@ html[data-theme='light'] {
   /* Bedienelemente                                                      */
   /* ------------------------------------------------------------------ */
   .btn-primary {
-    @apply btn text-white;
+    @apply btn;
+    color: var(--color-brand-contrast);
     background-image: linear-gradient(
       135deg,
       var(--color-brand-strong) 0%,
       var(--color-brand) 55%,
-      #6d0508 100%
+      var(--color-brand-deep) 100%
     );
     box-shadow:
       inset 0 1px 0 0 rgb(255 255 255 / 0.14),
@@ -619,7 +642,7 @@ html[data-theme='light'] {
   /* Sprunglink                                                          */
   /* ------------------------------------------------------------------ */
   .skip-link {
-    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-[var(--color-brand)] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white;
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-[var(--color-brand)] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[var(--color-brand-contrast)];
   }
 
   /* ------------------------------------------------------------------ */
@@ -1444,7 +1467,7 @@ html[data-theme='light'] {
   /* Auswahl bleibt in beiden Darstellungen die Markenfarbe mit weisser Schrift. */
   html[data-theme='light'] ::selection {
     background-color: var(--color-brand);
-    color: #ffffff;
+    color: var(--color-brand-contrast);
   }
 
   /*

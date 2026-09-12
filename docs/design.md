@@ -68,6 +68,50 @@ aus dem vorhandenen Symbolsatz. Massgeblich ist immer das Merkmal am `<html>`
 denselben Zustand. Umgeschaltet wird ohne Neuaufbau der Seite; die Abmessungen
 bleiben gleich, es entsteht kein Sprung im Layout.
 
+## Akzentfarbe
+
+`#83060A` ist der Standard und bleibt es. Im Dashboard lässt sich unter
+**Einstellungen → Darstellung** eine andere Akzentfarbe wählen; sie wirkt
+ausschliesslich auf Farben – Schaltflächen, Links, Hervorhebungen, Akzentlinien
+sowie Hover- und Fokuszustände. Inhalte, Aufbau, Abstände, Bilder, Logos und
+Bewegung bleiben unberührt.
+
+Aus dem einen gewählten Wert leitet `src/lib/brandColor.ts` die ganze
+Markenpalette ab: `--color-brand`, `-strong`, `-bright`, `-deep`, `-contrast`
+sowie je Darstellung `-soft` und `-text`. Zwei Gründe dafür:
+
+- Es bleibt bei **einer** Einstellung statt sieben, die zueinander passen müssten.
+- Die Kontraste lassen sich prüfen und nachziehen. Markentext und Schrift auf
+  Markenflächen werden so weit verschoben, bis sie mindestens 4.5:1 erreichen –
+  auch bei einer hellen oder unbunten Wahl.
+
+Das Wurzel-Layout gibt die Palette als kleines, nonce-signiertes Stylesheet aus,
+das nur die Markenmerkmale überschreibt – in einer Regel für beide
+Darstellungen, damit ein Wechsel zwischen hell und dunkel ohne Neuaufbau stimmt.
+
+**Wichtig:** Die helle Darstellung darf `--color-brand`, `-strong`, `-bright`,
+`-deep` und `-contrast` nicht erneut setzen. Ihre Regel
+(`html[data-theme='light']`) ist spezifischer als `:root` und schlüge sonst die
+gewählte Akzentfarbe – die helle Darstellung bliebe beim ursprünglichen Rot.
+Eigene Werte brauchen dort nur `-soft` und `-text`.
+
+## Verlinkte Karten
+
+Eine Karte, deren ganze Fläche auf eine Detailseite führt, trägt den Link im
+Titel und die Utility `card-link`. Sie dehnt den Link über die ganze Karte aus
+und legt ihn mit `z-10` über den Inhalt.
+
+Das `z-10` ist nicht kosmetisch: Die ausgedehnte Fläche ist absolut positioniert
+und liegt damit in derselben Ebene wie jedes nachfolgende Geschwisterelement mit
+`position: relative`. `.link-arrow` ist genau so eines – ohne eigenen Stapelwert
+gewänne es nach Dokumentreihenfolge und verschluckte die Klicks im unteren Teil
+der Karte. Rein schmückende Hinweiszeilen („Partner ansehen“, „Details“) tragen
+zusätzlich `pointer-events-none` und `aria-hidden`.
+
+Pro Karte darf es **genau eine** solche Fläche geben. Ein zweiter ausgedehnter
+Link übernimmt sonst die ganze Karte – so führte die Partnerkachel früher auf
+die externe Website statt auf die Partnerseite.
+
 ## Typografie
 
 Eine einzige, lokal gehostete Schrift (Inter, variabel) plus die Systemschrift

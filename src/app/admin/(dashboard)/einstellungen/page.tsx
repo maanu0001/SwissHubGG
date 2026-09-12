@@ -1,5 +1,6 @@
 import { MediaKind } from '@prisma/client';
-import { PageHeader, Panel, Field, InfoBox } from '@/components/admin/ui';
+import { PageHeader, Panel, Field, FieldError, InfoBox } from '@/components/admin/ui';
+import { BrandColorField } from '@/components/admin/BrandColorField';
 import { ActionForm, SubmitButton } from '@/components/admin/ActionForm';
 import { MediaSelectField } from '@/components/admin/MediaSelectField';
 import {
@@ -19,7 +20,7 @@ export const metadata = { title: 'Einstellungen' };
 export default async function AdminSettingsPage() {
   await requirePermission(PERMISSIONS.SETTINGS_MANAGE);
 
-  const [settings, media, flags] = await Promise.all([
+  const [settings, media, flags, sponsors] = await Promise.all([
     getSettings(),
     prisma.mediaAsset.findMany({
       where: { kind: MediaKind.IMAGE },
@@ -28,6 +29,13 @@ export default async function AdminSettingsPage() {
       select: { id: true, originalName: true, title: true, storageKey: true },
     }),
     prisma.featureFlag.findMany({ orderBy: { key: 'asc' } }),
+    // Für den Fussbereich stehen nur veröffentlichte, nicht archivierte
+    // Partner zur Auswahl – ein Entwurf soll gar nicht erst wählbar sein.
+    prisma.sponsor.findMany({
+      where: { publishedAt: { not: null }, archivedAt: null },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      select: { id: true, name: true, status: true },
+    }),
   ]);
 
   const config = env();
@@ -67,6 +75,51 @@ export default async function AdminSettingsPage() {
                   <input id="contactEmail" name="contactEmail" type="email" maxLength={160} defaultValue={settings.contactEmail} className="input" />
                 </Field>
               </div>
+
+              <SubmitButton>Speichern</SubmitButton>
+            </>
+          </ActionForm>
+        </Panel>
+
+        <Panel
+          title="Darstellung"
+          description="Die Akzentfarbe wirkt auf Schaltflächen, Links, Hervorhebungen sowie Hover- und Fokuszustände. Inhalte, Aufbau und Bewegung bleiben unverändert."
+        >
+          <ActionForm action={updateSettingsGroupAction} className="space-y-5">
+            <>
+              <input type="hidden" name="group" value="darstellung" />
+              <BrandColorField initial={settings.brandColor} />
+              <FieldError name="brandColor" />
+              <SubmitButton>Farbe speichern</SubmitButton>
+            </>
+          </ActionForm>
+        </Panel>
+
+        <Panel
+          title="Partner im Fussbereich"
+          description="Ein veröffentlichter Partner erscheint mit Logo und Namen im Fussbereich und führt auf seine Partnerseite."
+        >
+          <ActionForm action={updateSettingsGroupAction} className="space-y-4">
+            <>
+              <input type="hidden" name="group" value="footer-partner" />
+
+              {sponsors.length === 0 ? (
+                <InfoBox tone="info" title="Noch kein veröffentlichter Partner">
+                  Sobald ein Partner veröffentlicht ist, lässt er sich hier auswählen.
+                </InfoBox>
+              ) : (
+                <Field label="Ausgewählter Partner" name="footerSponsorId" hint="„Kein Partner“ blendet den Bereich vollständig aus.">
+                  <select id="footerSponsorId" name="footerSponsorId" defaultValue={settings.footerSponsorId ?? ''} className="select">
+                    <option value="">Kein Partner</option>
+                    {sponsors.map((sponsor) => (
+                      <option key={sponsor.id} value={sponsor.id}>
+                        {sponsor.name}
+                        {sponsor.status === 'FORMER' ? ' (ehemalig)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
 
               <SubmitButton>Speichern</SubmitButton>
             </>

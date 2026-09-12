@@ -33,7 +33,7 @@ type FilterLinkProps = {
 const STYLES = {
   solid: {
     active:
-      'badge border-[color-mix(in_srgb,var(--color-brand)_65%,transparent)] bg-[var(--color-brand)] px-4 py-2 font-semibold text-white shadow-[var(--shadow-card)]',
+      'badge border-[color-mix(in_srgb,var(--color-brand)_65%,transparent)] bg-[var(--color-brand)] px-4 py-2 font-semibold text-[var(--color-brand-contrast)] shadow-[var(--shadow-card)]',
     inactive:
       'badge-neutral px-4 py-2 transition-[color,border-color,background-color] duration-200 hover:border-[var(--color-line-strong)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-ink)]',
   },

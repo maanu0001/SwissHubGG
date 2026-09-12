@@ -92,7 +92,7 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
                   aria-current={viewport === option.key ? 'true' : undefined}
                   className={`rounded px-3 py-1 text-xs font-medium ${
                     viewport === option.key
-                      ? 'bg-[var(--color-brand)] text-white'
+                      ? 'bg-[var(--color-brand)] text-[var(--color-brand-contrast)]'
                       : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]'
                   }`}
                 >

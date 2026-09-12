@@ -22,14 +22,39 @@ const idList = z
       .filter((entry) => entry.length > 0),
   );
 
+/** Hostname einer Adresse, ohne bei einer unbrauchbaren Angabe zu werfen. */
+function safeHostname(value: string): string | null {
+  try {
+    return new URL(value).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 
   DATABASE_URL: z.string().min(1, 'DATABASE_URL muss gesetzt sein.'),
 
+  /*
+    Die öffentliche Adresse der Website. Sie ist die einzige Quelle für
+    Weiterleitungen, Canonical-Adressen und den OAuth-Rückruf – und bleibt
+    damit konfigurierbar, ein Domainwechsel ist eine reine Einstellung.
+
+    `0.0.0.0` ist eine Bind-Adresse des Servers und keine erreichbare Adresse.
+    Sie hier zuzulassen führt zu Weiterleitungen ins Leere, deshalb wird sie
+    ausdrücklich abgelehnt.
+  */
   APP_URL: z
     .string()
-    .url('APP_URL muss eine vollständige URL sein, z. B. https://swisshub.gg')
+    .url('APP_URL muss eine vollständige URL sein, z. B. https://new.swisshub.gg')
+    .refine(
+      (value) => {
+        const host = safeHostname(value);
+        return host !== '0.0.0.0' && host !== '::' && host !== '[::]';
+      },
+      'APP_URL darf keine Bind-Adresse sein (0.0.0.0). Trage die öffentliche Adresse ein, z. B. https://new.swisshub.gg',
+    )
     .default('http://localhost:3000')
     .transform((value) => value.replace(/\/$/, '')),
 

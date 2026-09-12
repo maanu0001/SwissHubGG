@@ -1,6 +1,6 @@
+import Link from 'next/link';
 import { MediaImage } from '@/components/site/MediaImage';
 import { Icons } from '@/components/ui/Icon';
-import { safeUrl } from '@/lib/sanitize';
 import { formatDateRange } from '@/lib/format';
 
 /**
@@ -52,8 +52,26 @@ export function SponsorLogo({ sponsor, className = '' }: { sponsor: SponsorLogoI
   );
 }
 
+/**
+ * Die Kachel führt auf die Detailseite des Partners.
+ *
+ * Die ganze Fläche ist anklickbar: Der Titel trägt den Link, und ein
+ * ausgedehnter Bereich (`card-link`) macht daraus das
+ * Klickziel der Karte. Genau eine Fläche darf das tun – ein zweiter
+ * ausgedehnter Link würde den ersten überdecken.
+ *
+ * Zwei Fallstricke, die genau diese Fläche unwirksam machen:
+ *
+ * - Ein nachfolgendes Geschwisterelement mit `position: relative` liegt in
+ *   derselben Ebene wie die ausgedehnte Fläche und gewinnt nach
+ *   Dokumentreihenfolge. `.link-arrow` ist genau so eines. Deshalb liegt die
+ *   Fläche mit `after:z-10` darüber, und die rein schmückende Zeile nimmt
+ *   ohnehin keine Klicks entgegen.
+ * - Ein zweiter ausgedehnter Link (früher der Verweis auf die Website des
+ *   Partners) übernimmt die gesamte Kachel. Die Website steht deshalb auf der
+ *   Detailseite, nicht auf der Kachel.
+ */
 export function SponsorCard({ sponsor, showDescription = true }: { sponsor: Sponsor; showDescription?: boolean }) {
-  const website = safeUrl(sponsor.websiteUrl);
   const isFormer = sponsor.status === 'FORMER';
 
   return (
@@ -69,7 +87,11 @@ export function SponsorCard({ sponsor, showDescription = true }: { sponsor: Spon
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        <h3 className="text-base font-semibold text-[var(--color-ink)]">{sponsor.name}</h3>
+        <h3 className="text-base font-semibold text-[var(--color-ink)]">
+          <Link href={`/partner/${sponsor.slug}`} className="card-link">
+            {sponsor.name}
+          </Link>
+        </h3>
         {sponsor.tier ? <span className="badge-brand">{sponsor.tier.name}</span> : null}
         {isFormer ? <span className="badge-neutral">Ehemaliger Partner</span> : null}
       </div>
@@ -88,19 +110,10 @@ export function SponsorCard({ sponsor, showDescription = true }: { sponsor: Spon
         </p>
       ) : null}
 
-      {website ? (
-        <a
-          href={website}
-          target="_blank"
-          rel="noopener noreferrer sponsored"
-          data-track-sponsor={sponsor.slug}
-          className="link-arrow mt-auto pt-5 after:absolute after:inset-0"
-        >
-          Website besuchen
-          <Icons.external size={13} />
-          <span className="sr-only">(öffnet in neuem Tab)</span>
-        </a>
-      ) : null}
+      <p aria-hidden="true" className="link-arrow pointer-events-none mt-auto pt-5">
+        Partner ansehen
+        <Icons.arrowRight size={14} />
+      </p>
     </article>
   );
 }

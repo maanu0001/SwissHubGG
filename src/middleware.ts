@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { internalUrl } from '@/lib/publicUrl';
 
 /**
  * Setzt die Content-Security-Policy mit einer Nonce pro Request und schützt den
@@ -54,7 +55,9 @@ export function middleware(request: NextRequest): NextResponse {
     pathname.startsWith('/admin') && !PUBLIC_ADMIN_PATHS.some((allowed) => pathname === allowed || pathname.startsWith(`${allowed}/`));
 
   if (isProtectedAdminPath && !request.cookies.get(SESSION_COOKIE)) {
-    const loginUrl = new URL('/admin/login', request.url);
+    // Aus der öffentlichen Adresse gebaut, nicht aus `request.url`: Letzteres
+    // ist hinter dem Reverse Proxy die interne Adresse der Anwendung.
+    const loginUrl = internalUrl('/admin/login', request.headers);
     loginUrl.searchParams.set('next', pathname);
     const redirectResponse = NextResponse.redirect(loginUrl);
     redirectResponse.headers.set('Content-Security-Policy', csp);

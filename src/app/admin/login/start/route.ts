@@ -6,6 +6,7 @@ import { hashIp, hashToken, randomToken } from '@/lib/crypto';
 import { buildAuthorizeUrl, createPkcePair } from '@/lib/auth/discord';
 import { OAUTH_STATE_COOKIE, cookieOptions } from '@/lib/auth/session';
 import { consumeRateLimit, RATE_LIMITS } from '@/lib/ratelimit';
+import { internalUrl, safeInternalPath } from '@/lib/publicUrl';
 
 /**
  * Startet den Discord-OAuth2-Flow.
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const config = env();
 
   if (!config.discordConfigured) {
-    return NextResponse.redirect(new URL('/admin/login?fehler=nicht_konfiguriert', request.url));
+    return NextResponse.redirect(internalUrl('/admin/login?fehler=nicht_konfiguriert', request.headers));
   }
 
   const forwarded = config.TRUST_PROXY ? request.headers.get('x-forwarded-for') : null;
@@ -32,16 +33,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const limit = await consumeRateLimit(RATE_LIMITS.loginStart, hashIp(ip) ?? 'unknown');
 
   if (!limit.allowed) {
-    return NextResponse.redirect(new URL('/admin/login?fehler=zu_viele_versuche', request.url));
+    return NextResponse.redirect(internalUrl('/admin/login?fehler=zu_viele_versuche', request.headers));
   }
 
   const state = randomToken(24);
   const { verifier, challenge } = createPkcePair();
 
-  const requestedNext = request.nextUrl.searchParams.get('next');
-  // Nur interne Pfade sind als Ziel erlaubt (Schutz vor offenen Weiterleitungen).
-  const redirectPath =
-    requestedNext && requestedNext.startsWith('/admin') && !requestedNext.startsWith('//') ? requestedNext : null;
+  // Nur interne Pfade im Admin-Bereich sind als Ziel erlaubt – Schutz vor
+  // offenen Weiterleitungen auf fremde Domains.
+  const requestedNext = safeInternalPath(request.nextUrl.searchParams.get('next'), '');
+  const redirectPath = requestedNext.startsWith('/admin') ? requestedNext : null;
 
   await prisma.oAuthState.create({
     data: {

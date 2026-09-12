@@ -135,7 +135,7 @@ function CompactTournamentCard({ tournament, priority = false }: TournamentCardP
 
       <div className="flex flex-1 flex-col p-5">
         <h3 className="text-lg font-bold leading-snug text-[var(--color-ink)]">
-          <Link href={`/turniere/${tournament.slug}`} className="after:absolute after:inset-0">
+          <Link href={`/turniere/${tournament.slug}`} className="card-link">
             {tournament.title}
           </Link>
         </h3>
@@ -178,7 +178,7 @@ function CompactTournamentCard({ tournament, priority = false }: TournamentCardP
           ) : null}
         </dl>
 
-        <p className="link-arrow card-shift mt-auto pt-5">
+        <p aria-hidden="true" className="link-arrow card-shift pointer-events-none mt-auto pt-5">
           {isOpen ? 'Zur Anmeldung' : isPast ? 'Rückblick ansehen' : 'Details ansehen'}
           <Icons.arrowRight size={15} />
         </p>
@@ -257,7 +257,7 @@ function FeaturedTournamentCard({ tournament, priority = false }: TournamentCard
         <p className="meta-brand mb-3">Im Fokus</p>
 
         <h3 className="display-2 text-[var(--color-ink)]">
-          <Link href={`/turniere/${tournament.slug}`} className="after:absolute after:inset-0">
+          <Link href={`/turniere/${tournament.slug}`} className="card-link">
             {tournament.title}
           </Link>
         </h3>
@@ -300,7 +300,7 @@ function FeaturedTournamentCard({ tournament, priority = false }: TournamentCard
           ) : null}
         </dl>
 
-        <p className="link-arrow card-shift mt-7 text-base">
+        <p aria-hidden="true" className="link-arrow card-shift pointer-events-none mt-7 text-base">
           {isOpen ? 'Jetzt anmelden' : isPast ? 'Rückblick ansehen' : 'Details ansehen'}
           <Icons.arrowRight size={17} />
         </p>

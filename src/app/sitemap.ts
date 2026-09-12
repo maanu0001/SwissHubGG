@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { env } from '@/lib/env';
-import { getVisiblePublicTournaments, listPublishedPageSlugs } from '@/lib/content/queries';
+import { getVisiblePublicTournaments, listPublicSponsorSlugs, listPublishedPageSlugs } from '@/lib/content/queries';
 
 // Wird pro Anfrage erzeugt, damit der Produktions-Build keine Datenbank benötigt.
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,11 @@ export const dynamic = 'force-dynamic';
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = env().APP_URL;
-  const [pages, tournaments] = await Promise.all([listPublishedPageSlugs(), getVisiblePublicTournaments()]);
+  const [pages, tournaments, sponsors] = await Promise.all([
+    listPublishedPageSlugs(),
+    getVisiblePublicTournaments(),
+    listPublicSponsorSlugs(),
+  ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: base, changeFrequency: 'weekly', priority: 1 },
@@ -39,5 +43,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticRoutes, ...cmsRoutes, ...tournamentRoutes];
+  const sponsorRoutes: MetadataRoute.Sitemap = sponsors.map((sponsor) => ({
+    url: `${base}/partner/${sponsor.slug}`,
+    lastModified: sponsor.updatedAt,
+    changeFrequency: 'monthly',
+    priority: 0.5,
+  }));
+
+  return [...staticRoutes, ...cmsRoutes, ...tournamentRoutes, ...sponsorRoutes];
 }

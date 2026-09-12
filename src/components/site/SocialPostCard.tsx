@@ -84,7 +84,7 @@ export function SocialPostCard({ post, emphasis = false }: { post: SocialPost; e
               target="_blank"
               rel="noopener noreferrer"
               data-track-social={post.platform}
-              className="after:absolute after:inset-0"
+              className="card-link"
             >
               {post.title}
             </a>
@@ -105,7 +105,7 @@ export function SocialPostCard({ post, emphasis = false }: { post: SocialPost; e
           ) : null}
           {post.account ? <span className="meta">· {post.account.handle}</span> : null}
           {url ? (
-            <span className="link-arrow ml-auto text-xs">
+            <span aria-hidden="true" className="link-arrow pointer-events-none ml-auto text-xs">
               Ansehen <Icons.external size={12} />
             </span>
           ) : null}

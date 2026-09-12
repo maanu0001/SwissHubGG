@@ -9,6 +9,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { AUDIT_ACTIONS, recordAudit } from '@/lib/audit';
 import { communityStatSchema, parseSettingsPatch, updateSettings, type SiteSettings } from '@/lib/settings';
 import { safeUrl } from '@/lib/sanitize';
+import { normaliseBrandColor } from '@/lib/brandColor';
 import { runSchedulerTick } from '@/lib/scheduler';
 import {
   checkbox,
@@ -71,6 +72,38 @@ export async function updateSettingsGroupAction(_state: ActionState, formData: F
         assignText('footerText');
         assignText('footerNote');
         break;
+
+      case 'footer-partner': {
+        /*
+          Ob der gewählte Partner öffentlich sichtbar ist, wird beim Anzeigen
+          erneut geprüft. Hier wird nur sichergestellt, dass es ihn gibt –
+          sonst bliebe eine Kennung stehen, die ins Leere zeigt.
+        */
+        const sponsorId = optionalText(formData, 'footerSponsorId');
+
+        if (sponsorId) {
+          const sponsor = await prisma.sponsor.findUnique({ where: { id: sponsorId }, select: { id: true } });
+          if (!sponsor) {
+            return failure('Bitte prüfe die markierten Felder.', {
+              footerSponsorId: 'Dieser Partner wurde nicht gefunden.',
+            });
+          }
+        }
+
+        patch.footerSponsorId = sponsorId;
+        break;
+      }
+
+      case 'darstellung': {
+        const colour = normaliseBrandColor(text(formData, 'brandColor'));
+        if (!colour) {
+          return failure('Bitte prüfe die markierten Felder.', {
+            brandColor: 'Bitte gib eine Farbe als Hexwert an, z. B. #83060A.',
+          });
+        }
+        patch.brandColor = colour;
+        break;
+      }
 
       case 'seo':
         assignText('seoDefaultTitle');

@@ -63,7 +63,7 @@ export default async function AdminStatisticsPage({ searchParams }: PageProps) {
                 aria-current={String(days) === option.key ? 'true' : undefined}
                 className={`rounded px-3 py-1 text-xs font-medium ${
                   String(days) === option.key
-                    ? 'bg-[var(--color-brand)] text-white'
+                    ? 'bg-[var(--color-brand)] text-[var(--color-brand-contrast)]'
                     : 'text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]'
                 }`}
               >
