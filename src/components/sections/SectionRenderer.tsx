@@ -80,14 +80,13 @@ function toneOf(tone: string | undefined): SectionTone {
  *
  * Auf Smartphones bleibt die Komposition erhalten: die Marke steht weiterhin
  * gross und zentral, nur die Ebenen und Abstände werden reduziert.
+ *
+ * Community-Zahlen erscheinen hier bewusst nicht: Sie werden weiterhin im
+ * Dashboard gepflegt und weiter unten im Block „Statistiken“ gezeigt. Der
+ * Einstieg bleibt dadurch auf Marke und Aussage konzentriert.
  */
 async function HeroSection({ data, index }: { data: Extract<RenderableSection, { type: 'HERO' }>['data']; index: number }) {
-  const [settings, background] = await Promise.all([
-    getSettings(),
-    data.backgroundMediaId ? loadMedia(data.backgroundMediaId) : Promise.resolve(null),
-  ]);
-
-  const stats = publishedStats(settings).slice(0, 3);
+  const background = data.backgroundMediaId ? await loadMedia(data.backgroundMediaId) : null;
   const first = index === 0;
 
   return (
@@ -170,22 +169,6 @@ async function HeroSection({ data, index }: { data: Extract<RenderableSection, {
                 <SectionLinkButton link={data.secondaryLink} fallbackStyle="secondary" size="lg" />
               ) : null}
             </div>
-          </Reveal>
-        ) : null}
-
-        {/* Community-Signale: ausschliesslich veröffentlichte, gepflegte Werte. */}
-        {stats.length > 0 ? (
-          <Reveal index={5}>
-            <dl className="mt-10 flex flex-wrap justify-center gap-x-10 gap-y-6 border-t border-[var(--color-line)] pt-7">
-              {stats.map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <dd className="text-2xl font-extrabold text-[var(--color-ink)] sm:text-3xl">
-                    <AnimatedNumber value={stat.value} />
-                  </dd>
-                  <dt className="meta mt-1.5">{stat.label}</dt>
-                </div>
-              ))}
-            </dl>
           </Reveal>
         ) : null}
       </div>

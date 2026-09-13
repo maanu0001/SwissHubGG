@@ -265,6 +265,8 @@ Besonders zu beachten:
   verborgen.
 - **Community-Zahlen**: Es erscheinen ausschliesslich Werte, die ausdrücklich
   als veröffentlicht markiert sind. Bitte nur geprüfte Zahlen freigeben.
+  Angezeigt werden sie im Block *Statistiken* – der Einstieg der Startseite
+  bleibt bewusst frei davon.
 - **Wartungsmodus**: Besucher sehen die Wartungsseite, angemeldete
   Admin-Benutzer weiterhin die normale Website.
 - **Aufbewahrungsfrist**: bestimmt, wann Kontaktanfragen automatisch
