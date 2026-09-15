@@ -1,4 +1,5 @@
 import { LogoMark } from '@/components/brand/Logo';
+import type { SiteLogo } from '@/lib/brandLogo';
 
 /**
  * Inszenierung der Bildmarke im Hero.
@@ -11,7 +12,7 @@ import { LogoMark } from '@/components/brand/Logo';
  * Zeigegeräten folgen sie leicht der Maus; auf Touch-Geräten und bei
  * reduzierter Bewegung stehen sie still.
  */
-export function HeroStage({ priority = false }: { priority?: boolean }) {
+export function HeroStage({ priority = false, logo }: { priority?: boolean; logo?: SiteLogo }) {
   return (
     <div
       className="relative flex aspect-square shrink-0 items-center justify-center"
@@ -90,9 +91,16 @@ export function HeroStage({ priority = false }: { priority?: boolean }) {
       <span
         data-parallax-layer
         style={{ '--depth': 34 } as React.CSSProperties}
-        className="logo-entrance relative block w-[62%]"
+        className="logo-entrance relative block aspect-square w-[62%]"
       >
-        <LogoMark size={512} priority={priority} className="h-auto w-full drop-shadow-[0_18px_45px_rgba(0,0,0,0.55)]" />
+        {/* Quadratische Fläche; das Logo passt sich proportional hinein. */}
+        <LogoMark
+          size={512}
+          priority={priority}
+          logo={logo}
+          fit="box"
+          className="h-full w-full drop-shadow-[0_18px_45px_rgba(0,0,0,0.55)]"
+        />
       </span>
     </div>
   );

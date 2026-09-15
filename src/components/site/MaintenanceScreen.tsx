@@ -1,17 +1,18 @@
 import { LogoStage } from '@/components/brand/Logo';
 import { TechBackdrop } from '@/components/visual/TechBackdrop';
 import { getSettings } from '@/lib/settings';
+import { getSiteLogo } from '@/lib/siteLogo';
 
 /** Wartungsseite für Besucherinnen und Besucher während geplanter Arbeiten. */
 export async function MaintenanceScreen({ message }: { message: string }) {
-  const settings = await getSettings();
+  const [settings, logo] = await Promise.all([getSettings(), getSiteLogo()]);
 
   return (
     <main className="relative isolate flex min-h-dvh flex-col items-center justify-center overflow-hidden px-6 py-16 text-center">
       <TechBackdrop variant="hero" />
 
       <div className="relative">
-        <LogoStage size="compact" priority />
+        <LogoStage size="compact" priority logo={logo} />
       </div>
 
       <p className="meta-brand relative mt-8">Wartung</p>

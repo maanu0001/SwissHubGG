@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'node:crypto';
+import { MediaKind } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { CacheTag, invalidateAll, invalidateTags } from '@/lib/cache';
 import { requirePermissionForAction } from '@/lib/auth/guards';
@@ -102,6 +103,33 @@ export async function updateSettingsGroupAction(_state: ActionState, formData: F
           });
         }
         patch.brandColor = colour;
+
+        /*
+          Das Hauptlogo muss ein Bild aus der Medienbibliothek sein. Geprüft
+          wird beides – Existenz und Art: Ein Dokument im Kopfbereich ergäbe
+          eine kaputte Grafik, die erst im Betrieb auffiele.
+        */
+        const logoId = optionalText(formData, 'logoMediaId');
+
+        if (logoId) {
+          const asset = await prisma.mediaAsset.findUnique({
+            where: { id: logoId },
+            select: { id: true, kind: true },
+          });
+
+          if (!asset) {
+            return failure('Bitte prüfe die markierten Felder.', {
+              logoMediaId: 'Dieses Medium wurde nicht gefunden.',
+            });
+          }
+          if (asset.kind !== MediaKind.IMAGE) {
+            return failure('Bitte prüfe die markierten Felder.', {
+              logoMediaId: 'Als Logo lässt sich nur ein Bild verwenden.',
+            });
+          }
+        }
+
+        patch.logoMediaId = logoId;
         break;
       }
 

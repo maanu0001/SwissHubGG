@@ -1,3 +1,5 @@
+import Image from 'next/image';
+import Link from 'next/link';
 import { MediaKind } from '@prisma/client';
 import { PageHeader, Panel, Field, FieldError, InfoBox } from '@/components/admin/ui';
 import { BrandColorField } from '@/components/admin/BrandColorField';
@@ -11,6 +13,7 @@ import {
 import { requirePermission } from '@/lib/auth/guards';
 import { PERMISSIONS } from '@/lib/permissions';
 import { getSettings } from '@/lib/settings';
+import { getSiteLogo } from '@/lib/siteLogo';
 import { prisma } from '@/lib/db';
 import { env } from '@/lib/env';
 
@@ -20,8 +23,10 @@ export const metadata = { title: 'Einstellungen' };
 export default async function AdminSettingsPage() {
   await requirePermission(PERMISSIONS.SETTINGS_MANAGE);
 
-  const [settings, media, flags, sponsors] = await Promise.all([
+  const [settings, logo, media, flags, sponsors] = await Promise.all([
     getSettings(),
+    // Das tatsächlich ausgelieferte Logo – inklusive Rückfall auf die Bildmarke.
+    getSiteLogo(),
     prisma.mediaAsset.findMany({
       where: { kind: MediaKind.IMAGE },
       orderBy: { createdAt: 'desc' },
@@ -39,6 +44,10 @@ export default async function AdminSettingsPage() {
   ]);
 
   const config = env();
+
+  // Zeigt an, welches Medium als Logo gewählt ist – oder dass es die
+  // mitgelieferte Bildmarke ist, etwa weil das Medium gelöscht wurde.
+  const currentLogo = media.find((asset) => asset.id === settings.logoMediaId) ?? null;
 
   return (
     <>
@@ -83,14 +92,85 @@ export default async function AdminSettingsPage() {
 
         <Panel
           title="Darstellung"
-          description="Die Akzentfarbe wirkt auf Schaltflächen, Links, Hervorhebungen sowie Hover- und Fokuszustände. Inhalte, Aufbau und Bewegung bleiben unverändert."
+          description="Hauptlogo und Akzentfarbe der Website. Die Akzentfarbe wirkt auf Schaltflächen, Links, Hervorhebungen sowie Hover- und Fokuszustände. Inhalte, Aufbau und Bewegung bleiben unverändert."
         >
-          <ActionForm action={updateSettingsGroupAction} className="space-y-5">
+          <ActionForm action={updateSettingsGroupAction} className="space-y-6">
             <>
               <input type="hidden" name="group" value="darstellung" />
-              <BrandColorField initial={settings.brandColor} />
-              <FieldError name="brandColor" />
-              <SubmitButton>Farbe speichern</SubmitButton>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-[var(--color-ink)]">Hauptlogo</h3>
+                  <p className="mt-1 text-sm text-[var(--color-ink-muted)]">
+                    Erscheint im Kopfbereich, in der mobilen Navigation, im Fussbereich und auf der Startseite. Ohne
+                    eigenes Logo gilt die mitgelieferte Bildmarke.
+                  </p>
+                </div>
+
+                {/* Was aktuell auf der Website steht – in voller Länge, nicht beschnitten. */}
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-3">
+                    <Image
+                      src={logo.src}
+                      alt=""
+                      width={logo.width}
+                      height={logo.height}
+                      className="h-full w-full object-contain"
+                      unoptimized
+                    />
+                  </div>
+                  <p className="text-sm text-[var(--color-ink-muted)]">
+                    <span className="font-semibold text-[var(--color-ink)]">
+                      {currentLogo ? (currentLogo.title ?? currentLogo.originalName) : 'Mitgelieferte Bildmarke'}
+                    </span>
+                    <br />
+                    {logo.width} × {logo.height} Pixel
+                  </p>
+                </div>
+
+                <Field
+                  label="Logo aus der Medienbibliothek"
+                  name="logoMediaId"
+                  hint="Empfohlen: PNG oder WebP mit transparentem Hintergrund, mindestens 256 Pixel Kantenlänge und ausreichend Kontrast in heller wie dunkler Darstellung. Das Seitenverhältnis bleibt erhalten – das Logo wird nie verzerrt oder beschnitten."
+                >
+                  <select
+                    id="logoMediaId"
+                    name="logoMediaId"
+                    defaultValue={settings.logoMediaId ?? ''}
+                    className="select"
+                  >
+                    <option value="">Mitgelieferte Bildmarke verwenden</option>
+                    {media.map((asset) => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.title ?? asset.originalName}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                {media.length === 0 ? (
+                  <InfoBox tone="info" title="Noch keine Bilder in der Medienbibliothek">
+                    Lade zuerst ein Logo in der <Link href="/admin/medien" className="underline underline-offset-2">Medienbibliothek</Link> hoch;
+                    danach lässt es sich hier auswählen.
+                  </InfoBox>
+                ) : (
+                  <p className="text-sm text-[var(--color-ink-muted)]">
+                    Neues Logo{' '}
+                    <Link href="/admin/medien" className="font-semibold text-[var(--color-brand-text)] underline underline-offset-2">
+                      in der Medienbibliothek hochladen
+                    </Link>{' '}
+                    – es steht anschliessend in dieser Liste zur Auswahl.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-4 border-t border-[var(--color-line)] pt-6">
+                <h3 className="text-sm font-semibold text-[var(--color-ink)]">Akzentfarbe</h3>
+                <BrandColorField initial={settings.brandColor} />
+                <FieldError name="brandColor" />
+              </div>
+
+              <SubmitButton>Darstellung speichern</SubmitButton>
             </>
           </ActionForm>
         </Panel>

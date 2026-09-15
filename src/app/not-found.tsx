@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { LogoStage } from '@/components/brand/Logo';
 import { Icons } from '@/components/ui/Icon';
 import { TechBackdrop } from '@/components/visual/TechBackdrop';
+import { getSiteLogo } from '@/lib/siteLogo';
 
 export const metadata: Metadata = {
   title: 'Seite nicht gefunden',
@@ -10,13 +11,17 @@ export const metadata: Metadata = {
 };
 
 /** Individuelle 404-Seite mit sinnvollen Anschlusszielen. */
-export default function NotFound() {
+export default async function NotFound() {
+  // Auch hier gilt das gepflegte Hauptlogo; ist es nicht ermittelbar, greift
+  // in `getSiteLogo` die mitgelieferte Bildmarke.
+  const logo = await getSiteLogo();
+
   return (
     <main className="relative isolate flex min-h-dvh flex-col items-center justify-center overflow-hidden px-6 py-20 text-center">
       <TechBackdrop variant="hero" />
 
       <div className="relative">
-        <LogoStage size="compact" priority />
+        <LogoStage size="compact" priority logo={logo} />
       </div>
 
       <p className="meta-brand relative mt-8">Fehler 404</p>

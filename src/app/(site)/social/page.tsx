@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { FilterLink } from '@/components/site/FilterLink';
-import type { SocialPlatform } from '@prisma/client';
 import { SocialPostCard } from '@/components/site/SocialPostCard';
 import { SOCIAL_PLATFORM_META } from '@/components/site/socialMeta';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -9,7 +8,8 @@ import { Icons } from '@/components/ui/Icon';
 import { PageHero } from '@/components/site/PageHero';
 import { Reveal, revealProps } from '@/components/visual/Reveal';
 import { SectionHeading } from '@/components/visual/Section';
-import { getSocialAccounts, getSocialPosts } from '@/lib/content/queries';
+import { getSocialAccounts, getSocialPostPlatforms, getSocialPosts } from '@/lib/content/queries';
+import { resolveSocialPlatform, showSocialFilters, socialFilterPlatforms } from '@/lib/content/socialFilters';
 import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 import { getSettings } from '@/lib/settings';
 import { formatNumber } from '@/lib/format';
@@ -37,13 +37,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function SocialPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const [accounts, settings] = await Promise.all([getSocialAccounts(), getSettings()]);
+  const [accounts, platformsWithPosts, settings] = await Promise.all([
+    getSocialAccounts(),
+    getSocialPostPlatforms(),
+    getSettings(),
+  ]);
 
-  const availablePlatforms = [...new Set(accounts.map((account) => account.platform))];
-  const selected =
-    params.plattform && availablePlatforms.includes(params.plattform.toUpperCase() as SocialPlatform)
-      ? (params.plattform.toUpperCase() as SocialPlatform)
-      : null;
+  // Filter ausschliesslich aus vorhandenen Beiträgen – siehe `socialFilters`.
+  const filterPlatforms = socialFilterPlatforms(
+    accounts.map((account) => account.platform),
+    platformsWithPosts,
+  );
+  const selected = resolveSocialPlatform(params.plattform, filterPlatforms);
 
   const posts = await getSocialPosts({
     platforms: selected ? [selected] : undefined,
@@ -156,7 +161,7 @@ export default async function SocialPage({ searchParams }: PageProps) {
               />
             </div>
 
-            {availablePlatforms.length > 1 ? (
+            {showSocialFilters(filterPlatforms) ? (
               <nav aria-label="Nach Plattform filtern">
                 <ul className="flex flex-wrap gap-2">
                   <li>
@@ -164,7 +169,7 @@ export default async function SocialPage({ searchParams }: PageProps) {
                       Alle
                     </FilterLink>
                   </li>
-                  {availablePlatforms.map((platform) => (
+                  {filterPlatforms.map((platform) => (
                     <li key={platform}>
                       <FilterLink
                         href={`/social?plattform=${platform.toLowerCase()}`}
@@ -179,10 +184,13 @@ export default async function SocialPage({ searchParams }: PageProps) {
             ) : null}
           </div>
 
-          {/* Meldet den Wechsel des Filters, ohne den Fokus zu verschieben. */}
-          <p className="meta mb-7" role="status">
-            {posts.length === 1 ? '1 Beitrag gefunden' : `${posts.length} Beiträge gefunden`}
-          </p>
+          {/* Meldet den Wechsel des Filters, ohne den Fokus zu verschieben.
+              Ohne Beiträge sagt der leere Zustand darunter bereits alles. */}
+          {posts.length > 0 ? (
+            <p className="meta mb-7" role="status">
+              {posts.length === 1 ? '1 Beitrag gefunden' : `${posts.length} Beiträge gefunden`}
+            </p>
+          ) : null}
 
           {posts.length === 0 ? (
             <EmptyState

@@ -68,6 +68,29 @@ aus dem vorhandenen Symbolsatz. Massgeblich ist immer das Merkmal am `<html>`
 denselben Zustand. Umgeschaltet wird ohne Neuaufbau der Seite; die Abmessungen
 bleiben gleich, es entsteht kein Sprung im Layout.
 
+## Hauptlogo
+
+Mitgeliefert ist die SwissHub-Bildmarke unter `public/brand/`. Im Dashboard
+lässt sich unter **Einstellungen → Darstellung** stattdessen ein Bild aus der
+Medienbibliothek als Hauptlogo wählen (`logoMediaId`); es erscheint im
+Kopfbereich, in der mobilen Navigation, im Fussbereich, im Hero der Startseite
+sowie auf der Wartungs- und der 404-Seite. Ohne Auswahl – und ebenso, wenn das
+gewählte Medium gelöscht wurde oder kein Bild ist – gilt die mitgelieferte
+Bildmarke. `src/lib/siteLogo.ts` löst das auf; ein Fehler dort führt nie zu
+einem leeren Kopfbereich.
+
+Das Seitenverhältnis stammt immer aus dem Bild selbst: Die Abmessungen des
+Mediums reisen mit, eine Kante wird festgelegt, die andere ergibt sich daraus.
+In Kopf- und Fussbereich zählt die Höhe (`fit="bar"`, dazu eine Höchstbreite,
+damit ein sehr breites Logo die Zeile nicht sprengt); in den grossen
+Inszenierungen passt sich das Logo proportional in eine quadratische Fläche ein
+(`fit="box"` mit `object-fit: contain`). Verzerrt, gestaucht oder beschnitten
+wird es dabei nie.
+
+Als Alternativtext dient der Name der Website. Steht die Wortmarke daneben –
+Kopf- und Fussbereich –, ist das Bild dekorativ und trägt einen leeren
+Alternativtext, damit Screenreader den Namen nicht doppelt vorlesen.
+
 ## Akzentfarbe
 
 `#83060A` ist der Standard und bleibt es. Im Dashboard lässt sich unter
@@ -237,6 +260,21 @@ unbeschnitten; die Maske liegt als `overflow: hidden` darauf und bewegt wird
 der Inhalt darin. Ein Beschnitt auf dem beobachteten Element würde seine
 Schnittfläche auf null setzen – die Sichtbarkeitsbeobachtung würde dann nie
 auslösen und der Inhalt dauerhaft unsichtbar bleiben.
+
+**Reserve für Ober- und Unterlängen.** Die Maske beschneidet an der Zeilenbox.
+Die Marketing-Überschriften stehen bewusst eng (`line-height` unter 1), ihre
+Ober- und Unterlängen ragen also darüber hinaus – oben „Ü“ und „Ä“, unten „g“,
+„p“, „j“ und „y“. Die Maske reserviert deshalb oben und unten `--mask-reserve`
+als Innenabstand und nimmt denselben Betrag als negativen Aussenabstand wieder
+aus dem Seitenfluss: Die Überschrift steht exakt dort, wo sie ohne Maske stünde.
+
+Der Wert folgt derselben `clamp()`-Kurve wie `.display-hero`. Eine Angabe in
+`em` wäre falsch: `em` bezieht sich auf die Schriftgrösse des Wrappers – also
+die des Fliesstexts –, nicht auf die der Überschrift darin. Der Versatz im
+Ausgangszustand schliesst die Reserve ein, sonst lugte die Zeile vor dem Einsatz
+der Bewegung unten aus der Maske. Aufrufer dürfen an einem `mask`-Element
+deshalb keine eigenen senkrechten Abstände setzen; ein Versatz gehört nach
+aussen (siehe der Hero der Startseite).
 
 ### Grundsätze
 

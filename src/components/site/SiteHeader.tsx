@@ -7,6 +7,7 @@ import { NavLink } from '@/components/site/NavLink';
 import { ThemeToggle } from '@/components/site/ThemeToggle';
 import { getNavigation } from '@/lib/content/queries';
 import { getSettings } from '@/lib/settings';
+import { getSiteLogo } from '@/lib/siteLogo';
 import { safeUrl } from '@/lib/sanitize';
 import { THEME_COOKIE, resolveTheme } from '@/lib/theme';
 
@@ -21,7 +22,12 @@ import { THEME_COOKIE, resolveTheme } from '@/lib/theme';
  * Interaktiv ist nur die mobile Navigation.
  */
 export async function SiteHeader() {
-  const [items, settings, cookieStore] = await Promise.all([getNavigation('main'), getSettings(), cookies()]);
+  const [items, settings, logo, cookieStore] = await Promise.all([
+    getNavigation('main'),
+    getSettings(),
+    getSiteLogo(),
+    cookies(),
+  ]);
   const discordUrl = safeUrl(settings.discordInviteUrl);
   const theme = resolveTheme(cookieStore.get(THEME_COOKIE)?.value);
 
@@ -36,7 +42,7 @@ export async function SiteHeader() {
           className="group shrink-0 rounded-lg"
           aria-label={`${settings.siteName} Startseite`}
         >
-          <LogoLockup size={36} priority interactive />
+          <LogoLockup size={36} priority interactive logo={logo} name={settings.siteName} />
         </Link>
 
         <nav className="hidden md:block" aria-label="Hauptnavigation">
@@ -77,6 +83,7 @@ export async function SiteHeader() {
             siteName={settings.siteName}
             motto={settings.motto}
             theme={theme}
+            logo={logo}
           />
         </div>
       </div>

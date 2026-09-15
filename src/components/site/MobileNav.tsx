@@ -7,6 +7,7 @@ import { LogoLockup } from '@/components/brand/Logo';
 import { Icons } from '@/components/ui/Icon';
 import { ThemeToggle } from '@/components/site/ThemeToggle';
 import type { NavItem } from '@/lib/content/queries';
+import type { SiteLogo } from '@/lib/brandLogo';
 import type { Theme } from '@/lib/theme';
 
 /**
@@ -32,9 +33,11 @@ type MobileNavProps = {
   siteName: string;
   motto: string;
   theme: Theme;
+  /** Gepflegtes Hauptlogo, serverseitig aufgelöst. */
+  logo?: SiteLogo;
 };
 
-export function MobileNav({ items, discordUrl, siteName, motto, theme }: MobileNavProps) {
+export function MobileNav({ items, discordUrl, siteName, motto, theme, logo }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const panelId = useId();
@@ -228,7 +231,7 @@ export function MobileNav({ items, discordUrl, siteName, motto, theme }: MobileN
               aria-label={`${siteName} Startseite`}
               className="inline-flex min-h-11 items-center rounded-lg pr-2"
             >
-              <LogoLockup size={32} />
+              <LogoLockup size={32} logo={logo} name={siteName} />
             </Link>
             <div className="flex items-center gap-2">
               {/* Gleiche Umschaltung wie im Kopfbereich – im Menü mit

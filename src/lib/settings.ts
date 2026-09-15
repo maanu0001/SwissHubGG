@@ -101,6 +101,14 @@ export const settingsSchema = z.object({
   footerSponsorId: z.string().nullable().default(null),
 
   /**
+   * Hauptlogo der Website aus der Medienbibliothek. Leer bedeutet: Es gilt die
+   * mitgelieferte Bildmarke. Ob das gewählte Medium noch existiert, entscheidet
+   * beim Anzeigen erneut die Abfrage – ein gelöschtes Bild fällt dadurch von
+   * selbst auf die Bildmarke zurück.
+   */
+  logoMediaId: z.string().nullable().default(null),
+
+  /**
    * Akzentfarbe der Website. Wirkt ausschliesslich auf Farben; alle übrigen
    * Merkmale des Designsystems bleiben unberührt.
    */
@@ -190,6 +198,7 @@ export const SETTINGS_GROUPS: Record<keyof SiteSettings, string> = {
   showSponsorTiers: 'sponsoring',
   footerSponsorId: 'footer',
   brandColor: 'darstellung',
+  logoMediaId: 'darstellung',
 };
 
 export const DEFAULT_SETTINGS: SiteSettings = settingsSchema.parse({});

@@ -4,6 +4,7 @@ import { Icons } from '@/components/ui/Icon';
 import { getNavigation, getSocialAccounts, getSponsors, getSponsorsByIds } from '@/lib/content/queries';
 import { SponsorLogo } from '@/components/site/SponsorCard';
 import { getSettings } from '@/lib/settings';
+import { getSiteLogo } from '@/lib/siteLogo';
 import { safeUrl } from '@/lib/sanitize';
 import { SOCIAL_PLATFORM_META } from '@/components/site/socialMeta';
 
@@ -20,10 +21,11 @@ const LEGAL_HREFS = ['/impressum', '/datenschutz', '/nutzungsbedingungen', '/coo
 export async function SiteFooter() {
   const settings = await getSettings();
 
-  const [footerItems, accounts, sponsors, footerSponsors] = await Promise.all([
+  const [footerItems, accounts, sponsors, logo, footerSponsors] = await Promise.all([
     getNavigation('footer'),
     getSocialAccounts(),
     getSponsors('ACTIVE', 12),
+    getSiteLogo(),
     /*
       Der im Dashboard gewählte Partner. Die Abfrage lässt ausschliesslich
       veröffentlichte, nicht archivierte Partner durch – ein zurückgezogener
@@ -51,7 +53,7 @@ export async function SiteFooter() {
       <div className="shell relative py-14 sm:py-16">
         <div className="grid gap-10 md:grid-cols-[minmax(0,1.5fr)_repeat(2,minmax(0,1fr))] lg:gap-14">
           <div>
-            <LogoLockup size={40} />
+            <LogoLockup size={40} logo={logo} name={settings.siteName} />
 
             {settings.motto ? (
               <p className="mt-5 flex items-center gap-2.5 text-base font-semibold text-[var(--color-brand-text)]">

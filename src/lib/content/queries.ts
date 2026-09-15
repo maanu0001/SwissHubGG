@@ -354,6 +354,29 @@ export async function getSocialAccounts() {
   );
 }
 
+/**
+ * Plattformen, für die es tatsächlich anzeigbare Beiträge gibt.
+ *
+ * Grundlage der Filter auf der Social-Media-Seite. Bewusst nicht aus den
+ * gepflegten Accounts abgeleitet: Ein Kanal kann hinterlegt sein, ohne dass ein
+ * einziger Beitrag freigegeben ist – ein Filter darauf führte ins Leere. Ebenso
+ * bewusst nicht aus einer bereits begrenzten Beitragsliste, sonst verschwände
+ * ein Filter, sobald die Beiträge einer Plattform gerade nicht unter die
+ * ersten Treffer fallen.
+ */
+export async function getSocialPostPlatforms(): Promise<SocialPlatform[]> {
+  return cached('social:post-platforms', [CacheTag.social], () =>
+    prisma.socialPost
+      .groupBy({
+        by: ['platform'],
+        where: { publishedAt: { not: null, lte: new Date() }, archivedAt: null },
+        // Feste Reihenfolge, damit die Filter nicht von Abfrage zu Abfrage springen.
+        orderBy: { platform: 'asc' },
+      })
+      .then((rows) => rows.map((row) => row.platform)),
+  );
+}
+
 export async function getSocialPosts(options: {
   platforms?: SocialPlatform[];
   onlyFeatured?: boolean;

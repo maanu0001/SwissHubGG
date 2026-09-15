@@ -213,6 +213,11 @@ ein Vorschaubild aus der Medienbibliothek. Es werden bewusst keine Embeds der
 Plattformen geladen: Die Seite bleibt schnell und überträgt keine Daten an
 Dritte.
 
+Die **Plattformfilter** auf der Social-Seite entstehen aus den vorhandenen
+Beiträgen, nicht aus den Accounts: Ein Kanal ohne freigegebene Beiträge bekommt
+keinen Filter. Gibt es nur eine Plattform mit Beiträgen oder gar keine, entfällt
+die Filterzeile ganz.
+
 Ein automatisches Veröffentlichen auf den Plattformen gibt es nicht. Dafür
 wären die offiziellen APIs und Zugangsdaten der jeweiligen Anbieter nötig.
 
@@ -263,6 +268,11 @@ Besonders zu beachten:
 
 - **Discord-Einladungslink**: ohne ihn bleiben alle Discord-Schaltflächen
   verborgen.
+- **Hauptlogo** (*Darstellung*): ein Bild aus der Medienbibliothek, das
+  Kopfbereich, mobile Navigation, Fussbereich und die Startseite verwenden.
+  Ohne Auswahl gilt die mitgelieferte Bildmarke. Empfohlen sind PNG oder WebP
+  mit transparentem Hintergrund und mindestens 256 Pixel Kantenlänge; das
+  Seitenverhältnis bleibt in jedem Fall erhalten.
 - **Community-Zahlen**: Es erscheinen ausschliesslich Werte, die ausdrücklich
   als veröffentlicht markiert sind. Bitte nur geprüfte Zahlen freigeben.
   Angezeigt werden sie im Block *Statistiken* – der Einstieg der Startseite

@@ -16,6 +16,7 @@ import type { RenderableSection } from '@/lib/content/sections';
 import { renderRichText, safeUrl } from '@/lib/sanitize';
 import { resolveEmbed } from '@/lib/content/embeds';
 import { publishedStats, getSettings, type SiteSettings } from '@/lib/settings';
+import { getSiteLogo } from '@/lib/siteLogo';
 import {
   getVisiblePublicTournaments,
   getFeaturedTournaments,
@@ -86,7 +87,10 @@ function toneOf(tone: string | undefined): SectionTone {
  * Einstieg bleibt dadurch auf Marke und Aussage konzentriert.
  */
 async function HeroSection({ data, index }: { data: Extract<RenderableSection, { type: 'HERO' }>['data']; index: number }) {
-  const background = data.backgroundMediaId ? await loadMedia(data.backgroundMediaId) : null;
+  const [background, logo] = await Promise.all([
+    data.backgroundMediaId ? loadMedia(data.backgroundMediaId) : Promise.resolve(null),
+    getSiteLogo(),
+  ]);
   const first = index === 0;
 
   return (
@@ -123,7 +127,7 @@ async function HeroSection({ data, index }: { data: Extract<RenderableSection, {
         {/* Die Marke als Mittelpunkt der Komposition. */}
         {data.showLogo ? (
           <div className="relative mt-2 sm:mt-3">
-            <HeroStage priority={first} />
+            <HeroStage priority={first} logo={logo} />
 
             {/* Abstrahierte Verbindungen als Symbol für die Community. */}
             <span
@@ -140,10 +144,17 @@ async function HeroSection({ data, index }: { data: Extract<RenderableSection, {
         ) : null}
 
         {/* Die Überschrift greift bewusst in die Bühne hinein – Marke und
-            Aussage lesen sich dadurch als eine Komposition. */}
-        <Reveal variant="mask" index={1} className="relative -mt-[9%] sm:-mt-[8%]">
-          <h1 className="display-hero mx-auto max-w-[15ch] text-balance">{data.headline}</h1>
-        </Reveal>
+            Aussage lesen sich dadurch als eine Komposition.
+
+            Der Versatz sitzt aussen: Die Maske führt ihre eigenen senkrechten
+            Abstände, mit denen sie den Platz für Ober- und Unterlängen wieder
+            aus dem Seitenfluss nimmt. Ein Abstand am selben Element überschriebe
+            sie. */}
+        <div className="relative -mt-[9%] sm:-mt-[8%]">
+          <Reveal variant="mask" index={1}>
+            <h1 className="display-hero mx-auto max-w-[15ch] text-balance">{data.headline}</h1>
+          </Reveal>
+        </div>
 
         {data.motto ? (
           <Reveal variant="fade" index={2}>

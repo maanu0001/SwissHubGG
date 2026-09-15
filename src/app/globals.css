@@ -72,6 +72,16 @@
   /* --- Bewegung --- */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /*
+    Reserve für Ober- und Unterlängen in der Überschriften-Maske.
+
+    Folgt derselben Kurve wie `.display-hero` – der grössten Schrift, die je in
+    einer Maske steht – mit Zuschlag: rund ein Fünftel ihrer Schriftgrösse. Die
+    Begründung, warum das hier und nicht in `em` steht, findet sich bei der
+    Maske selbst weiter unten.
+  */
+  --mask-reserve: clamp(0.65rem, 0.25rem + 0.9vw, 1rem);
 }
 
 /* Selbst gehostete Schrift – keine Anfrage an Drittanbieter. */
@@ -1047,18 +1057,39 @@ html[data-theme='light'] {
     Beschnitt darauf würde seine Schnittfläche auf null setzen und die
     Sichtbarkeitsbeobachtung damit nie auslösen. Deshalb liegt die Maske auf
     dem Element (overflow) und bewegt wird der Inhalt darin.
+
+    Zur Reserve oben und unten: Die Maske beschneidet an der Zeilenbox. Die
+    Marketing-Überschriften stehen bewusst eng (`line-height` unter 1), ihre
+    Ober- und Unterlängen ragen deshalb über die Zeilenbox hinaus – oben etwa
+    „Ü“ und „Ä“, unten „g“, „p“, „j“ und „y“. Ohne Reserve schneidet die Maske
+    sie ab, und zwar dauerhaft: Das `overflow` bleibt bestehen, solange die
+    Seite aus der Startseite heraus geöffnet wurde.
+
+    Die Reserve lässt sich hier **nicht** in `em` angeben. `em` bezieht sich auf
+    die Schriftgrösse dieses Elements – das ist die des Fliesstexts, nicht die
+    der Überschrift darin. Bei einer 80 px hohen Zeile ergäben 0.14em rund 2 px
+    statt der nötigen gut 10 px. Deshalb folgt `--mask-reserve` derselben
+    `clamp()`-Kurve wie die grösste vorkommende Überschrift.
+
+    Der gleich grosse negative Aussenabstand nimmt den reservierten Platz
+    wieder aus dem Seitenfluss: Die Überschrift steht exakt dort, wo sie ohne
+    Maske stünde, und der Abstand zu den Nachbarn bleibt unverändert. Aufrufer
+    dürfen an diesem Element deshalb keine eigenen senkrechten Abstände setzen.
   */
   .motion-ready[data-intro='on'] [data-reveal='mask'] {
     opacity: 1;
     overflow: hidden;
-    /* Platz für Unterlängen, damit die Maske sie nicht abschneidet. */
-    padding-bottom: 0.14em;
-    margin-bottom: -0.14em;
+    padding-block: var(--mask-reserve);
+    margin-block: calc(var(--mask-reserve) * -1);
     transform: none;
   }
 
+  /*
+    Der Versatz schliesst die Reserve ein – sonst lugte die Zeile vor dem
+    Einsetzen der Bewegung unten aus der Maske heraus.
+  */
   .motion-ready[data-intro='on'] [data-reveal='mask'] > * {
-    transform: translate3d(0, 108%, 0);
+    transform: translate3d(0, calc(108% + var(--mask-reserve)), 0);
     transition: transform 0.95s var(--ease-out-soft);
     transition-delay: var(--reveal-delay, 0ms);
   }
