@@ -98,35 +98,28 @@ sudo nginx -t && sudo systemctl reload nginx
 
 #### Alternative: Apache als Reverse Proxy
 
-Wichtig ist nur eines: Der Proxy muss den **öffentlichen Host durchreichen**.
-Bei Apache ist `ProxyPreserveHost` standardmässig **aus** – die Anwendung sieht
-dann ihre interne Adresse (`127.0.0.1:3001`), der Browser sendet aber die
-öffentliche. Next.js nimmt eine Server Action nur an, wenn `Origin` und Host
-zusammenpassen; ohne diese Zeile scheitert deshalb jedes Speichern im
-Dashboard, ohne dass im Formular ein Fehler sichtbar würde.
+Eine vollständige, einsatzfertige Konfiguration liegt unter
+`deploy/apache/swisshub.gg.conf` – inklusive der Weiterleitung der abgelösten
+Domain (siehe [Domainwechsel](#domainwechsel)).
 
-```apache
-<VirtualHost *:443>
-    ServerName new.swisshub.gg
-
-    SSLEngine on
-    SSLCertificateFile      /etc/letsencrypt/live/new.swisshub.gg/fullchain.pem
-    SSLCertificateKeyFile   /etc/letsencrypt/live/new.swisshub.gg/privkey.pem
-
-    # Ohne diese Zeile schlagen Server Actions fehl.
-    ProxyPreserveHost On
-    RequestHeader set X-Forwarded-Proto "https"
-    RequestHeader set X-Forwarded-Port  "443"
-
-    ProxyPass        / http://127.0.0.1:3001/
-    ProxyPassReverse / http://127.0.0.1:3001/
-</VirtualHost>
+```bash
+sudo a2enmod proxy proxy_http headers rewrite ssl
+sudo cp deploy/apache/swisshub.gg.conf /etc/apache2/sites-available/
+sudo a2ensite swisshub.gg
+sudo apachectl configtest && sudo systemctl reload apache2
 ```
+
+Wichtig ist vor allem eines: Der Proxy muss den **öffentlichen Host
+durchreichen**. Bei Apache ist `ProxyPreserveHost` standardmässig **aus** – die
+Anwendung sieht dann ihre interne Adresse (`127.0.0.1:3000`), der Browser sendet
+aber die öffentliche. Next.js nimmt eine Server Action nur an, wenn `Origin` und
+Host zusammenpassen; ohne diese Zeile scheitert deshalb jedes Speichern im
+Dashboard, ohne dass im Formular ein Fehler sichtbar würde.
 
 Dazu passend in der `.env`:
 
 ```env
-APP_URL=https://new.swisshub.gg
+APP_URL=https://swisshub.gg
 TRUST_PROXY=true
 ```
 
@@ -137,8 +130,8 @@ Ziel daraus gebaut, nicht aus der Adresse, unter der die Anwendung die Anfrage
 entgegengenommen hat. Hinter dem Proxy wäre das sonst die interne Adresse – bei
 einer Bindung auf `0.0.0.0:3000` landete die Weiterleitung auf
 `https://0.0.0.0:3000/admin`. Eine Bind-Adresse in `APP_URL` wird deshalb beim
-Start abgelehnt. Ein späterer Wechsel auf `swisshub.gg` ist eine reine Änderung
-dieser Variablen (plus der Rückrufadresse in der Discord-Anwendung).
+Start abgelehnt. Ein Wechsel der Domain ist im Kern eine Änderung dieser
+Variablen – siehe [Domainwechsel](#domainwechsel).
 
 Aus `APP_URL` leitet die Anwendung ausserdem die erlaubte Herkunft für Server
 Actions ab (`allowedOrigins` in `next.config.ts`). Wird die Website unter
@@ -209,6 +202,98 @@ docker compose up -d --build
 **Wichtig:** Migrationen sind nicht automatisch umkehrbar. Wenn ein Update das
 Schema verändert hat, ist die Sicherung der einzige verlässliche Weg zurück.
 Deshalb gilt: vor jedem Update sichern.
+
+## Domainwechsel
+
+Die Anwendung erzeugt **jede** absolute Adresse aus `APP_URL`: Canonical-Links,
+Open Graph, strukturierte Daten, Sitemap, `robots.txt`, den OAuth-Rückruf, die
+Weiterleitung nach der Anmeldung und die Links in E-Mails. Der Wechsel ist
+deshalb im Kern eine Änderung dieser einen Variablen – plus vier Schritten
+darum herum.
+
+**1. Sichern.**
+
+```bash
+cd /opt/swisshub && ./scripts/backup.sh
+```
+
+**2. `.env` anpassen.**
+
+```env
+APP_URL=https://swisshub.gg
+```
+
+Weiter zu prüfen: `ADDITIONAL_ORIGINS` (die abgelöste Domain gehört dort
+**nicht** hinein – sie wird im Proxy weitergeleitet und erreicht die Anwendung
+gar nicht) sowie `MAIL_FROM_ADDRESS` und `SMTP_USER`, falls das Postfach
+mitwechselt.
+
+**3. Container neu erstellen.** `APP_URL` wird beim Start gelesen; ein Neubau
+des Images ist nicht nötig, solange sich der Code nicht geändert hat.
+
+```bash
+docker compose up -d app
+```
+
+**4. Gespeicherte Adressen umstellen.** Alte Adressen, die jemand von Hand in
+Inhalte geschrieben hat – Links in Seitenabschnitten, E-Mail-Vorlagen,
+Menüpunkten, Weiterleitungen, Einstellungen –, wandern nicht mit. Dafür gibt es
+ein eigenes Skript. Es zeigt zuerst nur an, was es ändern würde:
+
+```bash
+# Vorschau – schreibt nichts
+docker compose run --rm migrate npx tsx scripts/migrate-domain.ts --von new.swisshub.gg
+
+# Nach Sichtung ausführen
+docker compose run --rm migrate npx tsx scripts/migrate-domain.ts --von new.swisshub.gg --anwenden
+
+# Zwischenspeicher neu füllen
+docker compose up -d app
+```
+
+Ausgeführt wird das über den `migrate`-Dienst: Das Laufzeit-Image enthält
+bewusst weder `tsx` noch die Skripte. Ohne Docker genügt `npm run
+domain:migrate -- --von new.swisshub.gg`.
+
+Das Ziel ist standardmässig `APP_URL`; mit `--nach https://…` lässt es sich
+ausdrücklich angeben. Eine Bind- oder Loopback-Adresse als Ziel wird abgelehnt.
+Ersetzt wird ausschliesslich der angegebene Host – andere Subdomains wie
+`system.swisshub.gg`, fremde Adressen und E-Mail-Adressen bleiben unberührt,
+Pfade, Suchparameter und Sprungmarken bleiben erhalten. Der Lauf ist
+wiederholbar: Ein zweiter Durchgang findet nichts mehr. Bereits versandte
+E-Mails und das Protokoll werden bewusst nicht angefasst.
+
+**5. Discord anpassen.** Im Discord Developer Portal muss die Redirect-URI
+exakt auf die neue Domain zeigen:
+
+```
+https://swisshub.gg/admin/login/callback
+```
+
+Die alte Adresse darf erst entfernt werden, wenn die neue eingetragen und
+geprüft ist – sonst ist die Anmeldung zwischenzeitlich nicht möglich. Siehe
+[oauth.md](oauth.md).
+
+**6. Alte Domain weiterleiten.** Damit bestehende Links und die Bewertung in
+Suchmaschinen erhalten bleiben, wird die abgelöste Domain dauerhaft (301) auf
+die neue weitergeleitet – mit Pfad und Suchparametern. Bei Apache ist das in
+`deploy/apache/swisshub.gg.conf` enthalten, bei Nginx aktiviert man
+`deploy/nginx/new.swisshub.gg.conf`.
+
+**Das Zertifikat der alten Domain wird weiterhin gebraucht.** Ohne gültiges
+Zertifikat scheitert schon der Verbindungsaufbau, und die Weiterleitung kommt
+nie zum Zug. Certbot muss `new.swisshub.gg` also weiter erneuern, solange alte
+Links im Umlauf sind.
+
+Prüfen:
+
+```bash
+curl -sI https://new.swisshub.gg/turniere?status=laufend | grep -i '^location'
+# erwartet: location: https://swisshub.gg/turniere?status=laufend
+
+curl -sS https://swisshub.gg/sitemap.xml | head -5
+curl -sS https://swisshub.gg/robots.txt
+```
 
 ## Wartungsmodus
 

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { ImageResponse } from 'next/og';
 import type { NextRequest } from 'next/server';
+import { env } from '@/lib/env';
 import { getSettings } from '@/lib/settings';
 
 /**
@@ -73,7 +74,9 @@ export async function GET(request: NextRequest): Promise<Response> {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 24, color: '#b0b4be' }}>swisshub.gg</span>
+          {/* Die Domain kommt aus der Konfiguration, damit das Vorschaubild
+              bei einem Domainwechsel nicht als einzige Stelle zurückbleibt. */}
+          <span style={{ fontSize: 24, color: '#b0b4be' }}>{new URL(env().APP_URL).host}</span>
           <div style={{ display: 'flex', width: '160px', height: '6px', background: '#83060a', borderRadius: '3px' }} />
         </div>
       </div>

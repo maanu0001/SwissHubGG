@@ -212,7 +212,9 @@ export async function submitContactRequest(
           renderQuotedText(values.message),
           `<p style="margin:20px 0 0;"><a href="${env().APP_URL}/admin/kontakt/${request.id}" style="color:#ff6b70;">Anfrage im Dashboard öffnen</a></p>`,
         ].join(''),
-        footerNote: 'Diese Nachricht wurde automatisch durch das Kontaktformular von swisshub.gg erzeugt.',
+        // Die Domain stammt aus der Konfiguration – sonst bliebe hier bei einem
+        // Domainwechsel die alte Adresse stehen.
+        footerNote: `Diese Nachricht wurde automatisch durch das Kontaktformular von ${new URL(env().APP_URL).host} erzeugt.`,
       });
 
       notificationJobId = await queueMail({

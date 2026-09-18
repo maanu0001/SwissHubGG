@@ -28,14 +28,14 @@ function mitKopf(kopf: Record<string, string> = {}): Headers {
 
 describe('Öffentlicher Ursprung', () => {
   it('kommt aus APP_URL', () => {
-    process.env.APP_URL = 'https://new.swisshub.gg';
-    expect(publicOrigin()).toBe('https://new.swisshub.gg');
+    process.env.APP_URL = 'https://swisshub.gg';
+    expect(publicOrigin()).toBe('https://swisshub.gg');
   });
 
   it('ignoriert den vom Proxy gemeldeten Host, solange APP_URL öffentlich ist', () => {
-    process.env.APP_URL = 'https://new.swisshub.gg';
-    expect(publicOrigin(mitKopf({ 'x-forwarded-host': 'angreifer.example' }))).toBe('https://new.swisshub.gg');
-    expect(publicOrigin(mitKopf({ host: '0.0.0.0:3000' }))).toBe('https://new.swisshub.gg');
+    process.env.APP_URL = 'https://swisshub.gg';
+    expect(publicOrigin(mitKopf({ 'x-forwarded-host': 'angreifer.example' }))).toBe('https://swisshub.gg');
+    expect(publicOrigin(mitKopf({ host: '0.0.0.0:3000' }))).toBe('https://swisshub.gg');
   });
 
   it('weicht auf den Proxy-Host aus, wenn APP_URL auf eine Bind-Adresse zeigt', () => {
@@ -44,8 +44,8 @@ describe('Öffentlicher Ursprung', () => {
     process.env.APP_URL = 'http://localhost:3000';
     process.env.TRUST_PROXY = 'true';
 
-    expect(publicOrigin(mitKopf({ 'x-forwarded-host': 'new.swisshub.gg', 'x-forwarded-proto': 'https' })))
-      .toBe('https://new.swisshub.gg');
+    expect(publicOrigin(mitKopf({ 'x-forwarded-host': 'swisshub.gg', 'x-forwarded-proto': 'https' })))
+      .toBe('https://swisshub.gg');
   });
 
   it('vertraut dem Proxy-Host nicht, wenn TRUST_PROXY aus ist', () => {
@@ -87,10 +87,10 @@ describe('Interne Pfade', () => {
   });
 
   it('baut die vollständige Adresse aus der öffentlichen Domain', () => {
-    process.env.APP_URL = 'https://new.swisshub.gg';
-    expect(internalUrl('/admin', undefined, '/').toString()).toBe('https://new.swisshub.gg/admin');
+    process.env.APP_URL = 'https://swisshub.gg';
+    expect(internalUrl('/admin', undefined, '/').toString()).toBe('https://swisshub.gg/admin');
     // Ein fremdes Ziel landet auf dem Rückfallpfad, nicht auf der fremden Domain.
     expect(internalUrl('https://fremde-domain.example', undefined, '/admin').toString())
-      .toBe('https://new.swisshub.gg/admin');
+      .toBe('https://swisshub.gg/admin');
   });
 });

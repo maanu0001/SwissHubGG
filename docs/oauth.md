@@ -41,6 +41,11 @@ Notfallzugang, der die Prüfung umgeht.
    http://localhost:3000/admin/login/callback
    ```
 
+   Die Adresse baut die Anwendung aus `APP_URL` – sie muss hier also genau so
+   stehen. Wechselt die Domain, wird die neue Redirect-URI zuerst ergänzt und
+   erst nach der Prüfung die alte entfernt; dazwischen ist die Anmeldung sonst
+   nicht möglich (siehe [deployment.md](deployment.md#domainwechsel)).
+
 3. **Client ID** und **Client Secret** kopieren und in die `.env` eintragen:
 
    ```dotenv

@@ -47,13 +47,13 @@ const envSchema = z.object({
   */
   APP_URL: z
     .string()
-    .url('APP_URL muss eine vollständige URL sein, z. B. https://new.swisshub.gg')
+    .url('APP_URL muss eine vollständige URL sein, z. B. https://swisshub.gg')
     .refine(
       (value) => {
         const host = safeHostname(value);
         return host !== '0.0.0.0' && host !== '::' && host !== '[::]';
       },
-      'APP_URL darf keine Bind-Adresse sein (0.0.0.0). Trage die öffentliche Adresse ein, z. B. https://new.swisshub.gg',
+      'APP_URL darf keine Bind-Adresse sein (0.0.0.0). Trage die öffentliche Adresse ein, z. B. https://swisshub.gg',
     )
     .default('http://localhost:3000')
     .transform((value) => value.replace(/\/$/, '')),
